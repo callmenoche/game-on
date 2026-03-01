@@ -1,73 +1,25 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
+/// GameOn logo — loaded from the PNG asset.
 class GameOnLogo extends StatelessWidget {
   final double size;
-  final Color color;
 
-  const GameOnLogo({
-    super.key,
-    this.size = 100.0,
-    this.color = const Color(0xFFFDBA30), // Saffron
-  });
+  const GameOnLogo({super.key, this.size = 200});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Image.asset(
+      'assets/icons/logo.png',
       width: size,
       height: size,
-      child: CustomPaint(
-        painter: _GameOnLogoPainter(color: color),
-      ),
+      fit: BoxFit.contain,
     );
   }
 }
 
-class _GameOnLogoPainter extends CustomPainter {
-  final Color color;
-
-  _GameOnLogoPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = size.width * 0.1
-      ..strokeCap = StrokeCap.round;
-
-    final double r = size.width * 0.40;
-    const double arcAngle = 130 * (math.pi / 180);
-    const double startAngleOffset = 115 * (math.pi / 180);
-
-    canvas.translate(size.width / 2, size.height / 2);
-
-    // Left arc ("C")
-    canvas.drawArc(
-      Rect.fromCircle(center: Offset.zero, radius: r),
-      startAngleOffset,
-      arcAngle,
-      false,
-      paint,
-    );
-
-    // Right arc (interlocked, mirrored)
-    canvas.rotate(math.pi);
-    canvas.drawArc(
-      Rect.fromCircle(center: Offset.zero, radius: r),
-      startAngleOffset,
-      arcAngle,
-      false,
-      paint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _GameOnLogoPainter oldDelegate) =>
-      oldDelegate.color != color;
-}
-
-/// Logo inside a rounded square background — use on splash / login.
+// ─────────────────────────────────────────────────────────────────────────────
+/// Rounded-square container with slate background + saffron glow.
+/// Use on the login screen and splash.
 class GameOnLogoContainer extends StatelessWidget {
   final double size;
 
@@ -79,29 +31,38 @@ class GameOnLogoContainer extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: GameOnBrand.slateDark,
-        borderRadius: BorderRadius.circular(size * 0.25),
+        color: const Color(0xFF243044), // slightly lighter than pure slateDark
+        borderRadius: BorderRadius.circular(size * 0.22),
         boxShadow: [
+          // Inner warm glow
           BoxShadow(
-            color: GameOnBrand.saffron.withValues(alpha: 0.35),
-            blurRadius: 24,
-            spreadRadius: 2,
+            color: GameOnBrand.saffron.withValues(alpha: 0.45),
+            blurRadius: size * 0.45,
+            spreadRadius: size * 0.01,
+          ),
+          // Outer wide bloom
+          BoxShadow(
+            color: GameOnBrand.saffron.withValues(alpha: 0.18),
+            blurRadius: size * 1.0,
+            spreadRadius: size * 0.04,
           ),
         ],
       ),
       child: Center(
-        child: GameOnLogo(size: size * 0.65),
+        child: GameOnLogo(size: size * 0.72),
       ),
     );
   }
 }
 
-/// Central brand colour tokens.
+// ─────────────────────────────────────────────────────────────────────────────
+/// Central brand colour tokens — import this wherever you need brand colours.
 class GameOnBrand {
   GameOnBrand._();
 
-  static const Color saffron   = Color(0xFFFDBA30);
-  static const Color slateDark = Color(0xFF1E293B);
-  static const Color slateLight = Color(0xFF334155); // hover / card surface
-  static const Color onSaffron = Color(0xFF1E293B);  // text on saffron buttons
+  static const Color saffron    = Color(0xFFFDBA30); // primary / logo
+  static const Color slateDark  = Color(0xFF1E293B); // scaffold / bg
+  static const Color slateCard  = Color(0xFF243044); // card / surface
+  static const Color slateLight = Color(0xFF334155); // hover / border
+  static const Color onSaffron  = Color(0xFF1E293B); // text on saffron buttons
 }
