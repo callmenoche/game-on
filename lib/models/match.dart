@@ -1,4 +1,51 @@
+import 'package:flutter/material.dart';
+
 enum MatchStatus { open, full, cancelled }
+
+// ─── Skill level ───────────────────────────────────────────────────────────────
+
+enum SkillLevel {
+  beginner,
+  intermediate,
+  expert,
+  allLevels;
+
+  /// Value stored in the database (snake_case).
+  String get dbValue => switch (this) {
+        SkillLevel.beginner     => 'beginner',
+        SkillLevel.intermediate => 'intermediate',
+        SkillLevel.expert       => 'expert',
+        SkillLevel.allLevels    => 'all_levels',
+      };
+
+  String get label => switch (this) {
+        SkillLevel.beginner     => 'Beginner',
+        SkillLevel.intermediate => 'Intermediate',
+        SkillLevel.expert       => 'Expert',
+        SkillLevel.allLevels    => 'All levels',
+      };
+
+  String get emoji => switch (this) {
+        SkillLevel.beginner     => '🟢',
+        SkillLevel.intermediate => '🟡',
+        SkillLevel.expert       => '🔴',
+        SkillLevel.allLevels    => '✨',
+      };
+
+  Color get color => switch (this) {
+        SkillLevel.beginner     => const Color(0xFF4CAF50),
+        SkillLevel.intermediate => const Color(0xFFFB8C00),
+        SkillLevel.expert       => const Color(0xFFE53935),
+        SkillLevel.allLevels    => const Color(0xFF7C4DFF),
+      };
+
+  static SkillLevel fromString(String value) => SkillLevel.values.firstWhere(
+        (e) => e.dbValue == value,
+        orElse: () => SkillLevel.allLevels,
+      );
+}
+
+// ─── Sport type ────────────────────────────────────────────────────────────────
 
 enum SportType {
   padel,
@@ -10,31 +57,32 @@ enum SportType {
   other;
 
   String get label => switch (this) {
-        SportType.padel => 'Padel',
-        SportType.football => 'Football',
+        SportType.padel      => 'Padel',
+        SportType.football   => 'Football',
         SportType.basketball => 'Basketball',
-        SportType.tennis => 'Tennis',
-        SportType.running => 'Running',
-        SportType.cycling => 'Cycling',
-        SportType.other => 'Other',
+        SportType.tennis     => 'Tennis',
+        SportType.running    => 'Running',
+        SportType.cycling    => 'Cycling',
+        SportType.other      => 'Other',
       };
 
   String get emoji => switch (this) {
-        SportType.padel => '🎾',
-        SportType.football => '⚽',
+        SportType.padel      => '🎾',
+        SportType.football   => '⚽',
         SportType.basketball => '🏀',
-        SportType.tennis => '🎾',
-        SportType.running => '🏃',
-        SportType.cycling => '🚴',
-        SportType.other => '🏅',
+        SportType.tennis     => '🎾',
+        SportType.running    => '🏃',
+        SportType.cycling    => '🚴',
+        SportType.other      => '🏅',
       };
 
-  static SportType fromString(String value) =>
-      SportType.values.firstWhere(
+  static SportType fromString(String value) => SportType.values.firstWhere(
         (e) => e.name == value,
         orElse: () => SportType.other,
       );
 }
+
+// ─── Match ─────────────────────────────────────────────────────────────────────
 
 class Match {
   final String id;
@@ -47,6 +95,7 @@ class Match {
   final int totalSpots;
   final int playersNeeded;
   final MatchStatus status;
+  final SkillLevel skillLevel;
   final DateTime createdAt;
 
   const Match({
@@ -60,6 +109,7 @@ class Match {
     required this.totalSpots,
     required this.playersNeeded,
     this.status = MatchStatus.open,
+    this.skillLevel = SkillLevel.allLevels,
     required this.createdAt,
   });
 
@@ -80,6 +130,8 @@ class Match {
           (e) => e.name == (json['status'] as String),
           orElse: () => MatchStatus.open,
         ),
+        skillLevel: SkillLevel.fromString(
+            json['skill_level'] as String? ?? 'all_levels'),
         createdAt: DateTime.parse(json['created_at'] as String),
       );
 
@@ -93,6 +145,7 @@ class Match {
         'total_spots': totalSpots,
         'players_needed': playersNeeded,
         'status': status.name,
+        'skill_level': skillLevel.dbValue,
       };
 
   Match copyWith({int? playersNeeded, MatchStatus? status}) => Match(
@@ -106,6 +159,7 @@ class Match {
         totalSpots: totalSpots,
         playersNeeded: playersNeeded ?? this.playersNeeded,
         status: status ?? this.status,
+        skillLevel: skillLevel,
         createdAt: createdAt,
       );
 }

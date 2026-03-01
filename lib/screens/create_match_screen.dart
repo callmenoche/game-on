@@ -18,6 +18,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
   final _locationController = TextEditingController();
 
   SportType _sport = SportType.football;
+  SkillLevel _skillLevel = SkillLevel.allLevels;
   DateTime _date = DateTime.now().add(const Duration(hours: 2));
   TimeOfDay _time = TimeOfDay.fromDateTime(
       DateTime.now().add(const Duration(hours: 2)));
@@ -60,6 +61,13 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
               onChanged: (s) => setState(() => _sport = s),
             ),
             const SizedBox(height: 24),
+            const _SectionLabel('Skill level'),
+            const SizedBox(height: 12),
+            _SkillLevelPicker(
+              selected: _skillLevel,
+              onChanged: (s) => setState(() => _skillLevel = s),
+            ),
+            const SizedBox(height: 24),
             const _SectionLabel('Location'),
             const SizedBox(height: 12),
             _LocationField(controller: _locationController),
@@ -95,6 +103,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
             const SizedBox(height: 24),
             _MatchPreview(
               sport: _sport,
+              skillLevel: _skillLevel,
               location: _locationController.text.isEmpty
                   ? 'Your location'
                   : _locationController.text,
@@ -154,6 +163,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
           location: _locationController.text.trim(),
           dateTime: _combinedDateTime,
           totalSpots: _totalSpots,
+          skillLevel: _skillLevel,
         );
 
     if (!mounted) return;
@@ -242,6 +252,62 @@ class _SportPicker extends StatelessWidget {
                     fontSize: 13,
                     color: isSelected
                         ? GameOnBrand.slateDark
+                        : Colors.white.withValues(alpha: 0.85),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+// ─── Skill level picker ────────────────────────────────────────────────────
+
+class _SkillLevelPicker extends StatelessWidget {
+  final SkillLevel selected;
+  final ValueChanged<SkillLevel> onChanged;
+
+  const _SkillLevelPicker({required this.selected, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: SkillLevel.values.map((level) {
+        final isSelected = level == selected;
+        return GestureDetector(
+          onTap: () => onChanged(level),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? level.color.withValues(alpha: 0.2)
+                  : GameOnBrand.slateCard,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSelected
+                    ? level.color
+                    : GameOnBrand.slateLight.withValues(alpha: 0.4),
+                width: isSelected ? 1.5 : 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(level.emoji, style: const TextStyle(fontSize: 16)),
+                const SizedBox(width: 6),
+                Text(
+                  level.label,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    color: isSelected
+                        ? level.color
                         : Colors.white.withValues(alpha: 0.85),
                   ),
                 ),
@@ -422,12 +488,14 @@ class _StepButton extends StatelessWidget {
 
 class _MatchPreview extends StatelessWidget {
   final SportType sport;
+  final SkillLevel skillLevel;
   final String location;
   final DateTime dateTime;
   final int totalSpots;
 
   const _MatchPreview({
     required this.sport,
+    required this.skillLevel,
     required this.location,
     required this.dateTime,
     required this.totalSpots,
@@ -478,20 +546,50 @@ class _MatchPreview extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color:
-                          GameOnBrand.saffron.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text('OPEN',
-                        style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            color: GameOnBrand.saffron,
-                            letterSpacing: 0.8)),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: GameOnBrand.saffron.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text('OPEN',
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                color: GameOnBrand.saffron,
+                                letterSpacing: 0.8)),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: skillLevel.color.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(skillLevel.emoji,
+                                style: const TextStyle(fontSize: 10)),
+                            const SizedBox(width: 3),
+                            Text(
+                              skillLevel.label,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: skillLevel.color,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

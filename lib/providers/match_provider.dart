@@ -115,6 +115,7 @@ class MatchProvider extends ChangeNotifier {
     required String location,
     required DateTime dateTime,
     required int totalSpots,
+    SkillLevel skillLevel = SkillLevel.allLevels,
   }) async {
     final userId = SupabaseService.currentUser?.id;
     if (userId == null) return false;
@@ -127,6 +128,7 @@ class MatchProvider extends ChangeNotifier {
       dateTime: dateTime,
       totalSpots: totalSpots,
       playersNeeded: totalSpots - 1, // creator counts as 1
+      skillLevel: skillLevel,
       createdAt: DateTime.now(),
     );
 

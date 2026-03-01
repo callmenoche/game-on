@@ -79,4 +79,16 @@ class MatchService {
   Future<void> cancelMatch(String matchId) async {
     await _matches.update({'status': 'cancelled'}).eq('id', matchId);
   }
+
+  /// Returns a map of userId → username for the given user IDs.
+  Future<Map<String, String>> fetchProfiles(List<String> userIds) async {
+    if (userIds.isEmpty) return {};
+    final data = await SupabaseService.table('profiles')
+        .select('id, username')
+        .inFilter('id', userIds);
+    return {
+      for (final r in data as List)
+        r['id'] as String: r['username'] as String? ?? 'Player'
+    };
+  }
 }

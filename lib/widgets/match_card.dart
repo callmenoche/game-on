@@ -120,7 +120,15 @@ class _Header extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        _StatusBadge(status: match.status),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _StatusBadge(status: match.status),
+            const SizedBox(height: 4),
+            _SkillBadge(level: match.skillLevel),
+          ],
+        ),
       ],
     );
   }
@@ -211,6 +219,40 @@ class _StatusBadge extends StatelessWidget {
           color: isFull ? Colors.redAccent : GameOnBrand.saffron,
           letterSpacing: 0.8,
         ),
+      ),
+    );
+  }
+}
+
+// ─── Skill badge ───────────────────────────────────────────────────────────
+
+class _SkillBadge extends StatelessWidget {
+  final SkillLevel level;
+  const _SkillBadge({required this.level});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: level.color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(level.emoji, style: const TextStyle(fontSize: 10)),
+          const SizedBox(width: 3),
+          Text(
+            level.label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: level.color,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
       ),
     );
   }
