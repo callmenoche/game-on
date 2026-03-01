@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/game_on_logo.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -29,7 +30,10 @@ class _LoginScreenState extends State<LoginScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _tabController.addListener(() => context.read<AuthProvider>().clearError());
+    _tabController.addListener(() {
+      context.read<AuthProvider>().clearError();
+      setState(() {}); // refresh button label
+    });
   }
 
   @override
@@ -48,24 +52,23 @@ class _LoginScreenState extends State<LoginScreen>
     final theme = Theme.of(context);
 
     return Scaffold(
-      // Push layout up when keyboard appears
+      backgroundColor: GameOnBrand.slateDark,
       resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: Column(
           children: [
-            // ── Scrollable content ──────────────────────────────
+            // ── Scrollable content ─────────────────────────────
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 48),
                     _buildHeader(theme),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 36),
                     _buildTabBar(theme),
                     const SizedBox(height: 24),
-                    // Sign In form
                     AnimatedBuilder(
                       animation: _tabController,
                       builder: (_, __) => _tabController.index == 0
@@ -95,10 +98,10 @@ class _LoginScreenState extends State<LoginScreen>
               ),
             ),
 
-            // ── Pinned submit button ─────────────────────────────
+            // ── Pinned submit button ────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-              child: _buildSubmitButton(theme),
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+              child: _buildSubmitButton(),
             ),
           ],
         ),
@@ -109,28 +112,23 @@ class _LoginScreenState extends State<LoginScreen>
   Widget _buildHeader(ThemeData theme) {
     return Column(
       children: [
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primary,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Icon(Icons.sports, color: Colors.white, size: 40),
-        ),
-        const SizedBox(height: 16),
-        Text(
+        const GameOnLogoContainer(size: 88),
+        const SizedBox(height: 20),
+        const Text(
           'GameOn',
-          style: theme.textTheme.headlineLarge?.copyWith(
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 36,
             fontWeight: FontWeight.w900,
             letterSpacing: -1,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         Text(
           'Find your next match',
-          style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.5),
+            fontSize: 15,
           ),
         ),
       ],
@@ -140,20 +138,19 @@ class _LoginScreenState extends State<LoginScreen>
   Widget _buildTabBar(ThemeData theme) {
     return Container(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
+        color: const Color(0xFF243044),
         borderRadius: BorderRadius.circular(12),
       ),
       child: TabBar(
         controller: _tabController,
         dividerColor: Colors.transparent,
         indicator: BoxDecoration(
-          color: theme.colorScheme.primary,
+          color: GameOnBrand.saffron,
           borderRadius: BorderRadius.circular(10),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
-        labelColor: Colors.white,
-        unselectedLabelColor:
-            theme.colorScheme.onSurface.withValues(alpha: 0.55),
+        labelColor: GameOnBrand.slateDark,
+        unselectedLabelColor: Colors.white54,
         labelStyle:
             const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
         tabs: const [Tab(text: 'Sign In'), Tab(text: 'Sign Up')],
@@ -168,19 +165,18 @@ class _LoginScreenState extends State<LoginScreen>
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.red.shade50,
-            border: Border.all(color: Colors.red.shade200),
+            color: Colors.red.shade900.withValues(alpha: 0.4),
+            border: Border.all(color: Colors.red.shade700),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             children: [
-              Icon(Icons.error_outline, color: Colors.red.shade700, size: 18),
+              const Icon(Icons.error_outline, color: Colors.redAccent, size: 18),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   auth.error!,
-                  style:
-                      TextStyle(color: Colors.red.shade700, fontSize: 13),
+                  style: const TextStyle(color: Colors.redAccent, fontSize: 13),
                 ),
               ),
             ],
@@ -190,13 +186,15 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildSubmitButton(ThemeData theme) {
+  Widget _buildSubmitButton() {
     return Consumer<AuthProvider>(
       builder: (_, auth, __) {
         return FilledButton(
           onPressed: auth.isLoading ? null : _submit,
           style: FilledButton.styleFrom(
             minimumSize: const Size.fromHeight(54),
+            backgroundColor: GameOnBrand.saffron,
+            foregroundColor: GameOnBrand.slateDark,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14)),
           ),
@@ -205,12 +203,14 @@ class _LoginScreenState extends State<LoginScreen>
                   height: 22,
                   width: 22,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2.5, color: Colors.white),
+                    strokeWidth: 2.5,
+                    color: GameOnBrand.slateDark,
+                  ),
                 )
               : Text(
                   _tabController.index == 0 ? 'Sign In' : 'Create Account',
                   style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w700),
+                      fontSize: 16, fontWeight: FontWeight.w800),
                 ),
         );
       },
@@ -274,9 +274,10 @@ class _SignInForm extends StatelessWidget {
             icon: Icons.lock_outline,
             obscureText: obscurePassword,
             suffixIcon: IconButton(
-              icon: Icon(obscurePassword
-                  ? Icons.visibility_off
-                  : Icons.visibility),
+              icon: Icon(
+                obscurePassword ? Icons.visibility_off : Icons.visibility,
+                color: Colors.white38,
+              ),
               onPressed: onToggleObscure,
             ),
             validator: (v) =>
@@ -317,8 +318,9 @@ class _SignUpForm extends StatelessWidget {
             controller: usernameController,
             label: 'Username',
             icon: Icons.person_outline,
-            validator: (v) =>
-                (v == null || v.trim().length < 3) ? 'Min 3 characters' : null,
+            validator: (v) => (v == null || v.trim().length < 3)
+                ? 'Min 3 characters'
+                : null,
           ),
           const SizedBox(height: 14),
           _GameOnField(
@@ -336,9 +338,10 @@ class _SignUpForm extends StatelessWidget {
             icon: Icons.lock_outline,
             obscureText: obscurePassword,
             suffixIcon: IconButton(
-              icon: Icon(obscurePassword
-                  ? Icons.visibility_off
-                  : Icons.visibility),
+              icon: Icon(
+                obscurePassword ? Icons.visibility_off : Icons.visibility,
+                color: Colors.white38,
+              ),
               onPressed: onToggleObscure,
             ),
             validator: (v) =>
@@ -373,20 +376,20 @@ class _GameOnField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,
-      style: const TextStyle(fontSize: 15),
+      style: const TextStyle(color: Colors.white, fontSize: 15),
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, size: 20),
+        labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+        prefixIcon:
+            Icon(icon, size: 20, color: Colors.white.withValues(alpha: 0.4)),
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: theme.colorScheme.surfaceContainerHighest
-            .withValues(alpha: 0.5),
+        fillColor: const Color(0xFF243044),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -394,17 +397,15 @@ class _GameOnField extends StatelessWidget {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide:
-              BorderSide(color: theme.colorScheme.primary, width: 1.5),
+              const BorderSide(color: GameOnBrand.saffron, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide:
-              BorderSide(color: theme.colorScheme.error, width: 1.5),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide:
-              BorderSide(color: theme.colorScheme.error, width: 1.5),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
         ),
       ),
     );
