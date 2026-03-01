@@ -28,6 +28,9 @@ dependencies:
   flutter_svg: ^2.0.10+1
   shimmer: ^3.0.0
 
+  # Sharing
+  share_plus: ^10.0.0
+
   # Location / maps (optional – geocoding)
   geolocator: ^12.0.0
 

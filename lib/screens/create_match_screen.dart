@@ -23,6 +23,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
   TimeOfDay _time = TimeOfDay.fromDateTime(
       DateTime.now().add(const Duration(hours: 2)));
   int _totalSpots = 4;
+  int _guestCount = 0;
   bool _isSubmitting = false;
 
   @override
@@ -38,8 +39,6 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('New Match',
@@ -98,7 +97,21 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
             const SizedBox(height: 12),
             _SpotsStepper(
               value: _totalSpots,
-              onChanged: (v) => setState(() => _totalSpots = v),
+              onChanged: (v) => setState(() {
+                _totalSpots = v;
+                // Clamp guest count if total spots decreased
+                if (_guestCount >= _totalSpots) {
+                  _guestCount = (_totalSpots - 1).clamp(0, _totalSpots - 1);
+                }
+              }),
+            ),
+            const SizedBox(height: 16),
+            const _SectionLabel('Bring friends (guests)'),
+            const SizedBox(height: 12),
+            _GuestCountStepper(
+              value: _guestCount,
+              max: _totalSpots - 1,
+              onChanged: (v) => setState(() => _guestCount = v),
             ),
             const SizedBox(height: 24),
             _MatchPreview(
@@ -109,6 +122,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
                   : _locationController.text,
               dateTime: _combinedDateTime,
               totalSpots: _totalSpots,
+              guestCount: _guestCount,
             ),
           ],
         ),
@@ -164,6 +178,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
           dateTime: _combinedDateTime,
           totalSpots: _totalSpots,
           skillLevel: _skillLevel,
+          guestCount: _guestCount,
         );
 
     if (!mounted) return;
@@ -447,6 +462,95 @@ class _SpotsStepper extends StatelessWidget {
   }
 }
 
+// ─── Guest count stepper ───────────────────────────────────────────────────
+
+class _GuestCountStepper extends StatelessWidget {
+  final int value;
+  final int max;
+  final ValueChanged<int> onChanged;
+
+  const _GuestCountStepper({
+    required this.value,
+    required this.max,
+    required this.onChanged,
+  });
+
+  String get _label => switch (value) {
+        0 => 'No guests',
+        1 => '1 guest',
+        _ => '$value guests',
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: GameOnBrand.slateCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: value > 0
+              ? GameOnBrand.saffron.withValues(alpha: 0.4)
+              : GameOnBrand.slateLight.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.person_add_rounded,
+                size: 18,
+                color: value > 0
+                    ? GameOnBrand.saffron
+                    : Colors.white.withValues(alpha: 0.35),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                _label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  color: value > 0 ? Colors.white : Colors.white.withValues(alpha: 0.55),
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              _StepButton(
+                icon: Icons.remove_rounded,
+                onTap: value > 0 ? () => onChanged(value - 1) : null,
+              ),
+              const SizedBox(width: 8),
+              Container(
+                width: 44,
+                alignment: Alignment.center,
+                child: Text(
+                  '$value',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: value > 0
+                        ? GameOnBrand.saffron
+                        : Colors.white.withValues(alpha: 0.25),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              _StepButton(
+                icon: Icons.add_rounded,
+                onTap: value < max ? () => onChanged(value + 1) : null,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _StepButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
@@ -492,6 +596,7 @@ class _MatchPreview extends StatelessWidget {
   final String location;
   final DateTime dateTime;
   final int totalSpots;
+  final int guestCount;
 
   const _MatchPreview({
     required this.sport,
@@ -499,11 +604,13 @@ class _MatchPreview extends StatelessWidget {
     required this.location,
     required this.dateTime,
     required this.totalSpots,
+    required this.guestCount,
   });
 
   @override
   Widget build(BuildContext context) {
-    
+    final filledSpots = 1 + guestCount; // creator + guests
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -615,7 +722,7 @@ class _MatchPreview extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('1 / $totalSpots players',
+                      Text('$filledSpots / $totalSpots players',
                           style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -623,15 +730,20 @@ class _MatchPreview extends StatelessWidget {
                       const SizedBox(height: 4),
                       Row(
                         children: List.generate(totalSpots, (i) {
+                          Color dotColor;
+                          if (i == 0) {
+                            dotColor = GameOnBrand.saffron; // creator
+                          } else if (i < filledSpots) {
+                            dotColor = GameOnBrand.saffron.withValues(alpha: 0.5); // guest
+                          } else {
+                            dotColor = GameOnBrand.saffron.withValues(alpha: 0.18); // open
+                          }
                           return Container(
                             margin: const EdgeInsets.only(right: 5),
                             width: 10, height: 10,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: i == 0
-                                  ? GameOnBrand.saffron
-                                  : GameOnBrand.saffron
-                                      .withValues(alpha: 0.18),
+                              color: dotColor,
                               border: Border.all(
                                   color: GameOnBrand.saffron
                                       .withValues(alpha: 0.4)),

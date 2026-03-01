@@ -94,6 +94,36 @@ class MatchProvider extends ChangeNotifier {
     }
   }
 
+  /// Optimistic join with guests: decrements by (1 + guestCount).
+  Future<void> joinMatchWithGuests(String matchId, int guestCount) async {
+    final total = 1 + guestCount;
+    _joinedIds.add(matchId);
+    _updateMatchLocally(matchId, delta: -total);
+    try {
+      await _service.joinMatchWithGuests(matchId, guestCount);
+    } catch (_) {
+      _joinedIds.remove(matchId);
+      _updateMatchLocally(matchId, delta: total);
+      _error = 'Could not join match.';
+      notifyListeners();
+    }
+  }
+
+  /// Claims a guest spot using the provided claim token.
+  /// Returns true on success.
+  Future<bool> claimGuestSpot(String matchId, String token) async {
+    try {
+      await _service.claimGuestSpot(matchId, token);
+      _joinedIds.add(matchId);
+      await fetchMatches();
+      return true;
+    } catch (_) {
+      _error = 'Invalid code or spot already taken.';
+      notifyListeners();
+      return false;
+    }
+  }
+
   /// Optimistic leave: update UI immediately, roll back on error.
   Future<void> leaveMatch(String matchId) async {
     _joinedIds.remove(matchId);
@@ -108,7 +138,7 @@ class MatchProvider extends ChangeNotifier {
     }
   }
 
-  /// Creates a new match. Creator occupies 1 spot automatically.
+  /// Creates a new match. Creator occupies 1 spot + [guestCount] guest spots.
   /// Returns true on success.
   Future<bool> createMatch({
     required SportType sport,
@@ -116,6 +146,7 @@ class MatchProvider extends ChangeNotifier {
     required DateTime dateTime,
     required int totalSpots,
     SkillLevel skillLevel = SkillLevel.allLevels,
+    int guestCount = 0,
   }) async {
     final userId = SupabaseService.currentUser?.id;
     if (userId == null) return false;
@@ -127,15 +158,15 @@ class MatchProvider extends ChangeNotifier {
       locationName: location,
       dateTime: dateTime,
       totalSpots: totalSpots,
-      playersNeeded: totalSpots - 1, // creator counts as 1
+      playersNeeded: totalSpots - 1 - guestCount, // creator + guests count
       skillLevel: skillLevel,
       createdAt: DateTime.now(),
     );
 
     try {
       final created = await _service.createMatch(match);
-      // Auto-join the creator
-      await _service.joinMatch(created.id);
+      // Auto-join the creator, inserting guest placeholders if needed
+      await _service.joinMatchWithGuests(created.id, guestCount);
       _joinedIds.add(created.id);
       await fetchMatches();
       return true;
