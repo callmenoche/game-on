@@ -1,8 +1,145 @@
-// TODO: Implement MatchProvider
-// Holds: List<Match> feed, loading state, selected sport filter
-// Calls: MatchService.fetchOpenMatches, joinMatch, leaveMatch
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/match.dart';
+import '../services/match_service.dart';
+import '../services/supabase_client.dart';
 
 class MatchProvider extends ChangeNotifier {
-  // Stub – full implementation in the next step
+  final _service = MatchService();
+
+  List<Match> _allMatches = [];
+  bool _isLoading = false;
+  String? _error;
+  SportType? _selectedSport;
+  final Set<String> _joinedIds = {};
+  RealtimeChannel? _channel;
+
+  // ── Getters ───────────────────────────────────────────────────────────────
+
+  List<Match> get matches => _selectedSport == null
+      ? _allMatches
+      : _allMatches.where((m) => m.sportType == _selectedSport).toList();
+
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+  SportType? get selectedSport => _selectedSport;
+  bool isJoined(String matchId) => _joinedIds.contains(matchId);
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+
+  MatchProvider() {
+    _init();
+  }
+
+  Future<void> _init() async {
+    await Future.wait([fetchMatches(), _loadJoinedIds()]);
+    _subscribeRealtime();
+  }
+
+  // ── Data fetching ─────────────────────────────────────────────────────────
+
+  Future<void> fetchMatches() async {
+    _setLoading(true);
+    try {
+      _allMatches = await _service.fetchOpenMatches();
+      _error = null;
+    } catch (_) {
+      _error = 'Failed to load matches.';
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> _loadJoinedIds() async {
+    final userId = SupabaseService.currentUser?.id;
+    if (userId == null) return;
+    try {
+      final data = await SupabaseService.table('match_participants')
+          .select('match_id')
+          .eq('user_id', userId);
+      _joinedIds
+        ..clear()
+        ..addAll((data as List).map((r) => r['match_id'] as String));
+    } catch (_) {
+      // non-fatal — user simply sees no joined state
+    }
+  }
+
+  // ── Realtime ──────────────────────────────────────────────────────────────
+
+  void _subscribeRealtime() {
+    _channel = SupabaseService.client.channel('public:matches')
+      ..onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: 'matches',
+        callback: (_) => fetchMatches(),
+      )
+      ..subscribe();
+  }
+
+  // ── Actions ───────────────────────────────────────────────────────────────
+
+  /// Optimistic join: update UI immediately, roll back on error.
+  Future<void> joinMatch(String matchId) async {
+    _joinedIds.add(matchId);
+    _updateMatchLocally(matchId, delta: -1);
+    try {
+      await _service.joinMatch(matchId);
+    } catch (_) {
+      _joinedIds.remove(matchId);
+      _updateMatchLocally(matchId, delta: 1);
+      _error = 'Could not join match.';
+      notifyListeners();
+    }
+  }
+
+  /// Optimistic leave: update UI immediately, roll back on error.
+  Future<void> leaveMatch(String matchId) async {
+    _joinedIds.remove(matchId);
+    _updateMatchLocally(matchId, delta: 1);
+    try {
+      await _service.leaveMatch(matchId);
+    } catch (_) {
+      _joinedIds.add(matchId);
+      _updateMatchLocally(matchId, delta: -1);
+      _error = 'Could not leave match.';
+      notifyListeners();
+    }
+  }
+
+  void setSportFilter(SportType? sport) {
+    _selectedSport = sport;
+    notifyListeners();
+  }
+
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  void _updateMatchLocally(String matchId, {required int delta}) {
+    final idx = _allMatches.indexWhere((m) => m.id == matchId);
+    if (idx == -1) return;
+    final m = _allMatches[idx];
+    final newNeeded = (m.playersNeeded + delta).clamp(0, m.totalSpots);
+    _allMatches[idx] = m.copyWith(
+      playersNeeded: newNeeded,
+      status: newNeeded == 0 ? MatchStatus.full : MatchStatus.open,
+    );
+    notifyListeners();
+  }
+
+  void _setLoading(bool v) {
+    _isLoading = v;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _channel?.unsubscribe();
+    super.dispose();
+  }
 }
