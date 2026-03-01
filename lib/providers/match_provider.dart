@@ -108,6 +108,42 @@ class MatchProvider extends ChangeNotifier {
     }
   }
 
+  /// Creates a new match. Creator occupies 1 spot automatically.
+  /// Returns true on success.
+  Future<bool> createMatch({
+    required SportType sport,
+    required String location,
+    required DateTime dateTime,
+    required int totalSpots,
+  }) async {
+    final userId = SupabaseService.currentUser?.id;
+    if (userId == null) return false;
+
+    final match = Match(
+      id: '',
+      creatorId: userId,
+      sportType: sport,
+      locationName: location,
+      dateTime: dateTime,
+      totalSpots: totalSpots,
+      playersNeeded: totalSpots - 1, // creator counts as 1
+      createdAt: DateTime.now(),
+    );
+
+    try {
+      final created = await _service.createMatch(match);
+      // Auto-join the creator
+      await _service.joinMatch(created.id);
+      _joinedIds.add(created.id);
+      await fetchMatches();
+      return true;
+    } catch (_) {
+      _error = 'Could not create match.';
+      notifyListeners();
+      return false;
+    }
+  }
+
   void setSportFilter(SportType? sport) {
     _selectedSport = sport;
     notifyListeners();

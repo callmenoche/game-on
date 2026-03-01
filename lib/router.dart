@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'providers/auth_provider.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/create_match_screen.dart';
 import 'screens/feed_screen.dart';
 import 'screens/match_detail_screen.dart';
 import 'screens/calendar_screen.dart';
@@ -38,6 +39,10 @@ GoRouter buildRouter(AuthProvider authProvider) {
             path: '/match/:id',
             builder: (_, state) =>
                 MatchDetailScreen(matchId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: '/create-match',
+            builder: (_, __) => const CreateMatchScreen(),
           ),
           GoRoute(
             path: '/calendar',

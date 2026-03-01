@@ -49,11 +49,8 @@ class _FeedScreenState extends State<FeedScreen> {
         ],
       ),
 
-      // FAB — Create Match (Phase 3)
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Create Match — coming in Phase 3!')),
-        ),
+        onPressed: () => context.push('/create-match'),
         backgroundColor: GameOnBrand.saffron,
         foregroundColor: GameOnBrand.slateDark,
         icon: const Icon(Icons.add_rounded),
