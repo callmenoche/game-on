@@ -97,6 +97,7 @@ class Match {
   final SkillLevel skillLevel;
   final DateTime createdAt;
   final DateTime? confirmedAt;
+  final int durationMinutes;
 
   const Match({
     required this.id,
@@ -112,10 +113,19 @@ class Match {
     this.skillLevel = SkillLevel.allLevels,
     required this.createdAt,
     this.confirmedAt,
+    this.durationMinutes = 60,
   });
 
   bool get isUnlimited => totalSpots == null;
   bool get isConfirmed => confirmedAt != null;
+
+  String get durationLabel {
+    final h = durationMinutes ~/ 60;
+    final m = durationMinutes % 60;
+    if (h == 0) return '${m}min';
+    if (m == 0) return '${h}h';
+    return '${h}h ${m}min';
+  }
 
   /// Number of spots already taken. Always 0 for unlimited (use participant
   /// list for the real count in the detail screen).
@@ -145,6 +155,7 @@ class Match {
         confirmedAt: json['confirmed_at'] == null
             ? null
             : DateTime.parse(json['confirmed_at'] as String),
+        durationMinutes: json['duration_minutes'] as int? ?? 60,
       );
 
   Map<String, dynamic> toJson() => {
@@ -158,6 +169,7 @@ class Match {
         'players_needed': playersNeeded,
         'status': status.name,
         'skill_level': skillLevel.dbValue,
+        'duration_minutes': durationMinutes,
       };
 
   Match copyWith({
@@ -179,5 +191,6 @@ class Match {
         skillLevel: skillLevel,
         createdAt: createdAt,
         confirmedAt: confirmedAt ?? this.confirmedAt,
+        durationMinutes: durationMinutes,
       );
 }

@@ -154,6 +154,7 @@ class MatchProvider extends ChangeNotifier {
     SkillLevel skillLevel = SkillLevel.allLevels,
     int guestCount = 0,
     bool isUnlimited = false,
+    int durationMinutes = 60,
   }) async {
     final userId = SupabaseService.currentUser?.id;
     if (userId == null) return false;
@@ -168,6 +169,7 @@ class MatchProvider extends ChangeNotifier {
       playersNeeded: isUnlimited ? null : totalSpots - 1 - guestCount,
       skillLevel: skillLevel,
       createdAt: DateTime.now(),
+      durationMinutes: durationMinutes,
     );
 
     try {

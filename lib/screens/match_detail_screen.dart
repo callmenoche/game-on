@@ -221,6 +221,19 @@ class _HeroCard extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(Icons.timer_outlined,
+                  size: 14, color: Colors.white.withValues(alpha: 0.5)),
+              const SizedBox(width: 6),
+              Text(
+                match.durationLabel,
+                style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.6), fontSize: 13),
+              ),
+            ],
+          ),
           const SizedBox(height: 20),
           _SpotsRow(match: match),
         ],

@@ -20,12 +20,18 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
   SportType _sport = SportType.football;
   SkillLevel _skillLevel = SkillLevel.allLevels;
   DateTime _date = DateTime.now().add(const Duration(hours: 2));
-  TimeOfDay _time = TimeOfDay.fromDateTime(
-      DateTime.now().add(const Duration(hours: 2)));
+  TimeOfDay _time = _roundToHalfHour(
+      TimeOfDay.fromDateTime(DateTime.now().add(const Duration(hours: 2))));
+  int _durationMinutes = 60;
   int _totalSpots = 4;
   int _guestCount = 0;
   bool _isUnlimited = false;
   bool _isSubmitting = false;
+
+  static TimeOfDay _roundToHalfHour(TimeOfDay t) {
+    final minute = t.minute >= 30 ? 30 : 0;
+    return TimeOfDay(hour: t.hour, minute: minute);
+  }
 
   @override
   void dispose() {
@@ -94,6 +100,13 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
               ],
             ),
             const SizedBox(height: 24),
+            const _SectionLabel('Duration'),
+            const SizedBox(height: 12),
+            _DurationStepper(
+              minutes: _durationMinutes,
+              onChanged: (v) => setState(() => _durationMinutes = v),
+            ),
+            const SizedBox(height: 24),
             const _SectionLabel('Players'),
             const SizedBox(height: 12),
             // Unlimited toggle
@@ -134,6 +147,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
               totalSpots: _totalSpots,
               guestCount: _guestCount,
               isUnlimited: _isUnlimited,
+              durationMinutes: _durationMinutes,
             ),
           ],
         ),
@@ -164,17 +178,14 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
   }
 
   Future<void> _pickTime() async {
-    final picked = await showTimePicker(
+    final picked = await showModalBottomSheet<TimeOfDay>(
       context: context,
-      initialTime: _time,
-      builder: (ctx, child) => Theme(
-        data: Theme.of(ctx).copyWith(
-          colorScheme: Theme.of(ctx)
-              .colorScheme
-              .copyWith(primary: GameOnBrand.saffron),
-        ),
-        child: child!,
+      isScrollControlled: true,
+      backgroundColor: GameOnBrand.slateDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      builder: (_) => _TimePickerSheet(initial: _time),
     );
     if (picked != null) setState(() => _time = picked);
   }
@@ -191,6 +202,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
           skillLevel: _skillLevel,
           guestCount: _guestCount,
           isUnlimited: _isUnlimited,
+          durationMinutes: _durationMinutes,
         );
 
     if (!mounted) return;
@@ -679,6 +691,7 @@ class _MatchPreview extends StatelessWidget {
   final int totalSpots;
   final int guestCount;
   final bool isUnlimited;
+  final int durationMinutes;
 
   const _MatchPreview({
     required this.sport,
@@ -688,7 +701,16 @@ class _MatchPreview extends StatelessWidget {
     required this.totalSpots,
     required this.guestCount,
     required this.isUnlimited,
+    required this.durationMinutes,
   });
+
+  String get _durationLabel {
+    final h = durationMinutes ~/ 60;
+    final m = durationMinutes % 60;
+    if (h == 0) return '${m}min';
+    if (m == 0) return '${h}h';
+    return '${h}h ${m}min';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -794,6 +816,17 @@ class _MatchPreview extends StatelessWidget {
                         fontSize: 12,
                         color: Colors.white.withValues(alpha: 0.6)),
                   ),
+                  const SizedBox(width: 8),
+                  Icon(Icons.timer_outlined,
+                      size: 13,
+                      color: Colors.white.withValues(alpha: 0.4)),
+                  const SizedBox(width: 3),
+                  Text(
+                    _durationLabel,
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.5)),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -875,6 +908,227 @@ class _MatchPreview extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ─── Duration stepper ──────────────────────────────────────────────────────
+
+class _DurationStepper extends StatelessWidget {
+  final int minutes;
+  final ValueChanged<int> onChanged;
+
+  const _DurationStepper({required this.minutes, required this.onChanged});
+
+  String get _label {
+    final h = minutes ~/ 60;
+    final m = minutes % 60;
+    if (h == 0) return '${m}min';
+    if (m == 0) return '${h}h';
+    return '${h}h ${m}min';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: GameOnBrand.slateCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+            color: GameOnBrand.slateLight.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.timer_outlined,
+              size: 18, color: Colors.white.withValues(alpha: 0.5)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Duration',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+                color: Colors.white.withValues(alpha: 0.65),
+              ),
+            ),
+          ),
+          _StepButton(
+            icon: Icons.remove_rounded,
+            onTap: minutes > 30 ? () => onChanged(minutes - 30) : null,
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 60,
+            child: Text(
+              _label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                color: GameOnBrand.saffron,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          _StepButton(
+            icon: Icons.add_rounded,
+            onTap: minutes < 300 ? () => onChanged(minutes + 30) : null,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Custom time picker sheet ───────────────────────────────────────────────
+
+class _TimePickerSheet extends StatefulWidget {
+  final TimeOfDay initial;
+  const _TimePickerSheet({required this.initial});
+
+  @override
+  State<_TimePickerSheet> createState() => _TimePickerSheetState();
+}
+
+class _TimePickerSheetState extends State<_TimePickerSheet> {
+  late final FixedExtentScrollController _hourCtrl;
+  late final FixedExtentScrollController _minuteCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _hourCtrl = FixedExtentScrollController(initialItem: widget.initial.hour);
+    _minuteCtrl = FixedExtentScrollController(
+        initialItem: widget.initial.minute >= 30 ? 1 : 0);
+  }
+
+  @override
+  void dispose() {
+    _hourCtrl.dispose();
+    _minuteCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.white24,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text('Select time',
+              style:
+                  TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 180,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Highlight band
+                Container(
+                  height: 52,
+                  margin: const EdgeInsets.symmetric(horizontal: 40),
+                  decoration: BoxDecoration(
+                    color: GameOnBrand.saffron.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: GameOnBrand.saffron.withValues(alpha: 0.3)),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Hour wheel
+                    SizedBox(
+                      width: 90,
+                      child: ListWheelScrollView.useDelegate(
+                        controller: _hourCtrl,
+                        itemExtent: 52,
+                        perspective: 0.004,
+                        diameterRatio: 2,
+                        physics: const FixedExtentScrollPhysics(),
+                        childDelegate: ListWheelChildLoopingListDelegate(
+                          children: List.generate(
+                            24,
+                            (h) => Center(
+                              child: Text(
+                                h.toString().padLeft(2, '0'),
+                                style: const TextStyle(
+                                  fontSize: 30,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const Text(':',
+                        style: TextStyle(
+                            fontSize: 28, fontWeight: FontWeight.w900,
+                            color: GameOnBrand.saffron)),
+                    // Minute wheel (00 / 30 only)
+                    SizedBox(
+                      width: 90,
+                      child: ListWheelScrollView.useDelegate(
+                        controller: _minuteCtrl,
+                        itemExtent: 52,
+                        perspective: 0.004,
+                        diameterRatio: 2,
+                        physics: const FixedExtentScrollPhysics(),
+                        childDelegate: ListWheelChildLoopingListDelegate(
+                          children: ['00', '30']
+                              .map((m) => Center(
+                                    child: Text(
+                                      m,
+                                      style: const TextStyle(
+                                        fontSize: 30,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ))
+                              .toList(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            child: FilledButton(
+              onPressed: () {
+                final hour = _hourCtrl.selectedItem % 24;
+                final minute = (_minuteCtrl.selectedItem % 2) * 30;
+                Navigator.pop(context, TimeOfDay(hour: hour, minute: minute));
+              },
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(50),
+                backgroundColor: GameOnBrand.saffron,
+                foregroundColor: GameOnBrand.slateDark,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+              ),
+              child: const Text('Confirm',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

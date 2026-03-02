@@ -262,13 +262,25 @@ class _MatchEventRow extends StatelessWidget {
               ],
             ),
           ),
-          Text(
-            DateFormat('HH:mm').format(match.dateTime),
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: GameOnBrand.saffron.withValues(alpha: 0.85),
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                DateFormat('HH:mm').format(match.dateTime),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: GameOnBrand.saffron.withValues(alpha: 0.85),
+                ),
+              ),
+              Text(
+                match.durationLabel,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.white.withValues(alpha: 0.35),
+                ),
+              ),
+            ],
           ),
           if (match.isConfirmed) ...[
             const SizedBox(width: 6),

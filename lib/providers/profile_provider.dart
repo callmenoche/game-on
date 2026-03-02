@@ -72,6 +72,28 @@ class ProfileProvider extends ChangeNotifier {
     }
   }
 
+  /// Saves username, bio, and favoriteSports. Optimistic + persists.
+  Future<void> saveProfile({
+    required String username,
+    String? bio,
+    required List<String> favoriteSports,
+  }) async {
+    if (_profile == null) return;
+    final updated = _profile!.copyWith(
+      username: username,
+      bio: bio?.isEmpty == true ? null : bio,
+      favoriteSports: favoriteSports,
+    );
+    _profile = updated;
+    notifyListeners();
+    try {
+      _profile = await _service.updateProfile(updated);
+    } catch (_) {
+      _error = 'Failed to save profile.';
+    }
+    notifyListeners();
+  }
+
   void clearError() {
     _error = null;
     notifyListeners();
