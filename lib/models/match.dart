@@ -143,8 +143,8 @@ class Match {
         geoLat: (json['geo_lat'] as num?)?.toDouble(),
         geoLng: (json['geo_lng'] as num?)?.toDouble(),
         dateTime: DateTime.parse(json['date_time'] as String).toLocal(),
-        totalSpots: json['total_spots'] as int?,
-        playersNeeded: json['players_needed'] as int?,
+        totalSpots: (json['total_spots'] as num?)?.toInt(),
+        playersNeeded: (json['players_needed'] as num?)?.toInt(),
         status: MatchStatus.values.firstWhere(
           (e) => e.name == (json['status'] as String),
           orElse: () => MatchStatus.open,
@@ -155,7 +155,7 @@ class Match {
         confirmedAt: json['confirmed_at'] == null
             ? null
             : DateTime.parse(json['confirmed_at'] as String),
-        durationMinutes: json['duration_minutes'] as int? ?? 60,
+        durationMinutes: (json['duration_minutes'] as num?)?.toInt() ?? 60,
       );
 
   Map<String, dynamic> toJson() => {
