@@ -50,7 +50,11 @@ class MatchCard extends StatelessWidget {
               const SizedBox(height: 10),
               _InfoRow(match: match),
               const SizedBox(height: 14),
-              _Footer(match: match, isJoined: isJoined, onJoin: onJoin, onLeave: onLeave),
+              _Footer(
+                  match: match,
+                  isJoined: isJoined,
+                  onJoin: onJoin,
+                  onLeave: onLeave),
             ],
           ),
         ),
@@ -58,7 +62,6 @@ class MatchCard extends StatelessWidget {
     );
   }
 
-  /// Each sport gets a subtle accent colour on the left border.
   Color _sportColor(SportType sport) => switch (sport) {
         SportType.padel      => const Color(0xFF00C2A8),
         SportType.football   => const Color(0xFF4CAF50),
@@ -82,10 +85,8 @@ class _Header extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Sport emoji
         Text(match.sportType.emoji, style: const TextStyle(fontSize: 32)),
         const SizedBox(width: 12),
-        // Sport + location
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,11 +99,9 @@ class _Header extends StatelessWidget {
               const SizedBox(height: 2),
               Row(
                 children: [
-                  Icon(
-                    Icons.location_on_outlined,
-                    size: 13,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
+                  Icon(Icons.location_on_outlined,
+                      size: 13,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
                   const SizedBox(width: 3),
                   Expanded(
                     child: Text(
@@ -124,7 +123,7 @@ class _Header extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           mainAxisSize: MainAxisSize.min,
           children: [
-            _StatusBadge(status: match.status),
+            _StatusBadge(match: match),
             const SizedBox(height: 4),
             _SkillBadge(level: match.skillLevel),
           ],
@@ -144,14 +143,12 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final color = theme.colorScheme.onSurface.withValues(alpha: 0.55);
-    final dateStr = DateFormat('EEE d MMM  •  HH:mm').format(match.dateTime);
-
     return Row(
       children: [
         Icon(Icons.access_time_rounded, size: 14, color: color),
         const SizedBox(width: 4),
         Text(
-          dateStr,
+          DateFormat('EEE d MMM  •  HH:mm').format(match.dateTime),
           style: theme.textTheme.bodySmall?.copyWith(
             color: color,
             fontWeight: FontWeight.w500,
@@ -184,11 +181,7 @@ class _Footer extends StatelessWidget {
         Expanded(child: _SpotsIndicator(match: match)),
         const SizedBox(width: 12),
         _JoinButton(
-          match: match,
-          isJoined: isJoined,
-          onJoin: onJoin,
-          onLeave: onLeave,
-        ),
+            match: match, isJoined: isJoined, onJoin: onJoin, onLeave: onLeave),
       ],
     );
   }
@@ -197,12 +190,31 @@ class _Footer extends StatelessWidget {
 // ─── Status badge ──────────────────────────────────────────────────────────
 
 class _StatusBadge extends StatelessWidget {
-  final MatchStatus status;
-  const _StatusBadge({required this.status});
+  final Match match;
+  const _StatusBadge({required this.match});
 
   @override
   Widget build(BuildContext context) {
-    final isFull = status == MatchStatus.full;
+    if (match.isConfirmed) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.green.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Text(
+          'CONFIRMED',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+            color: Colors.green,
+            letterSpacing: 0.8,
+          ),
+        ),
+      );
+    }
+
+    final isFull = match.status == MatchStatus.full;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -267,9 +279,27 @@ class _SpotsIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final taken = match.spotsTaken;
-    final total = match.totalSpots;
 
+    if (match.isUnlimited) {
+      return Row(
+        children: [
+          Icon(Icons.all_inclusive_rounded,
+              size: 16,
+              color: GameOnBrand.saffron.withValues(alpha: 0.7)),
+          const SizedBox(width: 6),
+          Text(
+            'Open to all',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      );
+    }
+
+    final taken = match.spotsTaken;
+    final total = match.totalSpots!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -330,11 +360,11 @@ class _JoinButton extends StatelessWidget {
           side: const BorderSide(color: GameOnBrand.saffron),
           foregroundColor: GameOnBrand.saffron,
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
-        child: const Text('Leave',
-            style: TextStyle(fontWeight: FontWeight.w700)),
+        child:
+            const Text('Leave', style: TextStyle(fontWeight: FontWeight.w700)),
       );
     }
 

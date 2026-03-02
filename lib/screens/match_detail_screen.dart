@@ -96,6 +96,11 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
                 const SizedBox(width: 8),
                 Text(match.sportType.label,
                     style: const TextStyle(fontWeight: FontWeight.w800)),
+                if (match.isConfirmed) ...[
+                  const SizedBox(width: 8),
+                  const Icon(Icons.check_circle_rounded,
+                      size: 16, color: Colors.green),
+                ],
               ],
             ),
             actions: [
@@ -160,13 +165,13 @@ class _HeroCard extends StatelessWidget {
   const _HeroCard({required this.match});
 
   Color get _sportColor => switch (match.sportType) {
-        SportType.padel => const Color(0xFF00C2A8),
-        SportType.football => const Color(0xFF4CAF50),
+        SportType.padel      => const Color(0xFF00C2A8),
+        SportType.football   => const Color(0xFF4CAF50),
         SportType.basketball => const Color(0xFFFF6B2B),
-        SportType.tennis => const Color(0xFFD4E157),
-        SportType.running => const Color(0xFF42A5F5),
-        SportType.cycling => const Color(0xFFAB47BC),
-        SportType.other => GameOnBrand.saffron,
+        SportType.tennis     => const Color(0xFFD4E157),
+        SportType.running    => const Color(0xFF42A5F5),
+        SportType.cycling    => const Color(0xFFAB47BC),
+        SportType.other      => GameOnBrand.saffron,
       };
 
   @override
@@ -181,16 +186,14 @@ class _HeroCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Status + skill badges
           Row(
             children: [
-              _StatusChip(match.status),
+              _StatusChip(match),
               const SizedBox(width: 8),
               _SkillChip(match.skillLevel),
             ],
           ),
           const SizedBox(height: 16),
-          // Location
           Row(
             children: [
               const Icon(Icons.location_on_outlined,
@@ -206,7 +209,6 @@ class _HeroCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          // Date/time
           Row(
             children: [
               Icon(Icons.calendar_today_rounded,
@@ -235,8 +237,26 @@ class _SpotsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (match.isUnlimited) {
+      return Row(
+        children: [
+          Icon(Icons.all_inclusive_rounded,
+              size: 18, color: GameOnBrand.saffron.withValues(alpha: 0.8)),
+          const SizedBox(width: 8),
+          Text(
+            'Unlimited spots — open to all',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.white.withValues(alpha: 0.6),
+            ),
+          ),
+        ],
+      );
+    }
+
     final taken = match.spotsTaken;
-    final total = match.totalSpots;
+    final total = match.totalSpots!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -306,7 +326,6 @@ class _ParticipantsListState extends State<_ParticipantsList> {
   @override
   void didUpdateWidget(_ParticipantsList old) {
     super.didUpdateWidget(old);
-    // Compare non-null userIds to detect profile changes
     final oldIds = old.participants
         .map((p) => p.userId)
         .whereType<String>()
@@ -333,12 +352,10 @@ class _ParticipantsListState extends State<_ParticipantsList> {
   Future<void> _showShareSheet(MatchParticipant guest) async {
     final code = guest.guestClaimToken ?? '';
     final text = 'Join my GameOn match! Use claim code: $code';
-    // Copy to clipboard as a convenience
     await Clipboard.setData(ClipboardData(text: code));
     try {
       await Share.share(text);
     } catch (_) {
-      // Share sheet unavailable — clipboard fallback already done
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -366,28 +383,24 @@ class _ParticipantsListState extends State<_ParticipantsList> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Claim a spot',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-            ),
+            const Text('Claim a spot',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
             const SizedBox(height: 6),
-            Text(
-              'Enter the claim code shared by the host.',
-              style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.55), fontSize: 13),
-            ),
+            Text('Enter the claim code shared by the host.',
+                style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.55),
+                    fontSize: 13)),
             const SizedBox(height: 16),
             TextField(
               controller: codeController,
               autofocus: true,
               textCapitalization: TextCapitalization.characters,
               style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 20,
-                  letterSpacing: 3),
+                  fontWeight: FontWeight.w800, fontSize: 20, letterSpacing: 3),
               decoration: const InputDecoration(
                 hintText: 'XXXXXXXX',
-                prefixIcon: Icon(Icons.key_rounded, color: GameOnBrand.saffron),
+                prefixIcon:
+                    Icon(Icons.key_rounded, color: GameOnBrand.saffron),
               ),
             ),
             const SizedBox(height: 20),
@@ -403,8 +416,8 @@ class _ParticipantsListState extends State<_ParticipantsList> {
                       borderRadius: BorderRadius.circular(12)),
                 ),
                 child: const Text('Confirm',
-                    style: TextStyle(
-                        fontWeight: FontWeight.w800, fontSize: 15)),
+                    style:
+                        TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
               ),
             ),
           ],
@@ -439,9 +452,8 @@ class _ParticipantsListState extends State<_ParticipantsList> {
         content: const Text('This guest slot will be freed up.'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Keep'),
-          ),
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Keep')),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
@@ -464,8 +476,10 @@ class _ParticipantsListState extends State<_ParticipantsList> {
           child: Text(
             'No players yet',
             style: TextStyle(
-              color:
-                  Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.4),
             ),
           ),
         ),
@@ -476,40 +490,37 @@ class _ParticipantsListState extends State<_ParticipantsList> {
 
     return Column(
       children: widget.participants.map((p) {
-        final isGuest = p.isGuest && p.userId == null; // unclaimed guest
-        final name = isGuest
+        final isGuestRow = p.isGuest && p.userId == null;
+        final name = isGuestRow
             ? (p.guestName ?? 'Guest')
             : (_usernames[p.userId] ?? '…');
         final isCreator = p.userId == widget.creatorId;
-        final initial = isGuest ? 'G' : (name.isNotEmpty ? name[0].toUpperCase() : '?');
+        final initial =
+            isGuestRow ? 'G' : (name.isNotEmpty ? name[0].toUpperCase() : '?');
 
         return Container(
           margin: const EdgeInsets.only(bottom: 8),
-          padding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
             color: GameOnBrand.slateCard,
             borderRadius: BorderRadius.circular(12),
-            border: isGuest
+            border: isGuestRow
                 ? Border.all(
-                    color: GameOnBrand.slateLight.withValues(alpha: 0.4),
-                    style: BorderStyle.solid,
-                  )
+                    color: GameOnBrand.slateLight.withValues(alpha: 0.4))
                 : null,
           ),
           child: Row(
             children: [
-              // Avatar
               CircleAvatar(
                 radius: 18,
-                backgroundColor: isGuest
+                backgroundColor: isGuestRow
                     ? Colors.white.withValues(alpha: 0.08)
                     : GameOnBrand.saffron.withValues(alpha: 0.2),
                 child: Text(
                   initial,
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
-                    color: isGuest
+                    color: isGuestRow
                         ? Colors.white.withValues(alpha: 0.35)
                         : GameOnBrand.saffron,
                     fontSize: 14,
@@ -517,7 +528,6 @@ class _ParticipantsListState extends State<_ParticipantsList> {
                 ),
               ),
               const SizedBox(width: 12),
-              // Name
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -527,34 +537,30 @@ class _ParticipantsListState extends State<_ParticipantsList> {
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
-                        color: isGuest
+                        color: isGuestRow
                             ? Colors.white.withValues(alpha: 0.4)
                             : Colors.white,
                       ),
                     ),
-                    if (isGuest)
+                    if (isGuestRow)
                       Text(
                         'Unclaimed',
                         style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.white.withValues(alpha: 0.3),
-                        ),
+                            fontSize: 11,
+                            color: Colors.white.withValues(alpha: 0.3)),
                       ),
                   ],
                 ),
               ),
-              // Badges / actions
-              if (isCreator && !isGuest)
+              if (isCreator && !isGuestRow)
                 _Badge(label: 'Host', color: GameOnBrand.saffron),
-              if (isGuest && isHost) ...[
-                // Host: share code button
+              if (isGuestRow && isHost) ...[
                 IconButton(
                   icon: const Icon(Icons.ios_share_rounded, size: 18),
                   color: GameOnBrand.saffron.withValues(alpha: 0.7),
                   tooltip: 'Share claim code',
                   onPressed: () => _showShareSheet(p),
                 ),
-                // Host: remove guest button
                 IconButton(
                   icon: const Icon(Icons.close_rounded, size: 18),
                   color: Colors.redAccent.withValues(alpha: 0.6),
@@ -562,8 +568,7 @@ class _ParticipantsListState extends State<_ParticipantsList> {
                   onPressed: () => _confirmRemoveGuest(p),
                 ),
               ],
-              // Non-host who hasn't joined: show Claim button on unclaimed rows
-              if (isGuest &&
+              if (isGuestRow &&
                   !isHost &&
                   widget.currentUserId.isNotEmpty &&
                   widget.currentUserId != widget.creatorId)
@@ -609,7 +614,9 @@ class _ActionBar extends StatelessWidget {
       ),
       builder: (ctx) => _JoinOptionsSheet(
         matchId: match.id,
-        maxGuests: (match.playersNeeded - 1).clamp(0, 10),
+        maxGuests: match.isUnlimited
+            ? 10
+            : (match.playersNeeded! - 1).clamp(0, 10),
       ),
     );
   }
@@ -626,26 +633,59 @@ class _ActionBar extends StatelessWidget {
           color: Colors.redAccent.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(14),
         ),
-        child: const Text(
-          'Match cancelled',
-          style: TextStyle(
-              fontWeight: FontWeight.w700, color: Colors.redAccent),
-        ),
+        child: const Text('Match cancelled',
+            style: TextStyle(
+                fontWeight: FontWeight.w700, color: Colors.redAccent)),
       );
     } else if (isCreator) {
-      child = Container(
-        height: 54,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: GameOnBrand.slateCard,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: const Text(
-          "You're the host ⚡",
-          style: TextStyle(
-              fontWeight: FontWeight.w700, color: GameOnBrand.saffron),
-        ),
-      );
+      if (!match.isConfirmed) {
+        child = FilledButton(
+          onPressed: () =>
+              context.read<MatchProvider>().confirmMatch(match.id),
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(54),
+            backgroundColor: Colors.green.withValues(alpha: 0.15),
+            foregroundColor: Colors.green.shade300,
+            overlayColor: Colors.green.withValues(alpha: 0.1),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+                side: BorderSide(
+                    color: Colors.green.withValues(alpha: 0.3))),
+          ),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.check_circle_outline_rounded, size: 18),
+              SizedBox(width: 8),
+              Text('Confirm match is happening',
+                  style: TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w800)),
+            ],
+          ),
+        );
+      } else {
+        child = Container(
+          height: 54,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Colors.green.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.check_circle_rounded,
+                  color: Colors.green.shade400, size: 18),
+              const SizedBox(width: 8),
+              Text('Confirmed — see you there!',
+                  style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: Colors.green.shade300)),
+            ],
+          ),
+        );
+      }
     } else if (isJoined) {
       child = OutlinedButton(
         onPressed: onLeave,
@@ -653,8 +693,8 @@ class _ActionBar extends StatelessWidget {
           minimumSize: const Size.fromHeight(54),
           side: const BorderSide(color: GameOnBrand.saffron),
           foregroundColor: GameOnBrand.saffron,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14)),
         ),
         child: const Text('Leave Match',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
@@ -668,8 +708,8 @@ class _ActionBar extends StatelessWidget {
           foregroundColor: GameOnBrand.slateDark,
           disabledBackgroundColor:
               GameOnBrand.saffron.withValues(alpha: 0.25),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14)),
         ),
         child: Text(
           match.isFull ? 'Match is full' : 'Join Match',
@@ -728,20 +768,18 @@ class _JoinOptionsSheetState extends State<_JoinOptionsSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Join match',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-          ),
+          const Text('Join match',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
           const SizedBox(height: 6),
           Text(
-            'Bring friends along — we\'ll generate a code for each guest slot.',
+            "Bring friends along — we'll generate a code for each guest slot.",
             style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.55), fontSize: 13),
           ),
           const SizedBox(height: 24),
-          // Guest count stepper
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
               color: GameOnBrand.slateDark,
               borderRadius: BorderRadius.circular(12),
@@ -756,13 +794,11 @@ class _JoinOptionsSheetState extends State<_JoinOptionsSheet> {
               children: [
                 Row(
                   children: [
-                    Icon(
-                      Icons.person_add_rounded,
-                      size: 18,
-                      color: _guestCount > 0
-                          ? GameOnBrand.saffron
-                          : Colors.white.withValues(alpha: 0.35),
-                    ),
+                    Icon(Icons.person_add_rounded,
+                        size: 18,
+                        color: _guestCount > 0
+                            ? GameOnBrand.saffron
+                            : Colors.white.withValues(alpha: 0.35)),
                     const SizedBox(width: 10),
                     Text(
                       _guestLabel,
@@ -828,8 +864,7 @@ class _JoinOptionsSheetState extends State<_JoinOptionsSheet> {
                       height: 20,
                       width: 20,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          color: GameOnBrand.slateDark),
+                          strokeWidth: 2.5, color: GameOnBrand.slateDark),
                     )
                   : Text(
                       _guestCount == 0
@@ -871,13 +906,11 @@ class _SheetStepButton extends StatelessWidget {
                 : GameOnBrand.slateLight.withValues(alpha: 0.2),
           ),
         ),
-        child: Icon(
-          icon,
-          size: 16,
-          color: enabled
-              ? GameOnBrand.saffron
-              : Colors.white.withValues(alpha: 0.2),
-        ),
+        child: Icon(icon,
+            size: 16,
+            color: enabled
+                ? GameOnBrand.saffron
+                : Colors.white.withValues(alpha: 0.2)),
       ),
     );
   }
@@ -898,14 +931,9 @@ class _Badge extends StatelessWidget {
         color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-          color: color,
-        ),
-      ),
+      child: Text(label,
+          style: TextStyle(
+              fontSize: 11, fontWeight: FontWeight.w800, color: color)),
     );
   }
 }
@@ -930,14 +958,30 @@ class _SectionLabel extends StatelessWidget {
 }
 
 class _StatusChip extends StatelessWidget {
-  final MatchStatus status;
-  const _StatusChip(this.status);
+  final Match match;
+  const _StatusChip(this.match);
 
   @override
   Widget build(BuildContext context) {
-    final (Color color, String label) = switch (status) {
-      MatchStatus.open => (GameOnBrand.saffron, 'OPEN'),
-      MatchStatus.full => (Colors.redAccent, 'FULL'),
+    if (match.isConfirmed) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.green.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Text('CONFIRMED',
+            style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                color: Colors.green,
+                letterSpacing: 0.8)),
+      );
+    }
+
+    final (Color color, String label) = switch (match.status) {
+      MatchStatus.open      => (GameOnBrand.saffron, 'OPEN'),
+      MatchStatus.full      => (Colors.redAccent, 'FULL'),
       MatchStatus.cancelled => (Colors.grey, 'CANCELLED'),
     };
     return Container(
@@ -946,15 +990,12 @@ class _StatusChip extends StatelessWidget {
         color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w900,
-          color: color,
-          letterSpacing: 0.8,
-        ),
-      ),
+      child: Text(label,
+          style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              color: color,
+              letterSpacing: 0.8)),
     );
   }
 }
@@ -976,15 +1017,12 @@ class _SkillChip extends StatelessWidget {
         children: [
           Text(level.emoji, style: const TextStyle(fontSize: 11)),
           const SizedBox(width: 4),
-          Text(
-            level.label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              color: level.color,
-              letterSpacing: 0.5,
-            ),
-          ),
+          Text(level.label,
+              style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: level.color,
+                  letterSpacing: 0.5)),
         ],
       ),
     );

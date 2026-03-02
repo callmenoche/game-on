@@ -24,6 +24,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
       DateTime.now().add(const Duration(hours: 2)));
   int _totalSpots = 4;
   int _guestCount = 0;
+  bool _isUnlimited = false;
   bool _isSubmitting = false;
 
   @override
@@ -93,26 +94,35 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
               ],
             ),
             const SizedBox(height: 24),
-            const _SectionLabel('Total players (including you)'),
+            const _SectionLabel('Players'),
             const SizedBox(height: 12),
-            _SpotsStepper(
-              value: _totalSpots,
+            // Unlimited toggle
+            _UnlimitedToggle(
+              value: _isUnlimited,
               onChanged: (v) => setState(() {
-                _totalSpots = v;
-                // Clamp guest count if total spots decreased
-                if (_guestCount >= _totalSpots) {
-                  _guestCount = (_totalSpots - 1).clamp(0, _totalSpots - 1);
-                }
+                _isUnlimited = v;
+                if (v) _guestCount = 0;
               }),
             ),
-            const SizedBox(height: 16),
-            const _SectionLabel('Bring friends (guests)'),
-            const SizedBox(height: 12),
-            _GuestCountStepper(
-              value: _guestCount,
-              max: _totalSpots - 1,
-              onChanged: (v) => setState(() => _guestCount = v),
-            ),
+            // Spots + guest steppers only for limited matches
+            if (!_isUnlimited) ...[
+              const SizedBox(height: 12),
+              _SpotsStepper(
+                value: _totalSpots,
+                onChanged: (v) => setState(() {
+                  _totalSpots = v;
+                  if (_guestCount >= v) _guestCount = v - 1;
+                }),
+              ),
+              const SizedBox(height: 16),
+              const _SectionLabel('Bring friends (guests)'),
+              const SizedBox(height: 12),
+              _GuestCountStepper(
+                value: _guestCount,
+                max: _totalSpots - 1,
+                onChanged: (v) => setState(() => _guestCount = v),
+              ),
+            ],
             const SizedBox(height: 24),
             _MatchPreview(
               sport: _sport,
@@ -123,6 +133,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
               dateTime: _combinedDateTime,
               totalSpots: _totalSpots,
               guestCount: _guestCount,
+              isUnlimited: _isUnlimited,
             ),
           ],
         ),
@@ -179,6 +190,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
           totalSpots: _totalSpots,
           skillLevel: _skillLevel,
           guestCount: _guestCount,
+          isUnlimited: _isUnlimited,
         );
 
     if (!mounted) return;
@@ -244,9 +256,7 @@ class _SportPicker extends StatelessWidget {
             duration: const Duration(milliseconds: 150),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: isSelected
-                  ? GameOnBrand.saffron
-                  : GameOnBrand.slateCard,
+              color: isSelected ? GameOnBrand.saffron : GameOnBrand.slateCard,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isSelected
@@ -257,8 +267,7 @@ class _SportPicker extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(sport.emoji,
-                    style: const TextStyle(fontSize: 18)),
+                Text(sport.emoji, style: const TextStyle(fontSize: 18)),
                 const SizedBox(width: 6),
                 Text(
                   sport.label,
@@ -404,6 +413,77 @@ class _PickerButton extends StatelessWidget {
   }
 }
 
+// ─── Unlimited toggle ──────────────────────────────────────────────────────
+
+class _UnlimitedToggle extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _UnlimitedToggle({required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => onChanged(!value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: GameOnBrand.slateCard,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: value
+                ? GameOnBrand.saffron.withValues(alpha: 0.5)
+                : GameOnBrand.slateLight.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.all_inclusive_rounded,
+              size: 20,
+              color: value
+                  ? GameOnBrand.saffron
+                  : Colors.white.withValues(alpha: 0.35),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Unlimited spots',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: value
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  Text(
+                    'Anyone can join — no cap',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.white.withValues(alpha: 0.35),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Switch(
+              value: value,
+              onChanged: onChanged,
+              activeColor: GameOnBrand.saffron,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ─── Spots stepper ─────────────────────────────────────────────────────────
 
 class _SpotsStepper extends StatelessWidget {
@@ -427,8 +507,7 @@ class _SpotsStepper extends StatelessWidget {
         children: [
           Text(
             '$value players',
-            style: const TextStyle(
-                fontWeight: FontWeight.w700, fontSize: 16),
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
           ),
           Row(
             children: [
@@ -512,7 +591,9 @@ class _GuestCountStepper extends StatelessWidget {
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 16,
-                  color: value > 0 ? Colors.white : Colors.white.withValues(alpha: 0.55),
+                  color: value > 0
+                      ? Colors.white
+                      : Colors.white.withValues(alpha: 0.55),
                 ),
               ),
             ],
@@ -597,6 +678,7 @@ class _MatchPreview extends StatelessWidget {
   final DateTime dateTime;
   final int totalSpots;
   final int guestCount;
+  final bool isUnlimited;
 
   const _MatchPreview({
     required this.sport,
@@ -605,11 +687,12 @@ class _MatchPreview extends StatelessWidget {
     required this.dateTime,
     required this.totalSpots,
     required this.guestCount,
+    required this.isUnlimited,
   });
 
   @override
   Widget build(BuildContext context) {
-    final filledSpots = 1 + guestCount; // creator + guests
+    final filledSpots = 1 + guestCount;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -639,14 +722,12 @@ class _MatchPreview extends StatelessWidget {
                       children: [
                         Text(sport.label,
                             style: const TextStyle(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 16)),
+                                fontWeight: FontWeight.w800, fontSize: 16)),
                         Text(
                           location,
                           style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white
-                                  .withValues(alpha: 0.55)),
+                              color: Colors.white.withValues(alpha: 0.55)),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -719,40 +800,60 @@ class _MatchPreview extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('$filledSpots / $totalSpots players',
+                  if (isUnlimited)
+                    Row(
+                      children: [
+                        Icon(Icons.all_inclusive_rounded,
+                            size: 16,
+                            color: GameOnBrand.saffron.withValues(alpha: 0.8)),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Unlimited — open to all',
                           style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white.withValues(alpha: 0.55))),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: List.generate(totalSpots, (i) {
-                          Color dotColor;
-                          if (i == 0) {
-                            dotColor = GameOnBrand.saffron; // creator
-                          } else if (i < filledSpots) {
-                            dotColor = GameOnBrand.saffron.withValues(alpha: 0.5); // guest
-                          } else {
-                            dotColor = GameOnBrand.saffron.withValues(alpha: 0.18); // open
-                          }
-                          return Container(
-                            margin: const EdgeInsets.only(right: 5),
-                            width: 10, height: 10,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: dotColor,
-                              border: Border.all(
-                                  color: GameOnBrand.saffron
-                                      .withValues(alpha: 0.4)),
-                            ),
-                          );
-                        }),
-                      ),
-                    ],
-                  ),
+                              color: Colors.white.withValues(alpha: 0.55)),
+                        ),
+                      ],
+                    )
+                  else
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('$filledSpots / $totalSpots players',
+                            style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white.withValues(alpha: 0.55))),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: List.generate(totalSpots, (i) {
+                            Color dotColor;
+                            if (i == 0) {
+                              dotColor = GameOnBrand.saffron;
+                            } else if (i < filledSpots) {
+                              dotColor = GameOnBrand.saffron
+                                  .withValues(alpha: 0.5);
+                            } else {
+                              dotColor = GameOnBrand.saffron
+                                  .withValues(alpha: 0.18);
+                            }
+                            return Container(
+                              margin: const EdgeInsets.only(right: 5),
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: dotColor,
+                                border: Border.all(
+                                    color: GameOnBrand.saffron
+                                        .withValues(alpha: 0.4)),
+                              ),
+                            );
+                          }),
+                        ),
+                      ],
+                    ),
                   FilledButton(
                     onPressed: null,
                     style: FilledButton.styleFrom(
@@ -802,14 +903,14 @@ class _SubmitBar extends StatelessWidget {
           ),
           child: isSubmitting
               ? const SizedBox(
-                  height: 22, width: 22,
+                  height: 22,
+                  width: 22,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      color: GameOnBrand.slateDark),
+                      strokeWidth: 2.5, color: GameOnBrand.slateDark),
                 )
               : const Text('Create Match',
-                  style: TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w800)),
+                  style:
+                      TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
         ),
       ),
     );

@@ -48,7 +48,6 @@ class _FeedScreenState extends State<FeedScreen> {
           ),
         ],
       ),
-
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/create-match'),
         backgroundColor: GameOnBrand.saffron,
@@ -57,10 +56,10 @@ class _FeedScreenState extends State<FeedScreen> {
         label: const Text('New Match',
             style: TextStyle(fontWeight: FontWeight.w700)),
       ),
-
       body: Column(
         children: [
           _SportFilterBar(),
+          _DateFilterBar(),
           const Divider(height: 1),
           Expanded(child: _MatchList()),
         ],
@@ -82,7 +81,6 @@ class _SportFilterBar extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         children: [
-          // "All" chip
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: FilterChip(
@@ -112,7 +110,6 @@ class _SportFilterBar extends StatelessWidget {
               backgroundColor: Colors.transparent,
             ),
           ),
-          // Per-sport chips
           ...SportType.values.map((sport) => Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: SportChip(
@@ -128,6 +125,96 @@ class _SportFilterBar extends StatelessWidget {
   }
 }
 
+// ─── Date filter chips ─────────────────────────────────────────────────────
+
+class _DateFilterBar extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<MatchProvider>();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Row(
+        children: [
+          _DateChip(
+            label: 'Any date',
+            filter: DateFilter.any,
+            current: provider.dateFilter,
+            onTap: () => provider.setDateFilter(DateFilter.any),
+          ),
+          const SizedBox(width: 8),
+          _DateChip(
+            label: 'Today',
+            filter: DateFilter.today,
+            current: provider.dateFilter,
+            onTap: () => provider.setDateFilter(DateFilter.today),
+          ),
+          const SizedBox(width: 8),
+          _DateChip(
+            label: 'This week',
+            filter: DateFilter.thisWeek,
+            current: provider.dateFilter,
+            onTap: () => provider.setDateFilter(DateFilter.thisWeek),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DateChip extends StatelessWidget {
+  final String label;
+  final DateFilter filter;
+  final DateFilter current;
+  final VoidCallback onTap;
+
+  const _DateChip({
+    required this.label,
+    required this.filter,
+    required this.current,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = filter == current;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected
+              ? GameOnBrand.saffron.withValues(alpha: 0.15)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected
+                ? GameOnBrand.saffron
+                : Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.15),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: selected
+                ? GameOnBrand.saffron
+                : Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.6),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // ─── Match list ────────────────────────────────────────────────────────────
 
 class _MatchList extends StatelessWidget {
@@ -135,18 +222,17 @@ class _MatchList extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<MatchProvider>();
 
-    // Loading skeleton
     if (provider.isLoading && provider.matches.isEmpty) {
       return const Center(
         child: CircularProgressIndicator(color: GameOnBrand.saffron),
       );
     }
 
-    // Empty state
     if (provider.matches.isEmpty) {
       return _EmptyState(
         hasSportFilter: provider.selectedSport != null,
         sport: provider.selectedSport,
+        dateFilter: provider.dateFilter,
       );
     }
 
@@ -164,7 +250,8 @@ class _MatchList extends StatelessWidget {
               match: match,
               isJoined: provider.isJoined(match.id),
               onJoin: () => context.read<MatchProvider>().joinMatch(match.id),
-              onLeave: () => context.read<MatchProvider>().leaveMatch(match.id),
+              onLeave: () =>
+                  context.read<MatchProvider>().leaveMatch(match.id),
               onTap: () => context.push('/match/${match.id}'),
             ),
           );
@@ -179,8 +266,25 @@ class _MatchList extends StatelessWidget {
 class _EmptyState extends StatelessWidget {
   final bool hasSportFilter;
   final SportType? sport;
+  final DateFilter dateFilter;
 
-  const _EmptyState({required this.hasSportFilter, this.sport});
+  const _EmptyState({
+    required this.hasSportFilter,
+    this.sport,
+    required this.dateFilter,
+  });
+
+  String get _title {
+    final sportLabel = sport?.label ?? '';
+    final dateLabel = switch (dateFilter) {
+      DateFilter.any      => '',
+      DateFilter.today    => ' today',
+      DateFilter.thisWeek => ' this week',
+    };
+    if (hasSportFilter) return 'No $sportLabel matches$dateLabel';
+    if (dateFilter != DateFilter.any) return 'No matches$dateLabel';
+    return 'No matches yet';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -195,9 +299,7 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            hasSportFilter
-                ? 'No ${sport?.label ?? ''} matches'
-                : 'No matches yet',
+            _title,
             style: theme.textTheme.titleLarge
                 ?.copyWith(fontWeight: FontWeight.w700),
           ),

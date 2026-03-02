@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 enum MatchStatus { open, full, cancelled }
 
-// ─── Skill level ───────────────────────────────────────────────────────────────
+// ─── Skill level ────────────────────────────────────────────────────────────
 
 enum SkillLevel {
   beginner,
@@ -10,7 +10,6 @@ enum SkillLevel {
   expert,
   allLevels;
 
-  /// Value stored in the database (snake_case).
   String get dbValue => switch (this) {
         SkillLevel.beginner     => 'beginner',
         SkillLevel.intermediate => 'intermediate',
@@ -45,7 +44,7 @@ enum SkillLevel {
       );
 }
 
-// ─── Sport type ────────────────────────────────────────────────────────────────
+// ─── Sport type ─────────────────────────────────────────────────────────────
 
 enum SportType {
   padel,
@@ -82,7 +81,7 @@ enum SportType {
       );
 }
 
-// ─── Match ─────────────────────────────────────────────────────────────────────
+// ─── Match ───────────────────────────────────────────────────────────────────
 
 class Match {
   final String id;
@@ -92,11 +91,12 @@ class Match {
   final double? geoLat;
   final double? geoLng;
   final DateTime dateTime;
-  final int totalSpots;
-  final int playersNeeded;
+  final int? totalSpots;      // null = unlimited
+  final int? playersNeeded;   // null = unlimited
   final MatchStatus status;
   final SkillLevel skillLevel;
   final DateTime createdAt;
+  final DateTime? confirmedAt;
 
   const Match({
     required this.id,
@@ -106,15 +106,24 @@ class Match {
     this.geoLat,
     this.geoLng,
     required this.dateTime,
-    required this.totalSpots,
-    required this.playersNeeded,
+    this.totalSpots,
+    this.playersNeeded,
     this.status = MatchStatus.open,
     this.skillLevel = SkillLevel.allLevels,
     required this.createdAt,
+    this.confirmedAt,
   });
 
-  int get spotsTaken => totalSpots - playersNeeded;
-  bool get isFull => status == MatchStatus.full || playersNeeded == 0;
+  bool get isUnlimited => totalSpots == null;
+  bool get isConfirmed => confirmedAt != null;
+
+  /// Number of spots already taken. Always 0 for unlimited (use participant
+  /// list for the real count in the detail screen).
+  int get spotsTaken => isUnlimited ? 0 : totalSpots! - playersNeeded!;
+
+  /// An unlimited match is never "full".
+  bool get isFull =>
+      !isUnlimited && (status == MatchStatus.full || playersNeeded == 0);
 
   factory Match.fromJson(Map<String, dynamic> json) => Match(
         id: json['id'] as String,
@@ -124,8 +133,8 @@ class Match {
         geoLat: (json['geo_lat'] as num?)?.toDouble(),
         geoLng: (json['geo_lng'] as num?)?.toDouble(),
         dateTime: DateTime.parse(json['date_time'] as String).toLocal(),
-        totalSpots: json['total_spots'] as int,
-        playersNeeded: json['players_needed'] as int,
+        totalSpots: json['total_spots'] as int?,
+        playersNeeded: json['players_needed'] as int?,
         status: MatchStatus.values.firstWhere(
           (e) => e.name == (json['status'] as String),
           orElse: () => MatchStatus.open,
@@ -133,6 +142,9 @@ class Match {
         skillLevel: SkillLevel.fromString(
             json['skill_level'] as String? ?? 'all_levels'),
         createdAt: DateTime.parse(json['created_at'] as String),
+        confirmedAt: json['confirmed_at'] == null
+            ? null
+            : DateTime.parse(json['confirmed_at'] as String),
       );
 
   Map<String, dynamic> toJson() => {
@@ -148,7 +160,12 @@ class Match {
         'skill_level': skillLevel.dbValue,
       };
 
-  Match copyWith({int? playersNeeded, MatchStatus? status}) => Match(
+  Match copyWith({
+    int? playersNeeded,
+    MatchStatus? status,
+    DateTime? confirmedAt,
+  }) =>
+      Match(
         id: id,
         creatorId: creatorId,
         sportType: sportType,
@@ -161,5 +178,6 @@ class Match {
         status: status ?? this.status,
         skillLevel: skillLevel,
         createdAt: createdAt,
+        confirmedAt: confirmedAt ?? this.confirmedAt,
       );
 }

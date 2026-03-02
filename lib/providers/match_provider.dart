@@ -4,6 +4,8 @@ import '../models/match.dart';
 import '../services/match_service.dart';
 import '../services/supabase_client.dart';
 
+enum DateFilter { any, today, thisWeek }
+
 class MatchProvider extends ChangeNotifier {
   final _service = MatchService();
 
@@ -11,18 +13,25 @@ class MatchProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   SportType? _selectedSport;
+  DateFilter _dateFilter = DateFilter.any;
   final Set<String> _joinedIds = {};
   RealtimeChannel? _channel;
 
   // ── Getters ───────────────────────────────────────────────────────────────
 
-  List<Match> get matches => _selectedSport == null
-      ? _allMatches
-      : _allMatches.where((m) => m.sportType == _selectedSport).toList();
+  List<Match> get matches {
+    var result = _allMatches;
+    if (_selectedSport != null) {
+      result = result.where((m) => m.sportType == _selectedSport).toList();
+    }
+    result = _applyDateFilter(result);
+    return result;
+  }
 
   bool get isLoading => _isLoading;
   String? get error => _error;
   SportType? get selectedSport => _selectedSport;
+  DateFilter get dateFilter => _dateFilter;
   bool isJoined(String matchId) => _joinedIds.contains(matchId);
 
   // ── Init ──────────────────────────────────────────────────────────────────
@@ -61,7 +70,7 @@ class MatchProvider extends ChangeNotifier {
         ..clear()
         ..addAll((data as List).map((r) => r['match_id'] as String));
     } catch (_) {
-      // non-fatal — user simply sees no joined state
+      // non-fatal
     }
   }
 
@@ -80,7 +89,6 @@ class MatchProvider extends ChangeNotifier {
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
-  /// Optimistic join: update UI immediately, roll back on error.
   Future<void> joinMatch(String matchId) async {
     _joinedIds.add(matchId);
     _updateMatchLocally(matchId, delta: -1);
@@ -94,7 +102,6 @@ class MatchProvider extends ChangeNotifier {
     }
   }
 
-  /// Optimistic join with guests: decrements by (1 + guestCount).
   Future<void> joinMatchWithGuests(String matchId, int guestCount) async {
     final total = 1 + guestCount;
     _joinedIds.add(matchId);
@@ -109,8 +116,6 @@ class MatchProvider extends ChangeNotifier {
     }
   }
 
-  /// Claims a guest spot using the provided claim token.
-  /// Returns true on success.
   Future<bool> claimGuestSpot(String matchId, String token) async {
     try {
       await _service.claimGuestSpot(matchId, token);
@@ -124,7 +129,6 @@ class MatchProvider extends ChangeNotifier {
     }
   }
 
-  /// Optimistic leave: update UI immediately, roll back on error.
   Future<void> leaveMatch(String matchId) async {
     _joinedIds.remove(matchId);
     _updateMatchLocally(matchId, delta: 1);
@@ -138,8 +142,6 @@ class MatchProvider extends ChangeNotifier {
     }
   }
 
-  /// Creates a new match. Creator occupies 1 spot + [guestCount] guest spots.
-  /// Returns true on success.
   Future<bool> createMatch({
     required SportType sport,
     required String location,
@@ -147,6 +149,7 @@ class MatchProvider extends ChangeNotifier {
     required int totalSpots,
     SkillLevel skillLevel = SkillLevel.allLevels,
     int guestCount = 0,
+    bool isUnlimited = false,
   }) async {
     final userId = SupabaseService.currentUser?.id;
     if (userId == null) return false;
@@ -157,16 +160,19 @@ class MatchProvider extends ChangeNotifier {
       sportType: sport,
       locationName: location,
       dateTime: dateTime,
-      totalSpots: totalSpots,
-      playersNeeded: totalSpots - 1 - guestCount, // creator + guests count
+      totalSpots: isUnlimited ? null : totalSpots,
+      playersNeeded: isUnlimited ? null : totalSpots - 1 - guestCount,
       skillLevel: skillLevel,
       createdAt: DateTime.now(),
     );
 
     try {
       final created = await _service.createMatch(match);
-      // Auto-join the creator, inserting guest placeholders if needed
-      await _service.joinMatchWithGuests(created.id, guestCount);
+      if (isUnlimited) {
+        await _service.joinMatch(created.id);
+      } else {
+        await _service.joinMatchWithGuests(created.id, guestCount);
+      }
       _joinedIds.add(created.id);
       await fetchMatches();
       return true;
@@ -177,8 +183,34 @@ class MatchProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> confirmMatch(String matchId) async {
+    final now = DateTime.now();
+    // Optimistic update
+    final idx = _allMatches.indexWhere((m) => m.id == matchId);
+    if (idx != -1) {
+      _allMatches[idx] = _allMatches[idx].copyWith(confirmedAt: now);
+      notifyListeners();
+    }
+    try {
+      await _service.confirmMatch(matchId);
+    } catch (_) {
+      // Roll back
+      if (idx != -1) {
+        _allMatches[idx] = _allMatches[idx].copyWith();
+        notifyListeners();
+      }
+      _error = 'Could not confirm match.';
+      notifyListeners();
+    }
+  }
+
   void setSportFilter(SportType? sport) {
     _selectedSport = sport;
+    notifyListeners();
+  }
+
+  void setDateFilter(DateFilter filter) {
+    _dateFilter = filter;
     notifyListeners();
   }
 
@@ -189,11 +221,29 @@ class MatchProvider extends ChangeNotifier {
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
+  List<Match> _applyDateFilter(List<Match> list) {
+    if (_dateFilter == DateFilter.any) return list;
+    final now = DateTime.now();
+    return list.where((m) {
+      return switch (_dateFilter) {
+        DateFilter.any => true,
+        DateFilter.today =>
+          m.dateTime.year == now.year &&
+          m.dateTime.month == now.month &&
+          m.dateTime.day == now.day,
+        DateFilter.thisWeek =>
+          m.dateTime.isAfter(now.subtract(const Duration(minutes: 1))) &&
+          m.dateTime.isBefore(now.add(const Duration(days: 7))),
+      };
+    }).toList();
+  }
+
   void _updateMatchLocally(String matchId, {required int delta}) {
     final idx = _allMatches.indexWhere((m) => m.id == matchId);
     if (idx == -1) return;
     final m = _allMatches[idx];
-    final newNeeded = (m.playersNeeded + delta).clamp(0, m.totalSpots);
+    if (m.isUnlimited) return; // unlimited: nothing to decrement
+    final newNeeded = (m.playersNeeded! + delta).clamp(0, m.totalSpots!);
     _allMatches[idx] = m.copyWith(
       playersNeeded: newNeeded,
       status: newNeeded == 0 ? MatchStatus.full : MatchStatus.open,
