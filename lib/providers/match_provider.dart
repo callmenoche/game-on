@@ -34,6 +34,10 @@ class MatchProvider extends ChangeNotifier {
   DateFilter get dateFilter => _dateFilter;
   bool isJoined(String matchId) => _joinedIds.contains(matchId);
 
+  /// All loaded matches the current user has joined (for calendar view).
+  List<Match> get joinedMatches =>
+      _allMatches.where((m) => _joinedIds.contains(m.id)).toList();
+
   // ── Init ──────────────────────────────────────────────────────────────────
 
   MatchProvider() {
