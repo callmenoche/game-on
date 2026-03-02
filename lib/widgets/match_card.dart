@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../models/match.dart';
+import '../providers/match_provider.dart';
 import 'game_on_logo.dart';
 
 class MatchCard extends StatelessWidget {
@@ -143,17 +145,52 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final color = theme.colorScheme.onSurface.withValues(alpha: 0.55);
-    return Row(
+    final distKm =
+        context.watch<MatchProvider>().distanceFromUser(match);
+
+    return Wrap(
+      spacing: 10,
+      runSpacing: 4,
       children: [
-        Icon(Icons.access_time_rounded, size: 14, color: color),
-        const SizedBox(width: 4),
-        Text(
-          DateFormat('EEE d MMM  •  HH:mm').format(match.dateTime),
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: color,
-            fontWeight: FontWeight.w500,
-          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.access_time_rounded, size: 14, color: color),
+            const SizedBox(width: 4),
+            Text(
+              DateFormat('EEE d MMM  •  HH:mm').format(match.dateTime),
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: color, fontWeight: FontWeight.w500),
+            ),
+          ],
         ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.timer_outlined, size: 13, color: color),
+            const SizedBox(width: 3),
+            Text(
+              match.durationLabel,
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: color, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+        if (distKm != null)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.near_me_rounded, size: 13, color: color),
+              const SizedBox(width: 3),
+              Text(
+                distKm < 1
+                    ? '${(distKm * 1000).round()}m'
+                    : '${distKm.toStringAsFixed(1)}km',
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(color: color, fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
       ],
     );
   }

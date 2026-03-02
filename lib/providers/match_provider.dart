@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/match.dart';
 import '../services/match_service.dart';
@@ -14,6 +17,11 @@ class MatchProvider extends ChangeNotifier {
   String? _error;
   SportType? _selectedSport;
   DateFilter _dateFilter = DateFilter.any;
+  String _searchQuery = '';
+  bool _distanceFilterEnabled = false;
+  double? _userLat;
+  double? _userLng;
+  static const double _distanceKm = 10.0;
   final Set<String> _joinedIds = {};
   RealtimeChannel? _channel;
 
@@ -25,6 +33,22 @@ class MatchProvider extends ChangeNotifier {
       result = result.where((m) => m.sportType == _selectedSport).toList();
     }
     result = _applyDateFilter(result);
+    if (_searchQuery.isNotEmpty) {
+      final q = _searchQuery.toLowerCase();
+      result = result
+          .where((m) =>
+              m.locationName.toLowerCase().contains(q) ||
+              m.sportType.label.toLowerCase().contains(q))
+          .toList();
+    }
+    if (_distanceFilterEnabled && _userLat != null) {
+      result = result
+          .where((m) =>
+              m.geoLat == null ||
+              _haversineKm(_userLat!, _userLng!, m.geoLat!, m.geoLng!) <=
+                  _distanceKm)
+          .toList();
+    }
     return result;
   }
 
@@ -32,7 +56,16 @@ class MatchProvider extends ChangeNotifier {
   String? get error => _error;
   SportType? get selectedSport => _selectedSport;
   DateFilter get dateFilter => _dateFilter;
+  String get searchQuery => _searchQuery;
+  bool get distanceFilterEnabled => _distanceFilterEnabled;
+  bool get hasUserLocation => _userLat != null;
   bool isJoined(String matchId) => _joinedIds.contains(matchId);
+
+  /// Distance in km from user to [m], null if either position is missing.
+  double? distanceFromUser(Match m) {
+    if (_userLat == null || m.geoLat == null) return null;
+    return _haversineKm(_userLat!, _userLng!, m.geoLat!, m.geoLng!);
+  }
 
   /// All loaded matches the current user has joined (for calendar view).
   List<Match> get joinedMatches =>
@@ -220,6 +253,41 @@ class MatchProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setSearchQuery(String q) {
+    _searchQuery = q;
+    notifyListeners();
+  }
+
+  Future<void> toggleDistanceFilter() async {
+    if (_distanceFilterEnabled) {
+      _distanceFilterEnabled = false;
+      notifyListeners();
+      return;
+    }
+    await _fetchUserLocation();
+    _distanceFilterEnabled = _userLat != null;
+    notifyListeners();
+  }
+
+  Future<void> _fetchUserLocation() async {
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        return;
+      }
+      final pos = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.low);
+      _userLat = pos.latitude;
+      _userLng = pos.longitude;
+    } catch (_) {
+      // Location unavailable — filter silently stays off
+    }
+  }
+
   void clearError() {
     _error = null;
     notifyListeners();
@@ -260,6 +328,19 @@ class MatchProvider extends ChangeNotifier {
   void _setLoading(bool v) {
     _isLoading = v;
     notifyListeners();
+  }
+
+  static double _haversineKm(
+      double lat1, double lng1, double lat2, double lng2) {
+    const r = 6371.0;
+    final dLat = (lat2 - lat1) * pi / 180;
+    final dLng = (lng2 - lng1) * pi / 180;
+    final a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(lat1 * pi / 180) *
+            cos(lat2 * pi / 180) *
+            sin(dLng / 2) *
+            sin(dLng / 2);
+    return r * 2 * atan2(sqrt(a), sqrt(1 - a));
   }
 
   @override

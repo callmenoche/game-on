@@ -5,6 +5,8 @@ import 'screens/auth/login_screen.dart';
 import 'screens/create_match_screen.dart';
 import 'screens/feed_screen.dart';
 import 'screens/match_detail_screen.dart';
+import 'screens/notifications_screen.dart';
+import 'screens/public_profile_screen.dart';
 import 'screens/calendar_screen.dart';
 import 'screens/profile_screen.dart';
 
@@ -51,6 +53,15 @@ GoRouter buildRouter(AuthProvider authProvider) {
           GoRoute(
             path: '/profile',
             builder: (_, __) => const ProfileScreen(),
+          ),
+          GoRoute(
+            path: '/player/:userId',
+            builder: (_, state) => PublicProfileScreen(
+                userId: state.pathParameters['userId']!),
+          ),
+          GoRoute(
+            path: '/notifications',
+            builder: (_, __) => const NotificationsScreen(),
           ),
         ],
       ),

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/match.dart';
 import '../models/profile.dart';
 import '../providers/auth_provider.dart';
-import '../providers/match_provider.dart';
 import '../providers/profile_provider.dart';
+import '../services/match_service.dart';
+import '../services/supabase_client.dart';
 import '../widgets/game_on_logo.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -17,6 +19,8 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _editing = false;
   bool _saving = false;
+  List<Match> _history = [];
+  bool _historyLoaded = false;
 
   late TextEditingController _usernameCtrl;
   late TextEditingController _bioCtrl;
@@ -28,9 +32,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _usernameCtrl = TextEditingController();
     _bioCtrl = TextEditingController();
     _favoriteSports = [];
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProfileProvider>().loadProfile();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await context.read<ProfileProvider>().loadProfile();
+      _loadHistory();
     });
+  }
+
+  Future<void> _loadHistory() async {
+    final userId = SupabaseService.currentUser?.id;
+    if (userId == null) return;
+    try {
+      final history = await MatchService().fetchUserMatchHistory(userId);
+      if (mounted) setState(() { _history = history; _historyLoaded = true; });
+    } catch (_) {
+      if (mounted) setState(() => _historyLoaded = true);
+    }
   }
 
   @override
@@ -75,7 +91,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final profileProvider = context.watch<ProfileProvider>();
-    final matchProvider = context.watch<MatchProvider>();
     final profile = profileProvider.profile;
 
     return Scaffold(
@@ -149,8 +164,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                       // ── Stats row ────────────────────────────────────────
                       _StatsRow(
-                        joinedCount: matchProvider.joinedMatches.length,
-                        createdCount: matchProvider.joinedMatches
+                        joinedCount: _history.length,
+                        createdCount: _history
                             .where((m) =>
                                 m.creatorId ==
                                 profileProvider.profile?.id)
@@ -176,7 +191,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           });
                         },
                       ),
-                      const SizedBox(height: 36),
+                      const SizedBox(height: 28),
+
+                      // ── Match history ────────────────────────────────────
+                      if (_historyLoaded && _history.isNotEmpty) ...[
+                        const _SectionLabel('Match History'),
+                        const SizedBox(height: 12),
+                        ..._history.take(5).map((m) => _HistoryRow(match: m)),
+                        const SizedBox(height: 28),
+                      ],
 
                       // ── Sign out ─────────────────────────────────────────
                       _SignOutButton(),
@@ -472,6 +495,61 @@ class _FavouriteSportsPicker extends StatelessWidget {
           ),
         );
       }).toList(),
+    );
+  }
+}
+
+// ─── History row ────────────────────────────────────────────────────────────
+
+class _HistoryRow extends StatelessWidget {
+  final Match match;
+  const _HistoryRow({required this.match});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: GameOnBrand.slateCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Text(match.sportType.emoji,
+              style: const TextStyle(fontSize: 20)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(match.sportType.label,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 13)),
+                Text(
+                  match.locationName,
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.white.withValues(alpha: 0.4)),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          Text(
+            DateFormat('d MMM yy').format(match.dateTime),
+            style: TextStyle(
+                fontSize: 11,
+                color: Colors.white.withValues(alpha: 0.4)),
+          ),
+          if (match.isConfirmed) ...[
+            const SizedBox(width: 6),
+            Icon(Icons.check_circle_rounded,
+                size: 13, color: Colors.green.shade400),
+          ],
+        ],
+      ),
     );
   }
 }

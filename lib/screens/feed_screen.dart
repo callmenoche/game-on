@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../models/match.dart';
 import '../providers/match_provider.dart';
+import '../providers/notification_provider.dart';
 import '../widgets/game_on_logo.dart';
 import '../widgets/match_card.dart';
 import '../widgets/sport_chip.dart';
@@ -15,17 +16,37 @@ class FeedScreen extends StatefulWidget {
 }
 
 class _FeedScreenState extends State<FeedScreen> {
+  bool _searchOpen = false;
+  final _searchCtrl = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MatchProvider>().fetchMatches();
+      context.read<NotificationProvider>().start();
     });
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  void _toggleSearch() {
+    setState(() => _searchOpen = !_searchOpen);
+    if (!_searchOpen) {
+      _searchCtrl.clear();
+      context.read<MatchProvider>().setSearchQuery('');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final notifCount =
+        context.watch<NotificationProvider>().unreadCount;
 
     return Scaffold(
       appBar: AppBar(
@@ -34,17 +55,65 @@ class _FeedScreenState extends State<FeedScreen> {
           padding: EdgeInsets.all(10),
           child: GameOnLogo(size: 32),
         ),
-        title: Text(
-          'GameOn',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.5,
-          ),
-        ),
+        title: _searchOpen
+            ? TextField(
+                controller: _searchCtrl,
+                autofocus: true,
+                style: const TextStyle(fontSize: 15),
+                decoration: InputDecoration(
+                  hintText: 'Search by sport or location…',
+                  border: InputBorder.none,
+                  filled: false,
+                  contentPadding: EdgeInsets.zero,
+                  hintStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.4)),
+                ),
+                onChanged: (q) =>
+                    context.read<MatchProvider>().setSearchQuery(q),
+              )
+            : Text(
+                'GameOn',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
+                ),
+              ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search_rounded),
-            onPressed: () {},
+            icon: Icon(
+                _searchOpen ? Icons.close_rounded : Icons.search_rounded),
+            onPressed: _toggleSearch,
+          ),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_outlined),
+                onPressed: () => context.push('/notifications'),
+              ),
+              if (notifCount > 0)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    width: 16,
+                    height: 16,
+                    decoration: const BoxDecoration(
+                      color: GameOnBrand.saffron,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        notifCount > 9 ? '9+' : '$notifCount',
+                        style: const TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            color: GameOnBrand.slateDark),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
       ),
@@ -156,7 +225,70 @@ class _DateFilterBar extends StatelessWidget {
             current: provider.dateFilter,
             onTap: () => provider.setDateFilter(DateFilter.thisWeek),
           ),
+          const SizedBox(width: 8),
+          _DistanceChip(
+            enabled: provider.distanceFilterEnabled,
+            onTap: provider.toggleDistanceFilter,
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _DistanceChip extends StatelessWidget {
+  final bool enabled;
+  final VoidCallback onTap;
+  const _DistanceChip({required this.enabled, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: enabled
+              ? GameOnBrand.saffron.withValues(alpha: 0.15)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: enabled
+                ? GameOnBrand.saffron
+                : Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.15),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.near_me_rounded,
+                size: 13,
+                color: enabled
+                    ? GameOnBrand.saffron
+                    : Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.6)),
+            const SizedBox(width: 4),
+            Text(
+              '≤ 10km',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: enabled
+                    ? GameOnBrand.saffron
+                    : Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.6),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -233,6 +365,8 @@ class _MatchList extends StatelessWidget {
         hasSportFilter: provider.selectedSport != null,
         sport: provider.selectedSport,
         dateFilter: provider.dateFilter,
+        hasSearch: provider.searchQuery.isNotEmpty,
+        hasDistanceFilter: provider.distanceFilterEnabled,
       );
     }
 
@@ -267,14 +401,20 @@ class _EmptyState extends StatelessWidget {
   final bool hasSportFilter;
   final SportType? sport;
   final DateFilter dateFilter;
+  final bool hasSearch;
+  final bool hasDistanceFilter;
 
   const _EmptyState({
     required this.hasSportFilter,
     this.sport,
     required this.dateFilter,
+    this.hasSearch = false,
+    this.hasDistanceFilter = false,
   });
 
   String get _title {
+    if (hasSearch) return 'No matches found';
+    if (hasDistanceFilter) return 'No matches within 10km';
     final sportLabel = sport?.label ?? '';
     final dateLabel = switch (dateFilter) {
       DateFilter.any      => '',

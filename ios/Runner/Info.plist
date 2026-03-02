@@ -45,6 +45,10 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>GameOn uses your location to show nearby matches.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>GameOn uses your location to show nearby matches.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

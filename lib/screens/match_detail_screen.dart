@@ -511,7 +511,15 @@ class _ParticipantsListState extends State<_ParticipantsList> {
         final initial =
             isGuestRow ? 'G' : (name.isNotEmpty ? name[0].toUpperCase() : '?');
 
-        return Container(
+        final canTap = !isGuestRow &&
+            p.userId != null &&
+            p.userId != widget.currentUserId;
+
+        return GestureDetector(
+          onTap: canTap
+              ? () => context.push('/player/${p.userId}')
+              : null,
+          child: Container(
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
@@ -597,7 +605,8 @@ class _ParticipantsListState extends State<_ParticipantsList> {
                 ),
             ],
           ),
-        );
+        ),
+        ); // GestureDetector
       }).toList(),
     );
   }

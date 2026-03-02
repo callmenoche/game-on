@@ -121,6 +121,21 @@ class MatchService {
         .eq('id', matchId);
   }
 
+  /// Returns past matches the user participated in, newest first.
+  Future<List<Match>> fetchUserMatchHistory(String userId) async {
+    final rows = await SupabaseService.table('match_participants')
+        .select('match_id')
+        .eq('user_id', userId);
+    final ids = (rows as List).map((r) => r['match_id'] as String).toList();
+    if (ids.isEmpty) return [];
+    final data = await _matches
+        .select()
+        .inFilter('id', ids)
+        .lt('date_time', DateTime.now().toUtc().toIso8601String())
+        .order('date_time', ascending: false);
+    return (data as List).map((e) => Match.fromJson(e)).toList();
+  }
+
   Future<Map<String, String>> fetchProfiles(List<String> userIds) async {
     if (userIds.isEmpty) return {};
     final data = await SupabaseService.table('profiles')
