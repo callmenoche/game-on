@@ -52,10 +52,9 @@
       </Testables>
    </TestAction>
    <LaunchAction
-      buildConfiguration = "Debug"
-      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      buildConfiguration = "Release"
+      selectedDebuggerIdentifier = ""
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      customLLDBInitFile = "$(SRCROOT)/Flutter/ephemeral/flutter_lldbinit"
       launchStyle = "0"
       useCustomWorkingDirectory = "NO"
       ignoresPersistentStateOnLaunch = "NO"
