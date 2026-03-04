@@ -9,19 +9,18 @@ class SupabaseService {
 
   // ── Credentials ──────────────────────────────────────────────────────────
   // Store these in a .env file (or --dart-define) and NEVER commit secrets.
-  static const String _supabaseUrl =
-      String.fromEnvironment('SUPABASE_URL', defaultValue: '');
-  static const String _supabaseAnonKey =
-      String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: '');
+  static const String _supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: 'https://jfhingwkrywnxtfapxsm.supabase.co',
+  );
+  static const String _supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmaGluZ3drcnl3bnh0ZmFweHNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzOTQxMjksImV4cCI6MjA4Nzk3MDEyOX0.Jo9vJl5PED6ZjcsGy5mrTC6bZRyoZ-FLKX210gtUHJI',
+  );
 
   // ── Initialisation ────────────────────────────────────────────────────────
   static Future<void> initialize() async {
-    assert(
-      _supabaseUrl.isNotEmpty && _supabaseAnonKey.isNotEmpty,
-      'Missing Supabase credentials. '
-      'Pass --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...',
-    );
-
     await Supabase.initialize(
       url: _supabaseUrl,
       anonKey: _supabaseAnonKey,
