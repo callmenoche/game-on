@@ -7,6 +7,7 @@ class Profile {
   final String? avatarUrl;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool onboarded;
 
   const Profile({
     required this.id,
@@ -17,6 +18,7 @@ class Profile {
     this.avatarUrl,
     required this.createdAt,
     required this.updatedAt,
+    this.onboarded = true,
   });
 
   factory Profile.fromJson(Map<String, dynamic> json) => Profile(
@@ -29,6 +31,7 @@ class Profile {
         avatarUrl: json['avatar_url'] as String?,
         createdAt: DateTime.parse(json['created_at'] as String),
         updatedAt: DateTime.parse(json['updated_at'] as String),
+        onboarded: json['onboarded'] as bool? ?? true,
       );
 
   Map<String, dynamic> toJson() => {
@@ -46,6 +49,7 @@ class Profile {
     List<String>? favoriteSports,
     Map<String, dynamic>? availabilityJson,
     String? avatarUrl,
+    bool? onboarded,
   }) =>
       Profile(
         id: id,
@@ -56,5 +60,6 @@ class Profile {
         avatarUrl: avatarUrl ?? this.avatarUrl,
         createdAt: createdAt,
         updatedAt: DateTime.now(),
+        onboarded: onboarded ?? this.onboarded,
       );
 }

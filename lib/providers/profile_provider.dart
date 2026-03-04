@@ -18,6 +18,7 @@ class ProfileProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isUploadingAvatar => _isUploadingAvatar;
   String? get error => _error;
+  bool get isOnboarded => _profile?.onboarded ?? true;
   Map<String, dynamic> get availability => _profile?.availabilityJson ?? {};
 
   ProfileProvider() {
@@ -127,6 +128,28 @@ class ProfileProvider extends ChangeNotifier {
       _error = 'Failed to upload avatar.';
     }
     _isUploadingAvatar = false;
+    notifyListeners();
+  }
+
+  Future<void> completeOnboarding({
+    required String username,
+    required List<String> favoriteSports,
+    String? bio,
+  }) async {
+    if (_profile == null) return;
+    _isLoading = true;
+    notifyListeners();
+    try {
+      _profile = await _service.completeOnboarding(
+        userId: _profile!.id,
+        username: username,
+        favoriteSports: favoriteSports,
+        bio: bio,
+      );
+    } catch (_) {
+      _error = 'Failed to complete setup.';
+    }
+    _isLoading = false;
     notifyListeners();
   }
 

@@ -97,9 +97,25 @@ class _Header extends StatelessWidget {
             children: [
               Text(
                 match.sportType.label,
-                style: theme.textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w800),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: match.title != null && match.title!.isNotEmpty
+                      ? FontWeight.w500
+                      : FontWeight.w800,
+                  color: match.title != null && match.title!.isNotEmpty
+                      ? theme.colorScheme.onSurface.withValues(alpha: 0.5)
+                      : null,
+                ),
               ),
+              if (match.title != null && match.title!.isNotEmpty)
+                Text(
+                  match.title!,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               const SizedBox(height: 2),
               Row(
                 children: [

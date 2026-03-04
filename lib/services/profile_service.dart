@@ -44,6 +44,25 @@ class ProfileService {
     return SupabaseService.client.storage.from('avatars').getPublicUrl(path);
   }
 
+  Future<Profile> completeOnboarding({
+    required String userId,
+    required String username,
+    required List<String> favoriteSports,
+    String? bio,
+  }) async {
+    final data = await _profiles
+        .update({
+          'username': username,
+          'favorite_sports': favoriteSports,
+          'bio': bio,
+          'onboarded': true,
+        })
+        .eq('id', userId)
+        .select()
+        .single();
+    return Profile.fromJson(data);
+  }
+
   /// Returns up to 20 profiles whose username matches [query] (case-insensitive),
   /// excluding the currently signed-in user.
   Future<List<Profile>> searchPlayers(String query) async {

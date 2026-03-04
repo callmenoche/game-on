@@ -22,6 +22,8 @@ class CreateMatchScreen extends StatefulWidget {
 class _CreateMatchScreenState extends State<CreateMatchScreen> {
   final _formKey = GlobalKey<FormState>();
   final _locationController = TextEditingController();
+  final _titleController = TextEditingController();
+  final _descController = TextEditingController();
 
   SportType _sport = SportType.football;
   SkillLevel _skillLevel = SkillLevel.allLevels;
@@ -76,6 +78,8 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
   @override
   void dispose() {
     _locationController.dispose();
+    _titleController.dispose();
+    _descController.dispose();
     super.dispose();
   }
 
@@ -100,6 +104,45 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
           children: [
+            const _SectionLabel('Match title'),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _titleController,
+              maxLength: 60,
+              decoration: const InputDecoration(
+                hintText: 'e.g. Sunday 5-a-side',
+                counterText: '',
+              ),
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Title required' : null,
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                const _SectionLabel('Description'),
+                const SizedBox(width: 8),
+                Text(
+                  '(optional)',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.4),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _descController,
+              maxLines: 3,
+              maxLength: 200,
+              decoration: const InputDecoration(
+                hintText: 'Any details for players…',
+              ),
+            ),
+            const SizedBox(height: 24),
             const _SectionLabel('Sport'),
             const SizedBox(height: 12),
             _SportPicker(
@@ -214,6 +257,9 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
               guestCount: _guestCount,
               isUnlimited: _isUnlimited,
               durationMinutes: _durationMinutes,
+              title: _titleController.text.trim().isEmpty
+                  ? null
+                  : _titleController.text.trim(),
             ),
           ],
         ),
@@ -272,6 +318,12 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
           geoLat: _geoLat,
           geoLng: _geoLng,
           groupId: _selectedGroupId,
+          title: _titleController.text.trim().isEmpty
+              ? null
+              : _titleController.text.trim(),
+          description: _descController.text.trim().isEmpty
+              ? null
+              : _descController.text.trim(),
         );
 
     if (!mounted) return;
@@ -1012,6 +1064,7 @@ class _MatchPreview extends StatelessWidget {
   final int guestCount;
   final bool isUnlimited;
   final int durationMinutes;
+  final String? title;
 
   const _MatchPreview({
     required this.sport,
@@ -1022,6 +1075,7 @@ class _MatchPreview extends StatelessWidget {
     required this.guestCount,
     required this.isUnlimited,
     required this.durationMinutes,
+    this.title,
   });
 
   String get _durationLabel {
@@ -1061,9 +1115,28 @@ class _MatchPreview extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(sport.label,
+                        if (title != null && title!.isNotEmpty)
+                          Text(
+                            title!,
                             style: const TextStyle(
-                                fontWeight: FontWeight.w800, fontSize: 16)),
+                                fontWeight: FontWeight.w800, fontSize: 16),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        Text(
+                          sport.label,
+                          style: TextStyle(
+                            fontWeight: title != null && title!.isNotEmpty
+                                ? FontWeight.w500
+                                : FontWeight.w800,
+                            fontSize: title != null && title!.isNotEmpty
+                                ? 13
+                                : 16,
+                            color: title != null && title!.isNotEmpty
+                                ? Colors.white.withValues(alpha: 0.5)
+                                : Colors.white,
+                          ),
+                        ),
                         Text(
                           location,
                           style: TextStyle(

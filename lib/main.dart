@@ -33,7 +33,10 @@ class GameOnApp extends StatefulWidget {
 }
 
 class _GameOnAppState extends State<GameOnApp> {
-  late final _router = buildRouter(context.read<AuthProvider>());
+  late final _router = buildRouter(
+    context.read<AuthProvider>(),
+    context.read<ProfileProvider>(),
+  );
 
   @override
   Widget build(BuildContext context) {

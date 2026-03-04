@@ -211,6 +211,20 @@ class MatchProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> updateMatchDetails(String matchId, {String? title, String? description}) async {
+    try {
+      final updated = await _service.updateMatchDetails(matchId, title: title, description: description);
+      final idx = _allMatches.indexWhere((m) => m.id == matchId);
+      if (idx != -1) {
+        _allMatches[idx] = updated;
+        notifyListeners();
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<bool> createMatch({
     required SportType sport,
     required String location,
@@ -223,6 +237,8 @@ class MatchProvider extends ChangeNotifier {
     double? geoLat,
     double? geoLng,
     String? groupId,
+    String? title,
+    String? description,
   }) async {
     final userId = SupabaseService.currentUser?.id;
     if (userId == null) return false;
@@ -241,6 +257,8 @@ class MatchProvider extends ChangeNotifier {
       createdAt: DateTime.now(),
       durationMinutes: durationMinutes,
       groupId: groupId,
+      title: title,
+      description: description,
     );
 
     try {

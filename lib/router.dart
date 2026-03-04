@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'providers/auth_provider.dart';
+import 'providers/profile_provider.dart';
 import 'widgets/game_on_logo.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/create_match_screen.dart';
 import 'screens/feed_screen.dart';
 import 'screens/match_detail_screen.dart';
 import 'screens/notifications_screen.dart';
+import 'screens/onboarding_screen.dart';
 import 'screens/public_profile_screen.dart';
 import 'screens/calendar_screen.dart';
 import 'screens/profile_screen.dart';
@@ -19,20 +21,28 @@ import 'screens/player_search_screen.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
-GoRouter buildRouter(AuthProvider authProvider) {
+GoRouter buildRouter(AuthProvider authProvider, ProfileProvider profileProvider) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/splash',
-    refreshListenable: authProvider,
+    refreshListenable: Listenable.merge([authProvider, profileProvider]),
     redirect: (context, state) {
       final isSplash = state.matchedLocation == '/splash';
       if (isSplash) return null; // always let splash through
 
       final isAuth = authProvider.isAuthenticated;
-      final isLoggingIn = state.matchedLocation == '/login';
+      final loc = state.matchedLocation;
 
-      if (!isAuth && !isLoggingIn) return '/login';
-      if (isAuth && isLoggingIn) return '/';
+      if (!isAuth && loc != '/login') return '/login';
+      if (isAuth && loc == '/login') return null; // splash handles next step
+
+      final profileLoaded = profileProvider.profile != null;
+      final onboarded = profileProvider.profile?.onboarded ?? true;
+
+      if (isAuth && profileLoaded && !onboarded && loc != '/onboarding') {
+        return '/onboarding';
+      }
+      if (isAuth && loc == '/onboarding' && onboarded) return '/';
       return null;
     },
     routes: [
@@ -43,6 +53,10 @@ GoRouter buildRouter(AuthProvider authProvider) {
       GoRoute(
         path: '/login',
         builder: (_, __) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (_, __) => const OnboardingScreen(),
       ),
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),

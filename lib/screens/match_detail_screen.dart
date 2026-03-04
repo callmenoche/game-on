@@ -32,6 +32,79 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
     _participantsStream = _service.watchParticipants(widget.matchId);
   }
 
+  Future<void> _showEditSheet(BuildContext context, Match match) async {
+    final titleCtrl = TextEditingController(text: match.title ?? '');
+    final descCtrl = TextEditingController(text: match.description ?? '');
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: GameOnBrand.slateCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.fromLTRB(
+            20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Edit match',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 16),
+            TextField(
+              controller: titleCtrl,
+              maxLength: 60,
+              decoration: const InputDecoration(
+                labelText: 'Title',
+                hintText: 'e.g. Sunday 5-a-side',
+                counterText: '',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: descCtrl,
+              maxLines: 3,
+              maxLength: 200,
+              decoration: const InputDecoration(
+                labelText: 'Description (optional)',
+                hintText: 'Any details for players…',
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  await context.read<MatchProvider>().updateMatchDetails(
+                        match.id,
+                        title: titleCtrl.text.trim().isEmpty
+                            ? null
+                            : titleCtrl.text.trim(),
+                        description: descCtrl.text.trim().isEmpty
+                            ? null
+                            : descCtrl.text.trim(),
+                      );
+                },
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Save',
+                    style:
+                        TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    titleCtrl.dispose();
+    descCtrl.dispose();
+  }
+
   Future<void> _confirmCancel(BuildContext context, Match match) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -104,13 +177,19 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
               ],
             ),
             actions: [
-              if (isCreator && match.status == MatchStatus.open)
+              if (isCreator && match.status == MatchStatus.open) ...[
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined, size: 20),
+                  tooltip: 'Edit title & description',
+                  onPressed: () => _showEditSheet(context, match),
+                ),
                 IconButton(
                   icon: const Icon(Icons.cancel_outlined),
                   color: Colors.redAccent,
                   tooltip: 'Cancel match',
                   onPressed: () => _confirmCancel(context, match),
                 ),
+              ],
             ],
           ),
           body: SingleChildScrollView(
@@ -193,6 +272,16 @@ class _HeroCard extends StatelessWidget {
               _SkillChip(match.skillLevel),
             ],
           ),
+          if (match.title != null && match.title!.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Text(
+              match.title!,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           Row(
             children: [
@@ -236,6 +325,16 @@ class _HeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           _SpotsRow(match: match),
+          if (match.description != null && match.description!.isNotEmpty) ...[
+            const Divider(height: 24, color: Colors.white12),
+            Text(
+              match.description!,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.white.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
         ],
       ),
     );

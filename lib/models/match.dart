@@ -110,6 +110,8 @@ class Match {
   final DateTime? confirmedAt;
   final int durationMinutes;
   final String? groupId; // null = public match
+  final String? title;
+  final String? description;
 
   const Match({
     required this.id,
@@ -127,6 +129,8 @@ class Match {
     this.confirmedAt,
     this.durationMinutes = 60,
     this.groupId,
+    this.title,
+    this.description,
   });
 
   bool get isUnlimited => totalSpots == null;
@@ -170,6 +174,8 @@ class Match {
             : DateTime.parse(json['confirmed_at'] as String),
         durationMinutes: (json['duration_minutes'] as num?)?.toInt() ?? 60,
         groupId: json['group_id'] as String?,
+        title: json['title'] as String?,
+        description: json['description'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -185,12 +191,16 @@ class Match {
         'skill_level': skillLevel.dbValue,
         'duration_minutes': durationMinutes,
         if (groupId != null) 'group_id': groupId,
+        if (title != null) 'title': title,
+        if (description != null) 'description': description,
       };
 
   Match copyWith({
     int? playersNeeded,
     MatchStatus? status,
     DateTime? confirmedAt,
+    String? title,
+    String? description,
   }) =>
       Match(
         id: id,
@@ -208,5 +218,7 @@ class Match {
         confirmedAt: confirmedAt ?? this.confirmedAt,
         durationMinutes: durationMinutes,
         groupId: groupId,
+        title: title ?? this.title,
+        description: description ?? this.description,
       );
 }

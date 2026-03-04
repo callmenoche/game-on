@@ -111,6 +111,15 @@ class MatchService {
     return data != null;
   }
 
+  Future<Match> updateMatchDetails(String id, {String? title, String? description}) async {
+    final data = await _matches
+        .update({'title': title, 'description': description})
+        .eq('id', id)
+        .select()
+        .single();
+    return Match.fromJson(data);
+  }
+
   Future<void> cancelMatch(String matchId) async {
     await _matches.update({'status': 'cancelled'}).eq('id', matchId);
   }
