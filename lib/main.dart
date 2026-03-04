@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/group_provider.dart';
@@ -33,10 +34,16 @@ class GameOnApp extends StatefulWidget {
 }
 
 class _GameOnAppState extends State<GameOnApp> {
-  late final _router = buildRouter(
-    context.read<AuthProvider>(),
-    context.read<ProfileProvider>(),
-  );
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    _router = buildRouter(
+      context.read<AuthProvider>(),
+      context.read<ProfileProvider>(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

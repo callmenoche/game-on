@@ -34,7 +34,7 @@ GoRouter buildRouter(AuthProvider authProvider, ProfileProvider profileProvider)
       final loc = state.matchedLocation;
 
       if (!isAuth && loc != '/login') return '/login';
-      if (isAuth && loc == '/login') return null; // splash handles next step
+      if (isAuth && loc == '/login') return '/';
 
       final profileLoaded = profileProvider.profile != null;
       final onboarded = profileProvider.profile?.onboarded ?? true;
