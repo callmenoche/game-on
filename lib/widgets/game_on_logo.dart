@@ -13,6 +13,7 @@ class GameOnLogo extends StatelessWidget {
       width: size,
       height: size,
       fit: BoxFit.contain,
+      filterQuality: FilterQuality.high,
     );
   }
 }

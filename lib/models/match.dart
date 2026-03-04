@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 enum MatchStatus { open, full, cancelled }
 
@@ -24,11 +25,11 @@ enum SkillLevel {
         SkillLevel.allLevels    => 'All levels',
       };
 
-  String get emoji => switch (this) {
-        SkillLevel.beginner     => '🟢',
-        SkillLevel.intermediate => '🟡',
-        SkillLevel.expert       => '🔴',
-        SkillLevel.allLevels    => '✨',
+  PhosphorIconData get icon => switch (this) {
+        SkillLevel.beginner     => PhosphorIconsLight.leaf,
+        SkillLevel.intermediate => PhosphorIconsLight.flame,
+        SkillLevel.expert       => PhosphorIconsLight.crown,
+        SkillLevel.allLevels    => PhosphorIconsLight.infinity,
       };
 
   Color get color => switch (this) {
@@ -75,6 +76,16 @@ enum SportType {
         SportType.other      => '🏅',
       };
 
+  PhosphorIconData get icon => switch (this) {
+        SportType.football   => PhosphorIconsLight.soccerBall,
+        SportType.padel      => PhosphorIconsLight.tennisBall,
+        SportType.basketball => PhosphorIconsLight.basketball,
+        SportType.tennis     => PhosphorIconsLight.tennisBall,
+        SportType.running    => PhosphorIconsLight.personSimpleRun,
+        SportType.cycling    => PhosphorIconsLight.bicycle,
+        SportType.other      => PhosphorIconsLight.medal,
+      };
+
   static SportType fromString(String value) => SportType.values.firstWhere(
         (e) => e.name == value,
         orElse: () => SportType.other,
@@ -98,6 +109,7 @@ class Match {
   final DateTime createdAt;
   final DateTime? confirmedAt;
   final int durationMinutes;
+  final String? groupId; // null = public match
 
   const Match({
     required this.id,
@@ -114,6 +126,7 @@ class Match {
     required this.createdAt,
     this.confirmedAt,
     this.durationMinutes = 60,
+    this.groupId,
   });
 
   bool get isUnlimited => totalSpots == null;
@@ -156,6 +169,7 @@ class Match {
             ? null
             : DateTime.parse(json['confirmed_at'] as String),
         durationMinutes: (json['duration_minutes'] as num?)?.toInt() ?? 60,
+        groupId: json['group_id'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -170,6 +184,7 @@ class Match {
         'status': status.name,
         'skill_level': skillLevel.dbValue,
         'duration_minutes': durationMinutes,
+        if (groupId != null) 'group_id': groupId,
       };
 
   Match copyWith({
@@ -192,5 +207,6 @@ class Match {
         createdAt: createdAt,
         confirmedAt: confirmedAt ?? this.confirmedAt,
         durationMinutes: durationMinutes,
+        groupId: groupId,
       );
 }

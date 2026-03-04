@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/match.dart';
 import '../models/profile.dart';
 import '../services/match_service.dart';
@@ -180,8 +181,7 @@ class _ProfileBody extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(sport.emoji,
-                          style: const TextStyle(fontSize: 16)),
+                      PhosphorIcon(sport.icon, size: 16, color: GameOnBrand.saffron),
                       const SizedBox(width: 6),
                       Text(
                         sport.label,
@@ -262,8 +262,7 @@ class _HistoryRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text(match.sportType.emoji,
-              style: const TextStyle(fontSize: 20)),
+          PhosphorIcon(match.sportType.icon, size: 22, color: GameOnBrand.saffron),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

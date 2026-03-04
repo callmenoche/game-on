@@ -8,6 +8,7 @@ import '../services/match_service.dart';
 import '../services/supabase_client.dart';
 
 enum DateFilter { any, today, thisWeek }
+enum FeedMode { public, groups }
 
 class MatchProvider extends ChangeNotifier {
   final _service = MatchService();
@@ -21,14 +22,23 @@ class MatchProvider extends ChangeNotifier {
   bool _distanceFilterEnabled = false;
   double? _userLat;
   double? _userLng;
+  FeedMode _feedMode = FeedMode.public;
   static const double _distanceKm = 10.0;
   final Set<String> _joinedIds = {};
   RealtimeChannel? _channel;
 
   // ── Getters ───────────────────────────────────────────────────────────────
 
+  FeedMode get feedMode => _feedMode;
+
   List<Match> get matches {
     var result = _allMatches;
+    // Feed mode: public vs group matches
+    if (_feedMode == FeedMode.public) {
+      result = result.where((m) => m.groupId == null).toList();
+    } else {
+      result = result.where((m) => m.groupId != null).toList();
+    }
     if (_selectedSport != null) {
       result = result.where((m) => m.sportType == _selectedSport).toList();
     }
@@ -73,8 +83,24 @@ class MatchProvider extends ChangeNotifier {
 
   // ── Init ──────────────────────────────────────────────────────────────────
 
+  String? _currentUserId;
+
   MatchProvider() {
+    _currentUserId = SupabaseService.currentUser?.id;
     _init();
+
+    SupabaseService.authStateChanges.listen((data) {
+      final newUserId = data.session?.user.id;
+      if (newUserId == _currentUserId) return;
+      _currentUserId = newUserId;
+      _channel?.unsubscribe();
+      _channel = null;
+      _allMatches = [];
+      _joinedIds.clear();
+      _error = null;
+      notifyListeners();
+      if (newUserId != null) _init();
+    });
   }
 
   Future<void> _init() async {
@@ -126,30 +152,36 @@ class MatchProvider extends ChangeNotifier {
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
-  Future<void> joinMatch(String matchId) async {
+  Future<bool> joinMatch(String matchId) async {
     _joinedIds.add(matchId);
     _updateMatchLocally(matchId, delta: -1);
+    notifyListeners();
     try {
       await _service.joinMatch(matchId);
-    } catch (_) {
+      return true;
+    } catch (e) {
       _joinedIds.remove(matchId);
       _updateMatchLocally(matchId, delta: 1);
-      _error = 'Could not join match.';
+      _error = e.toString();
       notifyListeners();
+      return false;
     }
   }
 
-  Future<void> joinMatchWithGuests(String matchId, int guestCount) async {
+  Future<bool> joinMatchWithGuests(String matchId, int guestCount) async {
     final total = 1 + guestCount;
     _joinedIds.add(matchId);
     _updateMatchLocally(matchId, delta: -total);
+    notifyListeners();
     try {
       await _service.joinMatchWithGuests(matchId, guestCount);
-    } catch (_) {
+      return true;
+    } catch (e) {
       _joinedIds.remove(matchId);
       _updateMatchLocally(matchId, delta: total);
-      _error = 'Could not join match.';
+      _error = e.toString();
       notifyListeners();
+      return false;
     }
   }
 
@@ -188,6 +220,9 @@ class MatchProvider extends ChangeNotifier {
     int guestCount = 0,
     bool isUnlimited = false,
     int durationMinutes = 60,
+    double? geoLat,
+    double? geoLng,
+    String? groupId,
   }) async {
     final userId = SupabaseService.currentUser?.id;
     if (userId == null) return false;
@@ -197,12 +232,15 @@ class MatchProvider extends ChangeNotifier {
       creatorId: userId,
       sportType: sport,
       locationName: location,
+      geoLat: geoLat,
+      geoLng: geoLng,
       dateTime: dateTime,
       totalSpots: isUnlimited ? null : totalSpots,
-      playersNeeded: isUnlimited ? null : totalSpots - 1 - guestCount,
+      playersNeeded: isUnlimited ? null : totalSpots,
       skillLevel: skillLevel,
       createdAt: DateTime.now(),
       durationMinutes: durationMinutes,
+      groupId: groupId,
     );
 
     try {
@@ -215,8 +253,8 @@ class MatchProvider extends ChangeNotifier {
       _joinedIds.add(created.id);
       await fetchMatches();
       return true;
-    } catch (_) {
-      _error = 'Could not create match.';
+    } catch (e) {
+      _error = e.toString();
       notifyListeners();
       return false;
     }
@@ -255,6 +293,11 @@ class MatchProvider extends ChangeNotifier {
 
   void setSearchQuery(String q) {
     _searchQuery = q;
+    notifyListeners();
+  }
+
+  void setFeedMode(FeedMode mode) {
+    _feedMode = mode;
     notifyListeners();
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../models/match.dart';
 import '../providers/match_provider.dart';
@@ -64,16 +65,17 @@ class MatchCard extends StatelessWidget {
     );
   }
 
-  Color _sportColor(SportType sport) => switch (sport) {
-        SportType.padel      => const Color(0xFF00C2A8),
-        SportType.football   => const Color(0xFF4CAF50),
-        SportType.basketball => const Color(0xFFFF6B2B),
-        SportType.tennis     => const Color(0xFFD4E157),
-        SportType.running    => const Color(0xFF42A5F5),
-        SportType.cycling    => const Color(0xFFAB47BC),
-        SportType.other      => GameOnBrand.saffron,
-      };
 }
+
+Color _sportColor(SportType sport) => switch (sport) {
+      SportType.padel      => const Color(0xFF00C2A8),
+      SportType.football   => const Color(0xFF4CAF50),
+      SportType.basketball => const Color(0xFFFF6B2B),
+      SportType.tennis     => const Color(0xFFD4E157),
+      SportType.running    => const Color(0xFF42A5F5),
+      SportType.cycling    => const Color(0xFFAB47BC),
+      SportType.other      => GameOnBrand.saffron,
+    };
 
 // ─── Header ────────────────────────────────────────────────────────────────
 
@@ -87,7 +89,7 @@ class _Header extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(match.sportType.emoji, style: const TextStyle(fontSize: 32)),
+        PhosphorIcon(match.sportType.icon, size: 36, color: _sportColor(match.sportType)),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -290,7 +292,7 @@ class _SkillBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(level.emoji, style: const TextStyle(fontSize: 10)),
+          PhosphorIcon(level.icon, size: 10, color: level.color),
           const SizedBox(width: 3),
           Text(
             level.label,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/match.dart';
@@ -91,8 +92,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
             ),
             title: Row(
               children: [
-                Text(match.sportType.emoji,
-                    style: const TextStyle(fontSize: 20)),
+                PhosphorIcon(match.sportType.icon, size: 22),
                 const SizedBox(width: 8),
                 Text(match.sportType.label,
                     style: const TextStyle(fontWeight: FontWeight.w800)),
@@ -504,109 +504,107 @@ class _ParticipantsListState extends State<_ParticipantsList> {
     return Column(
       children: widget.participants.map((p) {
         final isGuestRow = p.isGuest && p.userId == null;
+        final isMe = p.userId == widget.currentUserId;
+        final isCreator = p.userId == widget.creatorId;
+
         final name = isGuestRow
             ? (p.guestName ?? 'Guest')
             : (_usernames[p.userId] ?? '…');
-        final isCreator = p.userId == widget.creatorId;
         final initial =
             isGuestRow ? 'G' : (name.isNotEmpty ? name[0].toUpperCase() : '?');
-
-        final canTap = !isGuestRow &&
-            p.userId != null &&
-            p.userId != widget.currentUserId;
+        final canTap = !isGuestRow && !isMe && p.userId != null;
 
         return GestureDetector(
-          onTap: canTap
-              ? () => context.push('/player/${p.userId}')
-              : null,
+          onTap: canTap ? () => context.push('/player/${p.userId}') : null,
           child: Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: GameOnBrand.slateCard,
-            borderRadius: BorderRadius.circular(12),
-            border: isGuestRow
-                ? Border.all(
-                    color: GameOnBrand.slateLight.withValues(alpha: 0.4))
-                : null,
-          ),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: isGuestRow
-                    ? Colors.white.withValues(alpha: 0.08)
-                    : GameOnBrand.saffron.withValues(alpha: 0.2),
-                child: Text(
-                  initial,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    color: isGuestRow
-                        ? Colors.white.withValues(alpha: 0.35)
-                        : GameOnBrand.saffron,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                        color: isGuestRow
-                            ? Colors.white.withValues(alpha: 0.4)
-                            : Colors.white,
-                      ),
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: GameOnBrand.slateCard,
+              borderRadius: BorderRadius.circular(12),
+              border: isGuestRow
+                  ? Border.all(
+                      color: GameOnBrand.slateLight.withValues(alpha: 0.3))
+                  : null,
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: isGuestRow
+                      ? Colors.white.withValues(alpha: 0.06)
+                      : GameOnBrand.saffron.withValues(alpha: 0.2),
+                  child: Text(
+                    initial,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: isGuestRow
+                          ? Colors.white.withValues(alpha: 0.35)
+                          : GameOnBrand.saffron,
+                      fontSize: 14,
                     ),
-                    if (isGuestRow)
-                      Text(
-                        'Unclaimed',
-                        style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.white.withValues(alpha: 0.3)),
-                      ),
-                  ],
-                ),
-              ),
-              if (isCreator && !isGuestRow)
-                _Badge(label: 'Host', color: GameOnBrand.saffron),
-              if (isGuestRow && isHost) ...[
-                IconButton(
-                  icon: const Icon(Icons.ios_share_rounded, size: 18),
-                  color: GameOnBrand.saffron.withValues(alpha: 0.7),
-                  tooltip: 'Share claim code',
-                  onPressed: () => _showShareSheet(p),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 18),
-                  color: Colors.redAccent.withValues(alpha: 0.6),
-                  tooltip: 'Remove guest',
-                  onPressed: () => _confirmRemoveGuest(p),
-                ),
-              ],
-              if (isGuestRow &&
-                  !isHost &&
-                  widget.currentUserId.isNotEmpty &&
-                  widget.currentUserId != widget.creatorId)
-                TextButton(
-                  onPressed: () => _showClaimDialog(context),
-                  style: TextButton.styleFrom(
-                    foregroundColor: GameOnBrand.saffron,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
                   ),
-                  child: const Text('Claim',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w800, fontSize: 12)),
                 ),
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                          color: isGuestRow
+                              ? Colors.white.withValues(alpha: 0.4)
+                              : Colors.white,
+                        ),
+                      ),
+                      if (isGuestRow)
+                        Text(
+                          'Unclaimed spot',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.white.withValues(alpha: 0.25)),
+                        ),
+                    ],
+                  ),
+                ),
+                if (isMe && !isGuestRow)
+                  _Badge(
+                      label: 'You',
+                      color: Colors.white.withValues(alpha: 0.4)),
+                if (isCreator)
+                  const _Badge(label: 'Host', color: GameOnBrand.saffron),
+                if (isGuestRow && isHost) ...[
+                  IconButton(
+                    icon: const Icon(Icons.ios_share_rounded, size: 18),
+                    color: GameOnBrand.saffron.withValues(alpha: 0.7),
+                    tooltip: 'Share claim code',
+                    onPressed: () => _showShareSheet(p),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, size: 18),
+                    color: Colors.redAccent.withValues(alpha: 0.6),
+                    tooltip: 'Remove guest',
+                    onPressed: () => _confirmRemoveGuest(p),
+                  ),
+                ],
+                if (isGuestRow && !isHost && widget.currentUserId.isNotEmpty)
+                  TextButton(
+                    onPressed: () => _showClaimDialog(context),
+                    style: TextButton.styleFrom(
+                      foregroundColor: GameOnBrand.saffron,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    child: const Text('Claim',
+                        style:
+                            TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
+                  ),
+              ],
+            ),
           ),
-        ),
-        ); // GestureDetector
+        );
       }).toList(),
     );
   }
@@ -774,12 +772,23 @@ class _JoinOptionsSheetState extends State<_JoinOptionsSheet> {
   Future<void> _join() async {
     setState(() => _isLoading = true);
     final provider = context.read<MatchProvider>();
+    final bool ok;
     if (_guestCount == 0) {
-      await provider.joinMatch(widget.matchId);
+      ok = await provider.joinMatch(widget.matchId);
     } else {
-      await provider.joinMatchWithGuests(widget.matchId, _guestCount);
+      ok = await provider.joinMatchWithGuests(widget.matchId, _guestCount);
     }
-    if (mounted) Navigator.pop(context);
+    if (!mounted) return;
+    if (ok) {
+      Navigator.pop(context);
+    } else {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(provider.error ?? 'Could not join match.'),
+        backgroundColor: Colors.redAccent,
+        duration: const Duration(seconds: 6),
+      ));
+    }
   }
 
   @override
@@ -1037,7 +1046,7 @@ class _SkillChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(level.emoji, style: const TextStyle(fontSize: 11)),
+          PhosphorIcon(level.icon, size: 11, color: level.color),
           const SizedBox(width: 4),
           Text(level.label,
               style: TextStyle(

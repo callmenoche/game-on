@@ -31,8 +31,17 @@ dependencies:
   # Sharing
   share_plus: ^10.0.0
 
+  # HTTP client (Places API)
+  http: ^1.2.2
+
   # Location / maps (optional – geocoding)
   geolocator: ^12.0.0
+
+  # Image picking (profile avatar)
+  image_picker: ^1.1.2
+
+  # Icons
+  phosphor_flutter: ^2.1.0
 
 dev_dependencies:
   flutter_test:

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../models/match.dart';
@@ -19,10 +20,10 @@ const _weekdays = [
   ('sunday',    'Sun'),
 ];
 
-const _slots = [
-  ('morning',   '☀️', 'Morning'),
-  ('afternoon', '🌤', 'Afternoon'),
-  ('evening',   '🌙', 'Evening'),
+final _slots = [
+  ('morning',   PhosphorIconsLight.sun,      'Morning'),
+  ('afternoon', PhosphorIconsLight.cloudSun, 'Afternoon'),
+  ('evening',   PhosphorIconsLight.moon,     'Evening'),
 ];
 
 // ─── Screen ────────────────────────────────────────────────────────────────
@@ -242,7 +243,7 @@ class _MatchEventRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text(match.sportType.emoji, style: const TextStyle(fontSize: 22)),
+          PhosphorIcon(match.sportType.icon, size: 24, color: GameOnBrand.saffron),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -359,10 +360,10 @@ class _AvailabilitySection extends StatelessWidget {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: _slots.map((s) {
-                                final (slot, emoji, _) = s;
+                                final (slot, icon, _) = s;
                                 final active = provider.isAvailable(day, slot);
                                 return _SlotChip(
-                                  emoji: emoji,
+                                  icon: icon,
                                   active: active,
                                   onTap: () => provider.toggleSlot(day, slot),
                                 );
@@ -390,12 +391,13 @@ class _AvailabilitySection extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: _slots.map((s) {
-              final (_, emoji, label) = s;
+              final (_, icon, label) = s;
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Row(
                   children: [
-                    Text(emoji, style: const TextStyle(fontSize: 11)),
+                    PhosphorIcon(icon, size: 11,
+                        color: Colors.white.withValues(alpha: 0.45)),
                     const SizedBox(width: 4),
                     Text(
                       label,
@@ -417,12 +419,12 @@ class _AvailabilitySection extends StatelessWidget {
 // ─── Slot chip ─────────────────────────────────────────────────────────────
 
 class _SlotChip extends StatelessWidget {
-  final String emoji;
+  final PhosphorIconData icon;
   final bool active;
   final VoidCallback onTap;
 
   const _SlotChip({
-    required this.emoji,
+    required this.icon,
     required this.active,
     required this.onTap,
   });
@@ -447,12 +449,12 @@ class _SlotChip extends StatelessWidget {
           ),
         ),
         child: Center(
-          child: Text(
-            emoji,
-            style: TextStyle(
-              fontSize: 17,
-              color: active ? null : null, // emoji colour handles itself
-            ),
+          child: PhosphorIcon(
+            icon,
+            size: 18,
+            color: active
+                ? GameOnBrand.saffron
+                : Colors.white.withValues(alpha: 0.4),
           ),
         ),
       ),

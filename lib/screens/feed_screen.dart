@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../models/match.dart';
 import '../providers/match_provider.dart';
-import '../providers/notification_provider.dart';
 import '../widgets/game_on_logo.dart';
 import '../widgets/match_card.dart';
 import '../widgets/sport_chip.dart';
@@ -24,7 +24,6 @@ class _FeedScreenState extends State<FeedScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MatchProvider>().fetchMatches();
-      context.read<NotificationProvider>().start();
     });
   }
 
@@ -45,8 +44,6 @@ class _FeedScreenState extends State<FeedScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final notifCount =
-        context.watch<NotificationProvider>().unreadCount;
 
     return Scaffold(
       appBar: AppBar(
@@ -84,36 +81,15 @@ class _FeedScreenState extends State<FeedScreen> {
                 _searchOpen ? Icons.close_rounded : Icons.search_rounded),
             onPressed: _toggleSearch,
           ),
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined),
-                onPressed: () => context.push('/notifications'),
-              ),
-              if (notifCount > 0)
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    width: 16,
-                    height: 16,
-                    decoration: const BoxDecoration(
-                      color: GameOnBrand.saffron,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        notifCount > 9 ? '9+' : '$notifCount',
-                        style: const TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w900,
-                            color: GameOnBrand.slateDark),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+          if (!_searchOpen)
+            IconButton(
+              icon: const Icon(Icons.person_search_rounded),
+              tooltip: 'Find players',
+              onPressed: () => context.push('/players/search'),
+            ),
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () => context.push('/notifications'),
           ),
         ],
       ),
@@ -127,11 +103,51 @@ class _FeedScreenState extends State<FeedScreen> {
       ),
       body: Column(
         children: [
+          _FeedModeToggle(),
           _SportFilterBar(),
           _DateFilterBar(),
           const Divider(height: 1),
           Expanded(child: _MatchList()),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Feed mode toggle ──────────────────────────────────────────────────────
+
+class _FeedModeToggle extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<MatchProvider>();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+      child: SegmentedButton<FeedMode>(
+        style: SegmentedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          selectedBackgroundColor:
+              GameOnBrand.saffron.withValues(alpha: 0.15),
+          selectedForegroundColor: GameOnBrand.saffron,
+          side: BorderSide(
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.15)),
+        ),
+        segments: const [
+          ButtonSegment(
+            value: FeedMode.public,
+            label: Text('Public'),
+            icon: Icon(Icons.public_rounded, size: 16),
+          ),
+          ButtonSegment(
+            value: FeedMode.groups,
+            label: Text('My Groups'),
+            icon: Icon(Icons.lock_rounded, size: 16),
+          ),
+        ],
+        selected: {provider.feedMode},
+        onSelectionChanged: (s) => provider.setFeedMode(s.first),
       ),
     );
   }
@@ -433,9 +449,12 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            hasSportFilter ? (sport?.emoji ?? '🏅') : '🏟️',
-            style: const TextStyle(fontSize: 56),
+          PhosphorIcon(
+            hasSportFilter
+                ? (sport?.icon ?? PhosphorIconsLight.medal)
+                : PhosphorIconsLight.lightning,
+            size: 56,
+            color: GameOnBrand.saffron.withValues(alpha: 0.4),
           ),
           const SizedBox(height: 16),
           Text(

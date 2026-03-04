@@ -1,9 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/match.dart';
+import '../providers/group_provider.dart';
 import '../providers/match_provider.dart';
+import '../services/places_service.dart';
 import '../widgets/game_on_logo.dart';
 
 class CreateMatchScreen extends StatefulWidget {
@@ -27,6 +33,40 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
   int _guestCount = 0;
   bool _isUnlimited = false;
   bool _isSubmitting = false;
+  double? _geoLat;
+  double? _geoLng;
+  bool _fetchingLocation = false;
+  String? _selectedGroupId; // null = public
+
+  Future<void> _fetchGeoLocation() async {
+    setState(() => _fetchingLocation = true);
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        return;
+      }
+      final pos = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.medium);
+      setState(() {
+        _geoLat = pos.latitude;
+        _geoLng = pos.longitude;
+      });
+      // Fill the text field with a reverse-geocoded address if Places key available
+      final address =
+          await PlacesService.reverseGeocode(pos.latitude, pos.longitude);
+      if (address != null && mounted) {
+        _locationController.text = address;
+      }
+    } catch (_) {
+      // silently ignore — geo is optional
+    } finally {
+      if (mounted) setState(() => _fetchingLocation = false);
+    }
+  }
 
   static TimeOfDay _roundToHalfHour(TimeOfDay t) {
     final minute = t.minute >= 30 ? 30 : 0;
@@ -76,7 +116,33 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
             const SizedBox(height: 24),
             const _SectionLabel('Location'),
             const SizedBox(height: 12),
-            _LocationField(controller: _locationController),
+            _LocationField(
+              controller: _locationController,
+              isGpsFetching: _fetchingLocation,
+              isGeoPinned: _geoLat != null,
+              onPlaceSelected: (name, lat, lng) {
+                setState(() {
+                  _locationController.text = name;
+                  _geoLat = lat;
+                  _geoLng = lng;
+                });
+              },
+              onGpsTapped: _fetchGeoLocation,
+              onClear: () {
+                setState(() {
+                  _locationController.clear();
+                  _geoLat = null;
+                  _geoLng = null;
+                });
+              },
+            ),
+            const SizedBox(height: 24),
+            const _SectionLabel('Post to'),
+            const SizedBox(height: 12),
+            _GroupPicker(
+              selectedGroupId: _selectedGroupId,
+              onChanged: (id) => setState(() => _selectedGroupId = id),
+            ),
             const SizedBox(height: 24),
             const _SectionLabel('Date & Time'),
             const SizedBox(height: 12),
@@ -203,6 +269,9 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
           guestCount: _guestCount,
           isUnlimited: _isUnlimited,
           durationMinutes: _durationMinutes,
+          geoLat: _geoLat,
+          geoLng: _geoLng,
+          groupId: _selectedGroupId,
         );
 
     if (!mounted) return;
@@ -217,10 +286,12 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
       );
       context.pop();
     } else {
+      final err = context.read<MatchProvider>().error ?? 'Unknown error';
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to create match. Try again.'),
+        SnackBar(
+          content: Text(err),
           backgroundColor: Colors.redAccent,
+          duration: const Duration(seconds: 8),
         ),
       );
     }
@@ -279,7 +350,8 @@ class _SportPicker extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(sport.emoji, style: const TextStyle(fontSize: 18)),
+                PhosphorIcon(sport.icon, size: 18,
+                    color: isSelected ? GameOnBrand.slateDark : GameOnBrand.saffron),
                 const SizedBox(width: 6),
                 Text(
                   sport.label,
@@ -335,7 +407,7 @@ class _SkillLevelPicker extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(level.emoji, style: const TextStyle(fontSize: 16)),
+                PhosphorIcon(level.icon, size: 16, color: isSelected ? level.color : Colors.white.withValues(alpha: 0.55)),
                 const SizedBox(width: 6),
                 Text(
                   level.label,
@@ -358,25 +430,273 @@ class _SkillLevelPicker extends StatelessWidget {
 
 // ─── Location field ────────────────────────────────────────────────────────
 
-class _LocationField extends StatelessWidget {
+class _LocationField extends StatefulWidget {
   final TextEditingController controller;
-  const _LocationField({required this.controller});
+  final bool isGpsFetching;
+  final bool isGeoPinned;
+  final void Function(String name, double lat, double lng) onPlaceSelected;
+  final VoidCallback onGpsTapped;
+  final VoidCallback onClear;
+
+  const _LocationField({
+    required this.controller,
+    required this.isGpsFetching,
+    required this.isGeoPinned,
+    required this.onPlaceSelected,
+    required this.onGpsTapped,
+    required this.onClear,
+  });
+
+  @override
+  State<_LocationField> createState() => _LocationFieldState();
+}
+
+class _LocationFieldState extends State<_LocationField> {
+  Timer? _debounce;
+  List<PlaceSuggestion> _suggestions = [];
+  bool _searching = false;
+  String _sessionToken = DateTime.now().microsecondsSinceEpoch.toString();
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onTextChanged(String value) {
+    if (!PlacesService.hasKey) return;
+    _debounce?.cancel();
+    if (value.trim().isEmpty) {
+      setState(() => _suggestions = []);
+      return;
+    }
+    _debounce = Timer(const Duration(milliseconds: 400), () async {
+      setState(() => _searching = true);
+      final results =
+          await PlacesService.autocomplete(value, _sessionToken);
+      if (mounted) {
+        setState(() {
+          _suggestions = results;
+          _searching = false;
+        });
+      }
+    });
+  }
+
+  Future<void> _onSuggestionTap(PlaceSuggestion suggestion) async {
+    final token = _sessionToken;
+    // Reset session token immediately (billing rule)
+    _sessionToken = DateTime.now().microsecondsSinceEpoch.toString();
+    setState(() {
+      _suggestions = [];
+      _searching = true;
+    });
+    final details = await PlacesService.getDetails(suggestion.placeId, token);
+    if (!mounted) return;
+    setState(() => _searching = false);
+    if (details != null) {
+      final name = suggestion.secondaryText.isNotEmpty
+          ? '${suggestion.mainText}, ${suggestion.secondaryText}'
+          : suggestion.mainText;
+      widget.onPlaceSelected(name, details.lat, details.lng);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      style: const TextStyle(fontSize: 15),
-      decoration: InputDecoration(
-        hintText: 'e.g. Parc des Princes, Court 3',
-        prefixIcon: Icon(
-          Icons.location_on_outlined,
-          size: 20,
-          color: GameOnBrand.saffron.withValues(alpha: 0.8),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextFormField(
+          controller: widget.controller,
+          style: const TextStyle(fontSize: 15),
+          onChanged: _onTextChanged,
+          decoration: InputDecoration(
+            hintText: 'e.g. Parc des Princes, Court 3',
+            prefixIcon: Icon(
+              Icons.location_on_outlined,
+              size: 20,
+              color: GameOnBrand.saffron.withValues(alpha: 0.8),
+            ),
+            suffixIcon: _buildSuffixIcon(),
+          ),
+          validator: (v) =>
+              (v == null || v.trim().isEmpty) ? 'Enter a location' : null,
+        ),
+        if (_suggestions.isNotEmpty)
+          Material(
+            color: GameOnBrand.slateCard,
+            borderRadius:
+                const BorderRadius.vertical(bottom: Radius.circular(8)),
+            child: Column(
+              children: _suggestions.map((s) {
+                return InkWell(
+                  onTap: () => _onSuggestionTap(s),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    child: Row(
+                      children: [
+                        Icon(Icons.place_outlined,
+                            size: 18,
+                            color: GameOnBrand.saffron
+                                .withValues(alpha: 0.7)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                s.mainText,
+                                style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (s.secondaryText.isNotEmpty)
+                                Text(
+                                  s.secondaryText,
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.white
+                                          .withValues(alpha: 0.5)),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildSuffixIcon() {
+    if (_searching || widget.isGpsFetching) {
+      return const Padding(
+        padding: EdgeInsets.all(14),
+        child: SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(
+              strokeWidth: 2, color: GameOnBrand.saffron),
+        ),
+      );
+    }
+    // Show clear button when there's text and field is not pinned
+    if (widget.controller.text.isNotEmpty && !widget.isGeoPinned) {
+      return IconButton(
+        icon: const Icon(Icons.close, size: 18, color: Colors.white54),
+        tooltip: 'Clear',
+        onPressed: widget.onClear,
+      );
+    }
+    return IconButton(
+      icon: Icon(
+        widget.isGeoPinned
+            ? Icons.my_location_rounded
+            : Icons.location_searching_rounded,
+        size: 20,
+        color: widget.isGeoPinned ? GameOnBrand.saffron : Colors.white38,
+      ),
+      tooltip: widget.isGeoPinned
+          ? 'GPS pinned ✓'
+          : 'Pin my GPS location for distance filter',
+      onPressed: widget.onGpsTapped,
+    );
+  }
+}
+
+// ─── Group picker ──────────────────────────────────────────────────────────
+
+class _GroupPicker extends StatelessWidget {
+  final String? selectedGroupId;
+  final ValueChanged<String?> onChanged;
+
+  const _GroupPicker({required this.selectedGroupId, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final groups = context.watch<GroupProvider>().groups;
+
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        // Public option
+        _GroupChip(
+          label: 'Public',
+          icon: Icons.public_rounded,
+          selected: selectedGroupId == null,
+          onTap: () => onChanged(null),
+        ),
+        ...groups.map((g) => _GroupChip(
+              label: g.name,
+              icon: Icons.lock_rounded,
+              selected: selectedGroupId == g.id,
+              onTap: () => onChanged(g.id),
+            )),
+      ],
+    );
+  }
+}
+
+class _GroupChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _GroupChip({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? GameOnBrand.saffron : GameOnBrand.slateCard,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected
+                ? GameOnBrand.saffron
+                : GameOnBrand.slateLight.withValues(alpha: 0.4),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon,
+                size: 15,
+                color: selected
+                    ? GameOnBrand.slateDark
+                    : Colors.white.withValues(alpha: 0.6)),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                color: selected
+                    ? GameOnBrand.slateDark
+                    : Colors.white.withValues(alpha: 0.85),
+              ),
+            ),
+          ],
         ),
       ),
-      validator: (v) =>
-          (v == null || v.trim().isEmpty) ? 'Enter a location' : null,
     );
   }
 }
@@ -735,8 +1055,7 @@ class _MatchPreview extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Text(sport.emoji,
-                      style: const TextStyle(fontSize: 28)),
+                  PhosphorIcon(sport.icon, size: 30, color: GameOnBrand.saffron),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -785,8 +1104,7 @@ class _MatchPreview extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(skillLevel.emoji,
-                                style: const TextStyle(fontSize: 10)),
+                            PhosphorIcon(skillLevel.icon, size: 10, color: skillLevel.color),
                             const SizedBox(width: 3),
                             Text(
                               skillLevel.label,

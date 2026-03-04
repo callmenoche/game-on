@@ -13,6 +13,17 @@ class NotificationProvider extends ChangeNotifier {
   List<NotificationItem> get items => _items;
   int get unreadCount => _items.where((n) => !n.isRead).length;
 
+  NotificationProvider() {
+    SupabaseService.authStateChanges.listen((data) {
+      final newUserId = data.session?.user.id;
+      if (newUserId != null) {
+        start();
+      } else {
+        stop();
+      }
+    });
+  }
+
   /// Start listening. Safe to call multiple times (cancels previous sub).
   void start() {
     if (SupabaseService.currentUser == null) return;

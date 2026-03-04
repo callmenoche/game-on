@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'providers/auth_provider.dart';
+import 'widgets/game_on_logo.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/create_match_screen.dart';
 import 'screens/feed_screen.dart';
@@ -9,15 +11,23 @@ import 'screens/notifications_screen.dart';
 import 'screens/public_profile_screen.dart';
 import 'screens/calendar_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/splash_screen.dart';
+import 'screens/groups_screen.dart';
+import 'screens/create_group_screen.dart';
+import 'screens/group_detail_screen.dart';
+import 'screens/player_search_screen.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 GoRouter buildRouter(AuthProvider authProvider) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: '/',
+    initialLocation: '/splash',
     refreshListenable: authProvider,
     redirect: (context, state) {
+      final isSplash = state.matchedLocation == '/splash';
+      if (isSplash) return null; // always let splash through
+
       final isAuth = authProvider.isAuthenticated;
       final isLoggingIn = state.matchedLocation == '/login';
 
@@ -26,6 +36,10 @@ GoRouter buildRouter(AuthProvider authProvider) {
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (_, __) => const SplashScreen(),
+      ),
       GoRoute(
         path: '/login',
         builder: (_, __) => const LoginScreen(),
@@ -51,6 +65,19 @@ GoRouter buildRouter(AuthProvider authProvider) {
             builder: (_, __) => const CalendarScreen(),
           ),
           GoRoute(
+            path: '/groups',
+            builder: (_, __) => const GroupsScreen(),
+          ),
+          GoRoute(
+            path: '/groups/create',
+            builder: (_, __) => const CreateGroupScreen(),
+          ),
+          GoRoute(
+            path: '/groups/:id',
+            builder: (_, state) =>
+                GroupDetailScreen(groupId: state.pathParameters['id']!),
+          ),
+          GoRoute(
             path: '/profile',
             builder: (_, __) => const ProfileScreen(),
           ),
@@ -63,6 +90,10 @@ GoRouter buildRouter(AuthProvider authProvider) {
             path: '/notifications',
             builder: (_, __) => const NotificationsScreen(),
           ),
+          GoRoute(
+            path: '/players/search',
+            builder: (_, __) => const PlayerSearchScreen(),
+          ),
         ],
       ),
     ],
@@ -74,25 +105,40 @@ class AppShell extends StatelessWidget {
   final Widget child;
   const AppShell({super.key, required this.child});
 
-  static const _tabs = [
-    (icon: Icons.sports_soccer, label: 'Feed', path: '/'),
-    (icon: Icons.calendar_month, label: 'Calendar', path: '/calendar'),
-    (icon: Icons.person, label: 'Profile', path: '/profile'),
+  static const _paths = ['/', '/calendar', '/groups', '/profile'];
+  static const _labels = ['Feed', 'Calendar', 'Groups', 'Profile'];
+  static final _icons = [
+    PhosphorIconsLight.lightning,
+    PhosphorIconsLight.calendarBlank,
+    PhosphorIconsLight.users,
+    PhosphorIconsLight.user,
+  ];
+  static final _activeIcons = [
+    PhosphorIconsFill.lightning,
+    PhosphorIconsFill.calendarBlank,
+    PhosphorIconsFill.users,
+    PhosphorIconsFill.user,
   ];
 
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
-    final currentIndex = _tabs.indexWhere((t) => t.path == location).clamp(0, 2);
+    final currentIndex = _paths.indexWhere((p) => p == location).clamp(0, 3);
 
     return Scaffold(
       body: child,
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,
-        onDestinationSelected: (i) => context.go(_tabs[i].path),
-        destinations: _tabs
-            .map((t) => NavigationDestination(icon: Icon(t.icon), label: t.label))
-            .toList(),
+        onDestinationSelected: (i) => context.go(_paths[i]),
+        destinations: List.generate(
+          4,
+          (i) => NavigationDestination(
+            icon: PhosphorIcon(_icons[i]),
+            selectedIcon: PhosphorIcon(_activeIcons[i],
+                color: GameOnBrand.saffron),
+            label: _labels[i],
+          ),
+        ),
       ),
     );
   }

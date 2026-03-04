@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/match.dart';
 import 'game_on_logo.dart';
 
@@ -18,7 +19,8 @@ class SportChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return FilterChip(
-      avatar: Text(sport.emoji, style: const TextStyle(fontSize: 14)),
+      avatar: PhosphorIcon(sport.icon, size: 16,
+          color: selected ? GameOnBrand.saffron : null),
       label: Text(sport.label),
       selected: selected,
       onSelected: onSelected,
