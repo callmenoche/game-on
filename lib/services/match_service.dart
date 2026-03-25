@@ -160,14 +160,17 @@ class MatchService {
     return (data as List).map((e) => Match.fromJson(e)).toList();
   }
 
-  Future<Map<String, String>> fetchProfiles(List<String> userIds) async {
+  Future<Map<String, ({String username, String? avatarUrl})>> fetchProfiles(List<String> userIds) async {
     if (userIds.isEmpty) return {};
     final data = await SupabaseService.table('profiles')
-        .select('id, username')
+        .select('id, username, avatar_url')
         .inFilter('id', userIds);
     return {
       for (final r in data as List)
-        r['id'] as String: r['username'] as String? ?? 'Player'
+        r['id'] as String: (
+          username: r['username'] as String? ?? 'Player',
+          avatarUrl: r['avatar_url'] as String?,
+        )
     };
   }
 

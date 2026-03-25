@@ -192,38 +192,40 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
               ],
             ],
           ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _HeroCard(match: match),
-                const SizedBox(height: 28),
-                const _SectionLabel('Players'),
-                const SizedBox(height: 12),
-                StreamBuilder<List<MatchParticipant>>(
-                  stream: _participantsStream,
-                  builder: (context, partSnap) {
-                    if (!partSnap.hasData) {
-                      return const Center(
+          body: StreamBuilder<List<MatchParticipant>>(
+            stream: _participantsStream,
+            builder: (context, partSnap) {
+              final participantCount =
+                  partSnap.hasData ? partSnap.data!.length : null;
+              return SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _HeroCard(match: match, participantCount: participantCount),
+                    const SizedBox(height: 28),
+                    const _SectionLabel('Players'),
+                    const SizedBox(height: 12),
+                    if (!partSnap.hasData)
+                      const Center(
                         child: Padding(
                           padding: EdgeInsets.all(24),
                           child: CircularProgressIndicator(
                               color: GameOnBrand.saffron),
                         ),
-                      );
-                    }
-                    return _ParticipantsList(
-                      participants: partSnap.data!,
-                      service: _service,
-                      matchId: match.id,
-                      creatorId: match.creatorId,
-                      currentUserId: currentUserId ?? '',
-                    );
-                  },
+                      )
+                    else
+                      _ParticipantsList(
+                        participants: partSnap.data!,
+                        service: _service,
+                        matchId: match.id,
+                        creatorId: match.creatorId,
+                        currentUserId: currentUserId ?? '',
+                      ),
+                  ],
                 ),
-              ],
-            ),
+              );
+            },
           ),
           bottomNavigationBar: _ActionBar(
             match: match,
@@ -241,7 +243,8 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
 
 class _HeroCard extends StatelessWidget {
   final Match match;
-  const _HeroCard({required this.match});
+  final int? participantCount;
+  const _HeroCard({required this.match, this.participantCount});
 
   Color get _sportColor => switch (match.sportType) {
         SportType.padel      => const Color(0xFF00C2A8),
@@ -324,7 +327,7 @@ class _HeroCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          _SpotsRow(match: match),
+          _SpotsRow(match: match, participantCount: participantCount),
           if (match.description != null && match.description!.isNotEmpty) ...[
             const Divider(height: 24, color: Colors.white12),
             Text(
@@ -345,7 +348,8 @@ class _HeroCard extends StatelessWidget {
 
 class _SpotsRow extends StatelessWidget {
   final Match match;
-  const _SpotsRow({required this.match});
+  final int? participantCount;
+  const _SpotsRow({required this.match, this.participantCount});
 
   @override
   Widget build(BuildContext context) {
@@ -367,7 +371,7 @@ class _SpotsRow extends StatelessWidget {
       );
     }
 
-    final taken = match.spotsTaken;
+    final taken = participantCount ?? match.spotsTaken;
     final total = match.totalSpots!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -428,6 +432,7 @@ class _ParticipantsList extends StatefulWidget {
 
 class _ParticipantsListState extends State<_ParticipantsList> {
   Map<String, String> _usernames = {};
+  Map<String, String?> _avatarUrls = {};
 
   @override
   void initState() {
@@ -458,7 +463,10 @@ class _ParticipantsListState extends State<_ParticipantsList> {
         .toList();
     if (ids.isEmpty) return;
     final map = await widget.service.fetchProfiles(ids);
-    if (mounted) setState(() => _usernames = map);
+    if (mounted) setState(() {
+      _usernames = {for (final e in map.entries) e.key: e.value.username};
+      _avatarUrls = {for (final e in map.entries) e.key: e.value.avatarUrl};
+    });
   }
 
   Future<void> _showShareSheet(MatchParticipant guest) async {
@@ -471,8 +479,12 @@ class _ParticipantsListState extends State<_ParticipantsList> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Code copied: $code'),
-            backgroundColor: GameOnBrand.slateCard,
+            content: Text(
+              'Code copied: $code',
+              style: const TextStyle(
+                  color: Colors.black, fontWeight: FontWeight.w600),
+            ),
+            backgroundColor: GameOnBrand.saffron,
           ),
         );
       }
@@ -611,6 +623,7 @@ class _ParticipantsListState extends State<_ParticipantsList> {
             : (_usernames[p.userId] ?? '…');
         final initial =
             isGuestRow ? 'G' : (name.isNotEmpty ? name[0].toUpperCase() : '?');
+        final avatarUrl = isGuestRow ? null : _avatarUrls[p.userId];
         final canTap = !isGuestRow && !isMe && p.userId != null;
 
         return GestureDetector(
@@ -633,16 +646,21 @@ class _ParticipantsListState extends State<_ParticipantsList> {
                   backgroundColor: isGuestRow
                       ? Colors.white.withValues(alpha: 0.06)
                       : GameOnBrand.saffron.withValues(alpha: 0.2),
-                  child: Text(
-                    initial,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: isGuestRow
-                          ? Colors.white.withValues(alpha: 0.35)
-                          : GameOnBrand.saffron,
-                      fontSize: 14,
-                    ),
-                  ),
+                  backgroundImage: avatarUrl != null
+                      ? NetworkImage(avatarUrl)
+                      : null,
+                  child: avatarUrl == null
+                      ? Text(
+                          initial,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: isGuestRow
+                                ? Colors.white.withValues(alpha: 0.35)
+                                : GameOnBrand.saffron,
+                            fontSize: 14,
+                          ),
+                        )
+                      : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
