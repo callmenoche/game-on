@@ -147,6 +147,12 @@ class MatchProvider extends ChangeNotifier {
         table: 'matches',
         callback: (_) => fetchMatches(),
       )
+      ..onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: 'match_participants',
+        callback: (_) => fetchMatches(),
+      )
       ..subscribe();
   }
 
