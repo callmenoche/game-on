@@ -44,7 +44,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
       ),
       builder: (ctx) => Padding(
         padding: EdgeInsets.fromLTRB(
-            20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 20),
+            20, 20, 20, MediaQuery.viewInsetsOf(ctx).bottom + 20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -504,7 +504,7 @@ class _ParticipantsListState extends State<_ParticipantsList> {
       ),
       builder: (ctx) => Padding(
         padding: EdgeInsets.fromLTRB(
-            20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 20),
+            20, 20, 20, MediaQuery.viewInsetsOf(ctx).bottom + 20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -519,7 +519,6 @@ class _ParticipantsListState extends State<_ParticipantsList> {
             const SizedBox(height: 16),
             TextField(
               controller: codeController,
-              autofocus: true,
               textCapitalization: TextCapitalization.characters,
               style: const TextStyle(
                   fontWeight: FontWeight.w800, fontSize: 20, letterSpacing: 3),
