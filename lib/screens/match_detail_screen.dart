@@ -492,70 +492,17 @@ class _ParticipantsListState extends State<_ParticipantsList> {
   }
 
   Future<void> _showClaimDialog(BuildContext context) async {
-    final codeController = TextEditingController();
-    bool? confirmed;
-    try {
-    confirmed = await showModalBottomSheet<bool>(
+    final code = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
       backgroundColor: GameOnBrand.slateCard,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.fromLTRB(
-            20, 20, 20, MediaQuery.viewInsetsOf(ctx).bottom + 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Claim a spot',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 6),
-            Text('Enter the claim code shared by the host.',
-                style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.55),
-                    fontSize: 13)),
-            const SizedBox(height: 16),
-            TextField(
-              controller: codeController,
-              textCapitalization: TextCapitalization.characters,
-              style: const TextStyle(
-                  fontWeight: FontWeight.w800, fontSize: 20, letterSpacing: 3),
-              decoration: const InputDecoration(
-                hintText: 'XXXXXXXX',
-                prefixIcon:
-                    Icon(Icons.key_rounded, color: GameOnBrand.saffron),
-              ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                style: FilledButton.styleFrom(
-                  backgroundColor: GameOnBrand.saffron,
-                  foregroundColor: GameOnBrand.slateDark,
-                  minimumSize: const Size.fromHeight(50),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                child: const Text('Confirm',
-                    style:
-                        TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
-              ),
-            ),
-          ],
-        ),
-      ),
+      builder: (_) => const _ClaimSheet(),
     );
-    } finally {
-      codeController.dispose();
-    }
 
-    if (confirmed == true && mounted) {
-      final code = codeController.text.trim().toUpperCase();
-      if (code.isEmpty) return;
+    if (code != null && code.isNotEmpty && mounted) {
       // ignore: use_build_context_synchronously
       final ok = await context
           .read<MatchProvider>()
@@ -569,7 +516,6 @@ class _ParticipantsListState extends State<_ParticipantsList> {
         );
       }
     }
-    codeController.dispose();
   }
 
   Future<void> _confirmRemoveGuest(MatchParticipant guest) async {
@@ -1184,6 +1130,74 @@ class _SkillChip extends StatelessWidget {
                   fontWeight: FontWeight.w900,
                   color: level.color,
                   letterSpacing: 0.5)),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Claim sheet ────────────────────────────────────────────────────────────
+
+class _ClaimSheet extends StatefulWidget {
+  const _ClaimSheet();
+
+  @override
+  State<_ClaimSheet> createState() => _ClaimSheetState();
+}
+
+class _ClaimSheetState extends State<_ClaimSheet> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+          20, 20, 20, MediaQuery.viewInsetsOf(context).bottom + 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Claim a spot',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 6),
+          Text('Enter the claim code shared by the host.',
+              style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.55), fontSize: 13)),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _controller,
+            textCapitalization: TextCapitalization.characters,
+            style: const TextStyle(
+                fontWeight: FontWeight.w800, fontSize: 20, letterSpacing: 3),
+            decoration: const InputDecoration(
+              hintText: 'XXXXXXXX',
+              prefixIcon: Icon(Icons.key_rounded, color: GameOnBrand.saffron),
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () => Navigator.pop(
+                  context, _controller.text.trim().toUpperCase()),
+              style: FilledButton.styleFrom(
+                backgroundColor: GameOnBrand.saffron,
+                foregroundColor: GameOnBrand.slateDark,
+                minimumSize: const Size.fromHeight(50),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Confirm',
+                  style:
+                      TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+            ),
+          ),
         ],
       ),
     );
