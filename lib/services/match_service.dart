@@ -67,6 +67,7 @@ class MatchService {
         'is_guest': true,
         'guest_name': 'Guest ${i + 1}',
         'guest_claim_token': _generateToken(),
+        'added_by_user_id': userId,
       });
       await _participants.insert(guests);
     }

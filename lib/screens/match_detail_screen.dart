@@ -615,15 +615,17 @@ class _ParticipantsListState extends State<_ParticipantsList> {
     }
 
     final isHost = widget.currentUserId == widget.creatorId;
+    int guestIndex = 0;
 
     return Column(
       children: widget.participants.map((p) {
         final isGuestRow = p.isGuest && p.userId == null;
         final isMe = p.userId == widget.currentUserId;
         final isCreator = p.userId == widget.creatorId;
+        if (isGuestRow) guestIndex++;
 
         final name = isGuestRow
-            ? (p.guestName ?? 'Guest')
+            ? 'Guest $guestIndex'
             : (_usernames[p.userId] ?? '…');
         final initial =
             isGuestRow ? 'G' : (name.isNotEmpty ? name[0].toUpperCase() : '?');
@@ -710,8 +712,15 @@ class _ParticipantsListState extends State<_ParticipantsList> {
                     tooltip: 'Remove guest',
                     onPressed: () => _confirmRemoveGuest(p),
                   ),
-                ],
-                if (isGuestRow && !isHost && widget.currentUserId.isNotEmpty)
+                ] else if (isGuestRow &&
+                    p.addedByUserId == widget.currentUserId) ...[
+                  IconButton(
+                    icon: const Icon(Icons.ios_share_rounded, size: 18),
+                    color: GameOnBrand.saffron.withValues(alpha: 0.7),
+                    tooltip: 'Share claim code',
+                    onPressed: () => _showShareSheet(p),
+                  ),
+                ] else if (isGuestRow && widget.currentUserId.isNotEmpty)
                   TextButton(
                     onPressed: () => _showClaimDialog(context),
                     style: TextButton.styleFrom(

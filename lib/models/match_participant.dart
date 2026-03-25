@@ -6,6 +6,7 @@ class MatchParticipant {
   final bool isGuest;
   final String? guestClaimToken;
   final String? guestName;
+  final String? addedByUserId;
 
   const MatchParticipant({
     required this.id,
@@ -15,6 +16,7 @@ class MatchParticipant {
     this.isGuest = false,
     this.guestClaimToken,
     this.guestName,
+    this.addedByUserId,
   });
 
   /// A guest whose user_id has been filled in = claimed.
@@ -29,6 +31,7 @@ class MatchParticipant {
         isGuest: json['is_guest'] as bool? ?? false,
         guestClaimToken: json['guest_claim_token'] as String?,
         guestName: json['guest_name'] as String?,
+        addedByUserId: json['added_by_user_id'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
