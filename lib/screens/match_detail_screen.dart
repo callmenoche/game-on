@@ -493,7 +493,9 @@ class _ParticipantsListState extends State<_ParticipantsList> {
 
   Future<void> _showClaimDialog(BuildContext context) async {
     final codeController = TextEditingController();
-    final confirmed = await showModalBottomSheet<bool>(
+    bool? confirmed;
+    try {
+    confirmed = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: GameOnBrand.slateCard,
@@ -548,6 +550,9 @@ class _ParticipantsListState extends State<_ParticipantsList> {
         ),
       ),
     );
+    } finally {
+      codeController.dispose();
+    }
 
     if (confirmed == true && mounted) {
       final code = codeController.text.trim().toUpperCase();
