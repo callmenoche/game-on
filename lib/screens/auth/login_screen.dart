@@ -19,7 +19,6 @@ class _LoginScreenState extends State<LoginScreen>
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _usernameController = TextEditingController();
   final _signUpEmailController = TextEditingController();
   final _signUpPasswordController = TextEditingController();
 
@@ -41,7 +40,6 @@ class _LoginScreenState extends State<LoginScreen>
     _tabController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _usernameController.dispose();
     _signUpEmailController.dispose();
     _signUpPasswordController.dispose();
     super.dispose();
@@ -82,7 +80,6 @@ class _LoginScreenState extends State<LoginScreen>
                             )
                           : _SignUpForm(
                               formKey: _signUpFormKey,
-                              usernameController: _usernameController,
                               emailController: _signUpEmailController,
                               passwordController: _signUpPasswordController,
                               obscurePassword: _obscureSignUpPassword,
@@ -230,7 +227,6 @@ class _LoginScreenState extends State<LoginScreen>
       auth.signUp(
         email: _signUpEmailController.text.trim(),
         password: _signUpPasswordController.text,
-        username: _usernameController.text.trim(),
       );
     }
   }
@@ -293,7 +289,6 @@ class _SignInForm extends StatelessWidget {
 
 class _SignUpForm extends StatelessWidget {
   final GlobalKey<FormState> formKey;
-  final TextEditingController usernameController;
   final TextEditingController emailController;
   final TextEditingController passwordController;
   final bool obscurePassword;
@@ -301,7 +296,6 @@ class _SignUpForm extends StatelessWidget {
 
   const _SignUpForm({
     required this.formKey,
-    required this.usernameController,
     required this.emailController,
     required this.passwordController,
     required this.obscurePassword,
@@ -314,15 +308,6 @@ class _SignUpForm extends StatelessWidget {
       key: formKey,
       child: Column(
         children: [
-          _GameOnField(
-            controller: usernameController,
-            label: 'Username',
-            icon: Icons.person_outline,
-            validator: (v) => (v == null || v.trim().length < 3)
-                ? 'Min 3 characters'
-                : null,
-          ),
-          const SizedBox(height: 14),
           _GameOnField(
             controller: emailController,
             label: 'Email',

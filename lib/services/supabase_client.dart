@@ -51,13 +51,8 @@ class SupabaseService {
   static Future<AuthResponse> signUpWithEmail({
     required String email,
     required String password,
-    required String username,
   }) =>
-      client.auth.signUp(
-        email: email,
-        password: password,
-        data: {'username': username},
-      );
+      client.auth.signUp(email: email, password: password);
 
   static Future<AuthResponse> signInWithEmail({
     required String email,

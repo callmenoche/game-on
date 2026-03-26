@@ -40,15 +40,10 @@ class AuthProvider extends ChangeNotifier {
   Future<void> signUp({
     required String email,
     required String password,
-    required String username,
   }) async {
     _setLoading(true);
     try {
-      await SupabaseService.signUpWithEmail(
-        email: email,
-        password: password,
-        username: username,
-      );
+      await SupabaseService.signUpWithEmail(email: email, password: password);
       _error = null;
     } on AuthException catch (e) {
       _error = e.message;
