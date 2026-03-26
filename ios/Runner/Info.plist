@@ -39,16 +39,37 @@
 	<array>
 		<string>_dartobservatory._tcp</string>
 	</array>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>Flutter needs access to the local network to enable debugging features.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>GameOn uses your camera to take a profile photo.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Flutter needs access to the local network to enable debugging features.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>GameOn uses your location to show nearby matches.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>GameOn uses your location to show nearby matches.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>GameOn uses your photo library to set your profile picture.</string>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneClassName</key>
+					<string>UIWindowScene</string>
+					<key>UISceneConfigurationName</key>
+					<string>flutter</string>
+					<key>UISceneDelegateClassName</key>
+					<string>FlutterSceneDelegate</string>
+					<key>UISceneStoryboardFile</key>
+					<string>Main</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
