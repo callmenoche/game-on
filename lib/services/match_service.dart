@@ -73,6 +73,18 @@ class MatchService {
     }
   }
 
+  Future<void> addGuestSpots(String matchId, int count) async {
+    final userId = SupabaseService.currentUser!.id;
+    final guests = List.generate(count, (_) => {
+      'match_id': matchId,
+      'is_guest': true,
+      'guest_name': 'Guest',
+      'guest_claim_token': _generateToken(),
+      'added_by_user_id': userId,
+    });
+    await _participants.insert(guests);
+  }
+
   Future<void> claimGuestSpot(String matchId, String token) async {
     final userId = SupabaseService.currentUser!.id;
     final updated = await _participants

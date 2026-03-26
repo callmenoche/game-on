@@ -34,7 +34,7 @@ class MatchCard extends StatelessWidget {
           color: isDark ? GameOnBrand.slateCard : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border(
-            left: BorderSide(color: _sportColor(match.sportType), width: 4),
+            left: BorderSide(color: match.sportType.color, width: 4),
           ),
           boxShadow: [
             BoxShadow(
@@ -67,16 +67,6 @@ class MatchCard extends StatelessWidget {
 
 }
 
-Color _sportColor(SportType sport) => switch (sport) {
-      SportType.padel      => const Color(0xFF00C2A8),
-      SportType.football   => const Color(0xFF4CAF50),
-      SportType.basketball => const Color(0xFFFF6B2B),
-      SportType.tennis     => const Color(0xFFD4E157),
-      SportType.running    => const Color(0xFF42A5F5),
-      SportType.cycling    => const Color(0xFFAB47BC),
-      SportType.other      => GameOnBrand.saffron,
-    };
-
 // ─── Header ────────────────────────────────────────────────────────────────
 
 class _Header extends StatelessWidget {
@@ -89,7 +79,7 @@ class _Header extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        PhosphorIcon(match.sportType.icon, size: 36, color: _sportColor(match.sportType)),
+        PhosphorIcon(match.sportType.icon, size: 36, color: match.sportType.color),
         const SizedBox(width: 12),
         Expanded(
           child: Column(

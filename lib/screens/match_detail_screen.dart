@@ -156,48 +156,48 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
         final isCreator = match.creatorId == currentUserId;
         final isJoined = context.watch<MatchProvider>().isJoined(match.id);
 
-        return Scaffold(
-          appBar: AppBar(
-            titleSpacing: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded),
-              onPressed: () => context.pop(),
-            ),
-            title: Row(
-              children: [
-                PhosphorIcon(match.sportType.icon, size: 22),
-                const SizedBox(width: 8),
-                Text(match.sportType.label,
-                    style: const TextStyle(fontWeight: FontWeight.w800)),
-                if (match.isConfirmed) ...[
-                  const SizedBox(width: 8),
-                  const Icon(Icons.check_circle_rounded,
-                      size: 16, color: Colors.green),
+        return StreamBuilder<List<MatchParticipant>>(
+          stream: _participantsStream,
+          builder: (context, partSnap) {
+            final participantCount =
+                partSnap.hasData ? partSnap.data!.length : null;
+            return Scaffold(
+              appBar: AppBar(
+                titleSpacing: 0,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                  onPressed: () => context.pop(),
+                ),
+                title: Row(
+                  children: [
+                    PhosphorIcon(match.sportType.icon, size: 22),
+                    const SizedBox(width: 8),
+                    Text(match.sportType.label,
+                        style: const TextStyle(fontWeight: FontWeight.w800)),
+                    if (match.isConfirmed) ...[
+                      const SizedBox(width: 8),
+                      const Icon(Icons.check_circle_rounded,
+                          size: 16, color: Colors.green),
+                    ],
+                  ],
+                ),
+                actions: [
+                  if (isCreator && match.status == MatchStatus.open) ...[
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 20),
+                      tooltip: 'Edit title & description',
+                      onPressed: () => _showEditSheet(context, match),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.cancel_outlined),
+                      color: Colors.redAccent,
+                      tooltip: 'Cancel match',
+                      onPressed: () => _confirmCancel(context, match),
+                    ),
+                  ],
                 ],
-              ],
-            ),
-            actions: [
-              if (isCreator && match.status == MatchStatus.open) ...[
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined, size: 20),
-                  tooltip: 'Edit title & description',
-                  onPressed: () => _showEditSheet(context, match),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.cancel_outlined),
-                  color: Colors.redAccent,
-                  tooltip: 'Cancel match',
-                  onPressed: () => _confirmCancel(context, match),
-                ),
-              ],
-            ],
-          ),
-          body: StreamBuilder<List<MatchParticipant>>(
-            stream: _participantsStream,
-            builder: (context, partSnap) {
-              final participantCount =
-                  partSnap.hasData ? partSnap.data!.length : null;
-              return SingleChildScrollView(
+              ),
+              body: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,15 +224,18 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
                       ),
                   ],
                 ),
-              );
-            },
-          ),
-          bottomNavigationBar: _ActionBar(
-            match: match,
-            isJoined: isJoined,
-            isCreator: isCreator,
-            onLeave: () => context.read<MatchProvider>().leaveMatch(match.id),
-          ),
+              ),
+              bottomNavigationBar: _ActionBar(
+                match: match,
+                isJoined: isJoined,
+                isCreator: isCreator,
+                currentUserId: currentUserId ?? '',
+                participantCount: participantCount,
+                onLeave: () =>
+                    context.read<MatchProvider>().leaveMatch(match.id),
+              ),
+            );
+          },
         );
       },
     );
@@ -246,16 +249,6 @@ class _HeroCard extends StatelessWidget {
   final int? participantCount;
   const _HeroCard({required this.match, this.participantCount});
 
-  Color get _sportColor => switch (match.sportType) {
-        SportType.padel      => const Color(0xFF00C2A8),
-        SportType.football   => const Color(0xFF4CAF50),
-        SportType.basketball => const Color(0xFFFF6B2B),
-        SportType.tennis     => const Color(0xFFD4E157),
-        SportType.running    => const Color(0xFF42A5F5),
-        SportType.cycling    => const Color(0xFFAB47BC),
-        SportType.other      => GameOnBrand.saffron,
-      };
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -263,7 +256,7 @@ class _HeroCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: GameOnBrand.slateCard,
         borderRadius: BorderRadius.circular(20),
-        border: Border(left: BorderSide(color: _sportColor, width: 4)),
+        border: Border(left: BorderSide(color: match.sportType.color, width: 4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -693,12 +686,16 @@ class _ActionBar extends StatelessWidget {
   final bool isJoined;
   final bool isCreator;
   final VoidCallback onLeave;
+  final String currentUserId;
+  final int? participantCount;
 
   const _ActionBar({
     required this.match,
     required this.isJoined,
     required this.isCreator,
     required this.onLeave,
+    required this.currentUserId,
+    this.participantCount,
   });
 
   void _openJoinSheet(BuildContext context) {
@@ -717,9 +714,31 @@ class _ActionBar extends StatelessWidget {
     );
   }
 
+  void _openAddGuestSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: GameOnBrand.slateCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => _AddGuestSheet(
+        match: match,
+        currentUserId: currentUserId,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final Widget child;
+    // Use participant count from the stream as the source of truth;
+    // fall back to match.isFull when the stream hasn't loaded yet.
+    final showAddGuest = match.isUnlimited
+        ? true
+        : participantCount != null && match.totalSpots != null
+            ? participantCount! < match.totalSpots!
+            : !match.isFull;
 
     if (match.status == MatchStatus.cancelled) {
       child = Container(
@@ -734,8 +753,9 @@ class _ActionBar extends StatelessWidget {
                 fontWeight: FontWeight.w700, color: Colors.redAccent)),
       );
     } else if (isCreator) {
+      final Widget creatorPrimary;
       if (!match.isConfirmed) {
-        child = FilledButton(
+        creatorPrimary = FilledButton(
           onPressed: () =>
               context.read<MatchProvider>().confirmMatch(match.id),
           style: FilledButton.styleFrom(
@@ -760,7 +780,7 @@ class _ActionBar extends StatelessWidget {
           ),
         );
       } else {
-        child = Container(
+        creatorPrimary = Container(
           height: 54,
           alignment: Alignment.center,
           decoration: BoxDecoration(
@@ -782,18 +802,68 @@ class _ActionBar extends StatelessWidget {
           ),
         );
       }
+      child = showAddGuest
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                creatorPrimary,
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.person_add_rounded, size: 16),
+                    label: const Text('Add Guest'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(46),
+                      foregroundColor: GameOnBrand.saffron,
+                      side: BorderSide(
+                          color: GameOnBrand.saffron.withValues(alpha: 0.6)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                    ),
+                    onPressed: () => _openAddGuestSheet(context),
+                  ),
+                ),
+              ],
+            )
+          : creatorPrimary;
     } else if (isJoined) {
-      child = OutlinedButton(
-        onPressed: onLeave,
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size.fromHeight(54),
-          side: const BorderSide(color: GameOnBrand.saffron),
-          foregroundColor: GameOnBrand.saffron,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14)),
-        ),
-        child: const Text('Leave Match',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+      child = Row(
+        children: [
+          if (showAddGuest) ...[
+            Expanded(
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.person_add_rounded, size: 16),
+                label: const Text('Add Guest'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(54),
+                  foregroundColor: GameOnBrand.saffron,
+                  side: BorderSide(
+                      color: GameOnBrand.saffron.withValues(alpha: 0.6)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                ),
+                onPressed: () => _openAddGuestSheet(context),
+              ),
+            ),
+            const SizedBox(width: 10),
+          ],
+          Expanded(
+            child: OutlinedButton(
+              onPressed: onLeave,
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(54),
+                side: const BorderSide(color: GameOnBrand.saffron),
+                foregroundColor: GameOnBrand.saffron,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+              ),
+              child: const Text('Leave Match',
+                  style:
+                      TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+            ),
+          ),
+        ],
       );
     } else {
       child = FilledButton(
@@ -977,6 +1047,159 @@ class _JoinOptionsSheetState extends State<_JoinOptionsSheet> {
                       _guestCount == 0
                           ? 'Join — just me'
                           : 'Join with $_guestCount guest${_guestCount > 1 ? "s" : ""}',
+                      style: const TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w800),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Add guest sheet ────────────────────────────────────────────────────────
+
+class _AddGuestSheet extends StatefulWidget {
+  final Match match;
+  final String currentUserId;
+  const _AddGuestSheet({required this.match, required this.currentUserId});
+
+  @override
+  State<_AddGuestSheet> createState() => _AddGuestSheetState();
+}
+
+class _AddGuestSheetState extends State<_AddGuestSheet> {
+  int _count = 1;
+  bool _loading = false;
+
+  int get _maxGuests =>
+      widget.match.isUnlimited ? 10 : (widget.match.playersNeeded ?? 0);
+
+  Future<void> _add() async {
+    setState(() => _loading = true);
+    final ok = await context
+        .read<MatchProvider>()
+        .addGuestSpots(widget.match.id, _count);
+    if (!mounted) return;
+    Navigator.pop(context);
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to add guest — try again.')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+          20, 24, 20, MediaQuery.viewInsetsOf(context).bottom + 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const Text('Add a guest',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 6),
+          Text(
+            "We'll generate a claim code for each guest slot.",
+            style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.55), fontSize: 13),
+          ),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: GameOnBrand.slateDark,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: GameOnBrand.saffron.withValues(alpha: 0.4),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.person_add_rounded,
+                        size: 18, color: GameOnBrand.saffron),
+                    const SizedBox(width: 10),
+                    Text(
+                      _count == 1 ? '1 guest' : '$_count guests',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    _SheetStepButton(
+                      icon: Icons.remove_rounded,
+                      onTap: _count > 1
+                          ? () => setState(() => _count--)
+                          : null,
+                    ),
+                    const SizedBox(width: 8),
+                    SizedBox(
+                      width: 44,
+                      child: Text(
+                        '$_count',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          color: GameOnBrand.saffron,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _SheetStepButton(
+                      icon: Icons.add_rounded,
+                      onTap: _count < _maxGuests
+                          ? () => setState(() => _count++)
+                          : null,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: _loading ? null : _add,
+              style: FilledButton.styleFrom(
+                backgroundColor: GameOnBrand.saffron,
+                foregroundColor: GameOnBrand.slateDark,
+                minimumSize: const Size.fromHeight(52),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+              ),
+              child: _loading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2.5, color: GameOnBrand.slateDark),
+                    )
+                  : Text(
+                      'Add $_count guest${_count > 1 ? "s" : ""}',
                       style: const TextStyle(
                           fontSize: 15, fontWeight: FontWeight.w800),
                     ),

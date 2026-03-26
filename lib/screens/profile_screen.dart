@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../models/match.dart';
@@ -32,18 +33,6 @@ final _slots = [
   ('afternoon', PhosphorIconsLight.cloudSun, 'Afternoon'),
   ('evening',   PhosphorIconsLight.moon,     'Evening'),
 ];
-
-// ── Sport colour palette ──────────────────────────────────────────────────────
-
-const _sportColors = <SportType, Color>{
-  SportType.padel:      Color(0xFF4CAF50),
-  SportType.football:   Color(0xFF2196F3),
-  SportType.basketball: Color(0xFFFF9800),
-  SportType.tennis:     Color(0xFF9C27B0),
-  SportType.running:    Color(0xFFE91E63),
-  SportType.cycling:    Color(0xFF00BCD4),
-  SportType.other:      Color(0xFF607D8B),
-};
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -309,25 +298,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 12),
                       const _AvailabilityGrid(),
 
-                      // ── Favourite sports ─────────────────────────────────
-                      const SizedBox(height: 28),
-                      const _SectionLabel('Favourite Sports'),
-                      const SizedBox(height: 12),
-                      _FavouriteSportsPicker(
-                        selected: _editing
-                            ? _favoriteSports
-                            : profile.favoriteSports,
-                        editing: _editing,
-                        onToggle: (sport) {
-                          setState(() {
-                            if (_favoriteSports.contains(sport)) {
-                              _favoriteSports.remove(sport);
-                            } else {
-                              _favoriteSports.add(sport);
-                            }
-                          });
-                        },
-                      ),
+                      // ── Favourite sports (edit mode only) ───────────────
+                      if (_editing) ...[
+                        const SizedBox(height: 28),
+                        const _SectionLabel('Favourite Sports'),
+                        const SizedBox(height: 12),
+                        _FavouriteSportsPicker(
+                          selected: _favoriteSports,
+                          editing: true,
+                          onToggle: (sport) {
+                            setState(() {
+                              if (_favoriteSports.contains(sport)) {
+                                _favoriteSports.remove(sport);
+                              } else {
+                                _favoriteSports.add(sport);
+                              }
+                            });
+                          },
+                        ),
+                      ],
 
                       const SizedBox(height: 28),
                       const _SignOutButton(),
@@ -461,6 +450,24 @@ class _AvatarHeader extends StatelessWidget {
                       fontSize: 13,
                       fontStyle: FontStyle.italic,
                       color: Colors.white.withValues(alpha: 0.3)),
+                ),
+              if (!editing && profile.favoriteSports.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Wrap(
+                    spacing: 6,
+                    children: profile.favoriteSports.map((s) {
+                      final sport = SportType.fromString(s);
+                      return Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: sport.color.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: PhosphorIcon(sport.icon, size: 16, color: sport.color),
+                      );
+                    }).toList(),
+                  ),
                 ),
             ],
           ),
@@ -685,8 +692,7 @@ class _SportDonutChart extends StatelessWidget {
             children: sorted.map((e) {
               final pct =
                   total > 0 ? (e.value / total * 100).round() : 0;
-              final color =
-                  _sportColors[e.key] ?? const Color(0xFF607D8B);
+              final color = e.key.color;
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
@@ -756,7 +762,7 @@ class _DonutPainter extends CustomPainter {
     double start = -pi / 2;
     for (final entry in counts.entries) {
       final sweep = 2 * pi * entry.value / total;
-      paint.color = _sportColors[entry.key] ?? const Color(0xFF607D8B);
+      paint.color = entry.key.color;
       canvas.drawArc(rect, start, sweep - 0.04, false, paint);
       start += sweep;
     }
@@ -775,19 +781,21 @@ class _MatchRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: () => context.push('/match/${match.id}'),
+      child: Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding:
           const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       decoration: BoxDecoration(
         color: GameOnBrand.slateCard,
         borderRadius: BorderRadius.circular(12),
-        border: const Border(
-            left: BorderSide(color: GameOnBrand.saffron, width: 3)),
+        border: Border(
+            left: BorderSide(color: match.sportType.color, width: 3)),
       ),
       child: Row(
         children: [
-          PhosphorIcon(match.sportType.icon, size: 22, color: GameOnBrand.saffron),
+          PhosphorIcon(match.sportType.icon, size: 22, color: match.sportType.color),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -825,6 +833,7 @@ class _MatchRow extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }

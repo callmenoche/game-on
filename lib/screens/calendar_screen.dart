@@ -221,16 +221,6 @@ class _MatchEventRow extends StatelessWidget {
   final Match match;
   const _MatchEventRow({required this.match});
 
-  Color get _sportColor => switch (match.sportType) {
-        SportType.padel      => const Color(0xFF00C2A8),
-        SportType.football   => const Color(0xFF4CAF50),
-        SportType.basketball => const Color(0xFFFF6B2B),
-        SportType.tennis     => const Color(0xFFD4E157),
-        SportType.running    => const Color(0xFF42A5F5),
-        SportType.cycling    => const Color(0xFFAB47BC),
-        SportType.other      => GameOnBrand.saffron,
-      };
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -239,7 +229,7 @@ class _MatchEventRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: GameOnBrand.slateCard,
         borderRadius: BorderRadius.circular(12),
-        border: Border(left: BorderSide(color: _sportColor, width: 3)),
+        border: Border(left: BorderSide(color: match.sportType.color, width: 3)),
       ),
       child: Row(
         children: [

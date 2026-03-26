@@ -86,6 +86,16 @@ enum SportType {
         SportType.other      => PhosphorIconsLight.medal,
       };
 
+  Color get color => switch (this) {
+        SportType.padel      => const Color(0xFF00C2A8),
+        SportType.football   => const Color(0xFF4CAF50),
+        SportType.basketball => const Color(0xFFFF6B2B),
+        SportType.tennis     => const Color(0xFFD4E157),
+        SportType.running    => const Color(0xFF42A5F5),
+        SportType.cycling    => const Color(0xFFAB47BC),
+        SportType.other      => const Color(0xFFFDBA30),
+      };
+
   static SportType fromString(String value) => SportType.values.firstWhere(
         (e) => e.name == value,
         orElse: () => SportType.other,

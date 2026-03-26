@@ -191,6 +191,20 @@ class MatchProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> addGuestSpots(String matchId, int count) async {
+    _updateMatchLocally(matchId, delta: -count);
+    notifyListeners();
+    try {
+      await _service.addGuestSpots(matchId, count);
+      return true;
+    } catch (e) {
+      _updateMatchLocally(matchId, delta: count);
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> claimGuestSpot(String matchId, String token) async {
     try {
       await _service.claimGuestSpot(matchId, token);
