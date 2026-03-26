@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'l10n/app_localizations.dart';
 import 'providers/auth_provider.dart';
 import 'providers/profile_provider.dart';
 import 'widgets/game_on_logo.dart';
@@ -9,6 +10,7 @@ import 'screens/create_match_screen.dart';
 import 'screens/feed_screen.dart';
 import 'screens/match_detail_screen.dart';
 import 'screens/notifications_screen.dart';
+import 'screens/settings_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/public_profile_screen.dart';
 import 'screens/calendar_screen.dart';
@@ -67,8 +69,10 @@ GoRouter buildRouter(AuthProvider authProvider, ProfileProvider profileProvider)
           ),
           GoRoute(
             path: '/match/:id',
-            builder: (_, state) =>
-                MatchDetailScreen(matchId: state.pathParameters['id']!),
+            builder: (_, state) => MatchDetailScreen(
+              matchId: state.pathParameters['id']!,
+              initialClaimCode: (state.extra as Map?)?['claimCode'] as String?,
+            ),
           ),
           GoRoute(
             path: '/create-match',
@@ -105,6 +109,10 @@ GoRouter buildRouter(AuthProvider authProvider, ProfileProvider profileProvider)
             builder: (_, __) => const NotificationsScreen(),
           ),
           GoRoute(
+            path: '/settings',
+            builder: (_, __) => const SettingsScreen(),
+          ),
+          GoRoute(
             path: '/players/search',
             builder: (_, __) => const PlayerSearchScreen(),
           ),
@@ -120,7 +128,6 @@ class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.child});
 
   static const _paths = ['/', '/calendar', '/groups', '/profile'];
-  static const _labels = ['Feed', 'Calendar', 'Groups', 'Profile'];
   static final _icons = [
     PhosphorIconsLight.lightning,
     PhosphorIconsLight.calendarBlank,
@@ -136,6 +143,8 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final labels = [l.feed, l.calendar, l.groups, l.profile];
     final location = GoRouterState.of(context).matchedLocation;
     final currentIndex = _paths.indexWhere((p) => p == location).clamp(0, 3);
 
@@ -150,7 +159,7 @@ class AppShell extends StatelessWidget {
             icon: PhosphorIcon(_icons[i]),
             selectedIcon: PhosphorIcon(_activeIcons[i],
                 color: GameOnBrand.saffron),
-            label: _labels[i],
+            label: labels[i],
           ),
         ),
       ),
