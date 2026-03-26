@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../l10n/app_localizations.dart';
 import '../models/notification_item.dart';
 import '../providers/notification_provider.dart';
 import '../widgets/game_on_logo.dart';
@@ -14,10 +15,11 @@ class NotificationsScreen extends StatelessWidget {
     final provider = context.watch<NotificationProvider>();
     final items = provider.items;
 
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notifications',
-            style: TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(l.notificationsTitle,
+            style: const TextStyle(fontWeight: FontWeight.w800)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => context.pop(),
@@ -26,9 +28,9 @@ class NotificationsScreen extends StatelessWidget {
           if (provider.unreadCount > 0)
             TextButton(
               onPressed: provider.markAllRead,
-              child: const Text(
-                'Mark all read',
-                style: TextStyle(
+              child: Text(
+                l.markAllRead,
+                style: const TextStyle(
                     color: GameOnBrand.saffron, fontWeight: FontWeight.w700),
               ),
             ),
@@ -44,7 +46,7 @@ class NotificationsScreen extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.2)),
                   const SizedBox(height: 16),
                   Text(
-                    'No notifications yet',
+                    l.noNotificationsYet,
                     style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -120,7 +122,7 @@ class _NotifTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _timeAgo(item.createdAt),
+                    _timeAgo(item.createdAt, AppLocalizations.of(context)!, Localizations.localeOf(context).languageCode),
                     style: TextStyle(
                         fontSize: 11,
                         color: Colors.white.withValues(alpha: 0.35)),
@@ -144,12 +146,12 @@ class _NotifTile extends StatelessWidget {
     );
   }
 
-  String _timeAgo(DateTime dt) {
+  String _timeAgo(DateTime dt, AppLocalizations l, String locale) {
     final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1)   return 'Just now';
-    if (diff.inMinutes < 60)  return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24)    return '${diff.inHours}h ago';
-    if (diff.inDays < 7)      return '${diff.inDays}d ago';
-    return DateFormat('d MMM').format(dt);
+    if (diff.inMinutes < 1)   return l.justNow;
+    if (diff.inMinutes < 60)  return l.minutesAgo(diff.inMinutes);
+    if (diff.inHours < 24)    return l.hoursAgo(diff.inHours);
+    if (diff.inDays < 7)      return l.daysAgo(diff.inDays);
+    return DateFormat('d MMM', locale).format(dt);
   }
 }

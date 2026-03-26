@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../l10n/app_localizations.dart';
 import '../models/group.dart';
 import '../providers/group_provider.dart';
 import '../widgets/game_on_logo.dart';
@@ -26,13 +27,14 @@ class _GroupsScreenState extends State<GroupsScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<GroupProvider>();
 
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Groups', style: TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(l.groupsTitle, style: const TextStyle(fontWeight: FontWeight.w800)),
         actions: [
           IconButton(
             icon: const Icon(Icons.link_rounded),
-            tooltip: 'Join with code',
+            tooltip: l.joinWithCode,
             onPressed: () => _showJoinDialog(context),
           ),
         ],
@@ -42,8 +44,8 @@ class _GroupsScreenState extends State<GroupsScreen> {
         backgroundColor: GameOnBrand.saffron,
         foregroundColor: GameOnBrand.slateDark,
         icon: const Icon(Icons.add_rounded),
-        label: const Text('Create Group',
-            style: TextStyle(fontWeight: FontWeight.w700)),
+        label: Text(l.createGroup,
+            style: const TextStyle(fontWeight: FontWeight.w700)),
       ),
       body: provider.isLoading && provider.groups.isEmpty
           ? const Center(
@@ -67,25 +69,26 @@ class _GroupsScreenState extends State<GroupsScreen> {
 
   void _showJoinDialog(BuildContext context) {
     final ctrl = TextEditingController();
+    final l = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: GameOnBrand.slateCard,
-        title: const Text('Join a Group',
-            style: TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(l.joinAGroup,
+            style: const TextStyle(fontWeight: FontWeight.w800)),
         content: TextField(
           controller: ctrl,
           textCapitalization: TextCapitalization.characters,
           maxLength: 8,
-          decoration: const InputDecoration(
-            hintText: 'Enter 8-character code',
-            prefixIcon: Icon(Icons.vpn_key_rounded),
+          decoration: InputDecoration(
+            hintText: l.enter8CharCode,
+            prefixIcon: const Icon(Icons.vpn_key_rounded),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(l.cancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -102,17 +105,17 @@ class _GroupsScreenState extends State<GroupsScreen> {
               final messenger = ScaffoldMessenger.of(context);
               if (group != null) {
                 messenger.showSnackBar(SnackBar(
-                  content: Text('Joined ${group.name}! 🎉'),
+                  content: Text(l.joinedGroup(group.name)),
                   backgroundColor: GameOnBrand.saffron,
                 ));
               } else {
-                messenger.showSnackBar(const SnackBar(
-                  content: Text('Invalid code. Check and try again.'),
+                messenger.showSnackBar(SnackBar(
+                  content: Text(l.invalidGroupCode),
                   backgroundColor: Colors.redAccent,
                 ));
               }
             },
-            child: const Text('Join'),
+            child: Text(l.join),
           ),
         ],
       ),
@@ -194,9 +197,9 @@ class _InviteCodeBadge extends StatelessWidget {
       onTap: () {
         Clipboard.setData(ClipboardData(text: code));
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Invite code copied!'),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.inviteCodeCopied),
+            duration: const Duration(seconds: 2),
           ),
         );
       },
@@ -237,12 +240,12 @@ class _EmptyState extends StatelessWidget {
           children: [
             const Text('👥', style: TextStyle(fontSize: 56)),
             const SizedBox(height: 16),
-            Text('No groups yet',
+            Text(AppLocalizations.of(context)!.noGroupsYet,
                 style: theme.textTheme.titleLarge
                     ?.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
             Text(
-              'Create a private group for your team or company, or join one with an invite code.',
+              AppLocalizations.of(context)!.noGroupsBody,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
@@ -252,7 +255,7 @@ class _EmptyState extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: onJoin,
               icon: const Icon(Icons.link_rounded),
-              label: const Text('Join with code'),
+              label: Text(AppLocalizations.of(context)!.joinWithCode),
             ),
           ],
         ),

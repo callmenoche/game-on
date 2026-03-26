@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/profile.dart';
 import '../services/profile_service.dart';
 import '../widgets/game_on_logo.dart';
@@ -56,7 +57,7 @@ class _PlayerSearchScreenState extends State<PlayerSearchScreen> {
           autofocus: true,
           style: const TextStyle(fontSize: 15),
           decoration: InputDecoration(
-            hintText: 'Search players by username…',
+            hintText: AppLocalizations.of(context)!.searchPlayersHint,
             border: InputBorder.none,
             filled: false,
             contentPadding: EdgeInsets.zero,
@@ -76,8 +77,8 @@ class _PlayerSearchScreenState extends State<PlayerSearchScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 40),
                     child: Text(
                       _ctrl.text.isEmpty
-                          ? 'Search for players by username'
-                          : 'No players found for "${_ctrl.text}"',
+                          ? AppLocalizations.of(context)!.searchForPlayers
+                          : AppLocalizations.of(context)!.noPlayersFound(_ctrl.text),
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.4)),

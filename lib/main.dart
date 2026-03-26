@@ -1,9 +1,12 @@
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'l10n/app_localizations.dart';
 import 'providers/auth_provider.dart';
 import 'providers/group_provider.dart';
+import 'providers/language_provider.dart';
 import 'providers/match_provider.dart';
 import 'providers/profile_provider.dart';
 import 'router.dart';
@@ -20,6 +23,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => MatchProvider()),
         ChangeNotifierProvider(create: (_) => ProfileProvider()),
         ChangeNotifierProvider(create: (_) => GroupProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
       ],
       child: const GameOnApp(),
     ),
@@ -35,6 +39,11 @@ class GameOnApp extends StatefulWidget {
 
 class _GameOnAppState extends State<GameOnApp> {
   late final GoRouter _router;
+  late final AppLinks _appLinks;
+
+  // Pending deep link stored when the app isn't ready yet (cold start / not authed)
+  String? _pendingMatchId;
+  String? _pendingClaimCode;
 
   @override
   void initState() {
@@ -43,17 +52,83 @@ class _GameOnAppState extends State<GameOnApp> {
       context.read<AuthProvider>(),
       context.read<ProfileProvider>(),
     );
+    _initDeepLinks();
+    // Navigate to a pending link once auth + profile are ready
+    context.read<AuthProvider>().addListener(_onReadyCheck);
+    context.read<ProfileProvider>().addListener(_onReadyCheck);
+  }
+
+  @override
+  void dispose() {
+    context.read<AuthProvider>().removeListener(_onReadyCheck);
+    context.read<ProfileProvider>().removeListener(_onReadyCheck);
+    super.dispose();
+  }
+
+  /// Called whenever auth or profile state changes.
+  /// If a deep link arrived before the app was ready, navigate now.
+  void _onReadyCheck() {
+    if (_pendingMatchId == null) return;
+    final auth = context.read<AuthProvider>();
+    final profile = context.read<ProfileProvider>();
+    if (!auth.isAuthenticated) return;
+    if (profile.profile == null) return; // still loading
+    final matchId = _pendingMatchId!;
+    final code = _pendingClaimCode;
+    _pendingMatchId = null;
+    _pendingClaimCode = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _router.push('/match/$matchId',
+            extra: code != null ? {'claimCode': code} : null);
+      }
+    });
+  }
+
+  Future<void> _initDeepLinks() async {
+    _appLinks = AppLinks();
+    final initialUri = await _appLinks.getInitialLink();
+    if (initialUri != null) _handleDeepLink(initialUri);
+    _appLinks.uriLinkStream.listen(_handleDeepLink);
+  }
+
+  void _handleDeepLink(Uri uri) {
+    if (uri.scheme == 'io.supabase.gameon' && uri.host == 'claim') {
+      final code = uri.queryParameters['code'];
+      final matchId = uri.queryParameters['match'];
+      if (code != null && matchId != null) {
+        final auth = context.read<AuthProvider>();
+        final profile = context.read<ProfileProvider>();
+        if (auth.isAuthenticated && profile.profile != null) {
+          // App already ready — navigate immediately on next frame
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _router.push('/match/$matchId', extra: {'claimCode': code});
+            }
+          });
+        } else {
+          // Auth / profile still loading — store and navigate once ready
+          _pendingMatchId = matchId;
+          _pendingClaimCode = code;
+        }
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'GameOn',
-      debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.dark, // default to dark — brand feels right here
-      theme: _buildTheme(Brightness.light),
-      darkTheme: _buildTheme(Brightness.dark),
-      routerConfig: _router,
+    return Consumer<LanguageProvider>(
+      builder: (_, langProvider, __) => MaterialApp.router(
+        title: 'GameOn',
+        debugShowCheckedModeBanner: false,
+        locale: langProvider.locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        themeMode: ThemeMode.dark, // default to dark — brand feels right here
+        theme: _buildTheme(Brightness.light),
+        darkTheme: _buildTheme(Brightness.dark),
+        routerConfig: _router,
+      ),
     );
   }
 

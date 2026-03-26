@@ -7,7 +7,7 @@ import '../models/match.dart';
 import '../services/match_service.dart';
 import '../services/supabase_client.dart';
 
-enum DateFilter { any, today, thisWeek }
+enum DateFilter { upcoming, today, next7, next30, custom }
 enum FeedMode { public, groups }
 
 class MatchProvider extends ChangeNotifier {
@@ -17,13 +17,14 @@ class MatchProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   SportType? _selectedSport;
-  DateFilter _dateFilter = DateFilter.any;
+  DateFilter _dateFilter = DateFilter.upcoming;
   String _searchQuery = '';
   bool _distanceFilterEnabled = false;
   double? _userLat;
   double? _userLng;
   FeedMode _feedMode = FeedMode.public;
-  static const double _distanceKm = 10.0;
+  double _distanceKm = 10.0;
+  DateTimeRange? _customDateRange;
   final Set<String> _joinedIds = {};
   RealtimeChannel? _channel;
 
@@ -68,6 +69,8 @@ class MatchProvider extends ChangeNotifier {
   DateFilter get dateFilter => _dateFilter;
   String get searchQuery => _searchQuery;
   bool get distanceFilterEnabled => _distanceFilterEnabled;
+  double get distanceKm => _distanceKm;
+  DateTimeRange? get customDateRange => _customDateRange;
   bool get hasUserLocation => _userLat != null;
   bool isJoined(String matchId) => _joinedIds.contains(matchId);
 
@@ -339,6 +342,17 @@ class MatchProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setDistanceKm(double km) {
+    _distanceKm = km;
+    notifyListeners();
+  }
+
+  void setCustomDateRange(DateTimeRange range) {
+    _customDateRange = range;
+    _dateFilter = DateFilter.custom;
+    notifyListeners();
+  }
+
   Future<void> toggleDistanceFilter() async {
     if (_distanceFilterEnabled) {
       _distanceFilterEnabled = false;
@@ -377,18 +391,26 @@ class MatchProvider extends ChangeNotifier {
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   List<Match> _applyDateFilter(List<Match> list) {
-    if (_dateFilter == DateFilter.any) return list;
     final now = DateTime.now();
+    const grace = Duration(minutes: 30);
     return list.where((m) {
       return switch (_dateFilter) {
-        DateFilter.any => true,
+        DateFilter.upcoming => m.dateTime.isAfter(now.subtract(grace)),
         DateFilter.today =>
           m.dateTime.year == now.year &&
           m.dateTime.month == now.month &&
-          m.dateTime.day == now.day,
-        DateFilter.thisWeek =>
-          m.dateTime.isAfter(now.subtract(const Duration(minutes: 1))) &&
+          m.dateTime.day == now.day &&
+          m.dateTime.isAfter(now.subtract(grace)),
+        DateFilter.next7 =>
+          m.dateTime.isAfter(now.subtract(grace)) &&
           m.dateTime.isBefore(now.add(const Duration(days: 7))),
+        DateFilter.next30 =>
+          m.dateTime.isAfter(now.subtract(grace)) &&
+          m.dateTime.isBefore(now.add(const Duration(days: 30))),
+        DateFilter.custom => _customDateRange == null
+          ? m.dateTime.isAfter(now.subtract(grace))
+          : !m.dateTime.isBefore(_customDateRange!.start) &&
+            !m.dateTime.isAfter(_customDateRange!.end.add(const Duration(days: 1))),
       };
     }).toList();
   }

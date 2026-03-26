@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../l10n/app_localizations.dart';
 
 enum MatchStatus { open, full, cancelled }
 
@@ -188,6 +189,7 @@ class Match {
         description: json['description'] as String?,
       );
 
+  // Keep label as English fallback (used in non-UI contexts like search).
   Map<String, dynamic> toJson() => {
         'creator_id': creatorId,
         'sport_type': sportType.name,
@@ -231,4 +233,33 @@ class Match {
         title: title ?? this.title,
         description: description ?? this.description,
       );
+}
+
+// ─── Localized label extensions ──────────────────────────────────────────────
+
+extension SportTypeL10n on SportType {
+  String l10nLabel(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return switch (this) {
+      SportType.padel      => l.sportPadel,
+      SportType.football   => l.sportFootball,
+      SportType.basketball => l.sportBasketball,
+      SportType.tennis     => l.sportTennis,
+      SportType.running    => l.sportRunning,
+      SportType.cycling    => l.sportCycling,
+      SportType.other      => l.sportOther,
+    };
+  }
+}
+
+extension SkillLevelL10n on SkillLevel {
+  String l10nLabel(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return switch (this) {
+      SkillLevel.beginner     => l.skillBeginner,
+      SkillLevel.intermediate => l.skillIntermediate,
+      SkillLevel.expert       => l.skillExpert,
+      SkillLevel.allLevels    => l.skillAllLevels,
+    };
+  }
 }

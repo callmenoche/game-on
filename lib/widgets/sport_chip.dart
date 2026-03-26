@@ -21,7 +21,7 @@ class SportChip extends StatelessWidget {
     return FilterChip(
       avatar: PhosphorIcon(sport.icon, size: 16,
           color: selected ? GameOnBrand.saffron : null),
-      label: Text(sport.label),
+      label: Text(sport.l10nLabel(context)),
       selected: selected,
       onSelected: onSelected,
       selectedColor: GameOnBrand.saffron.withValues(alpha: 0.2),

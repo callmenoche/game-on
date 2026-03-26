@@ -8,6 +8,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/match.dart';
 import '../models/profile.dart';
 import '../providers/auth_provider.dart';
@@ -116,36 +117,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.white24,
-                borderRadius: BorderRadius.circular(2),
+      builder: (ctx) {
+        final lCtx = AppLocalizations.of(ctx)!;
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(Icons.photo_library_rounded,
-                  color: GameOnBrand.saffron),
-              title: const Text('Choose from library'),
-              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt_rounded,
-                  color: GameOnBrand.saffron),
-              title: const Text('Take a photo'),
-              onTap: () => Navigator.pop(ctx, ImageSource.camera),
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.photo_library_rounded,
+                    color: GameOnBrand.saffron),
+                title: Text(lCtx.chooseFromLibrary),
+                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_rounded,
+                    color: GameOnBrand.saffron),
+                title: Text(lCtx.takeAPhoto),
+                onTap: () => Navigator.pop(ctx, ImageSource.camera),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
     );
     if (choice == null || !mounted) return;
 
@@ -177,6 +181,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final profileProvider = context.watch<ProfileProvider>();
     final profile = profileProvider.profile;
 
@@ -198,8 +203,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile',
-            style: TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(l.profile,
+            style: const TextStyle(fontWeight: FontWeight.w800)),
         actions: [
           if (profileProvider.isLoading && profile == null)
             const Padding(
@@ -215,7 +220,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             if (_editing) ...[
               TextButton(
                 onPressed: _saving ? null : _cancelEdit,
-                child: Text('Cancel',
+                child: Text(l.cancel,
                     style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.6))),
               ),
@@ -228,8 +233,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: GameOnBrand.saffron),
                       )
-                    : const Text('Save',
-                        style: TextStyle(
+                    : Text(l.save,
+                        style: const TextStyle(
                             color: GameOnBrand.saffron,
                             fontWeight: FontWeight.w800)),
               ),
@@ -277,7 +282,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       // ── Activity breakdown (donut) ───────────────────────
                       if (_dataLoaded && sportCounts.isNotEmpty) ...[
                         const SizedBox(height: 28),
-                        const _SectionLabel('Activity Breakdown'),
+                        _SectionLabel(l.activityBreakdown),
                         const SizedBox(height: 14),
                         _SportDonutChart(counts: sportCounts),
                       ],
@@ -285,7 +290,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       // ── Upcoming matches ─────────────────────────────────
                       if (_upcoming.isNotEmpty) ...[
                         const SizedBox(height: 28),
-                        const _SectionLabel('Upcoming Matches'),
+                        _SectionLabel(l.upcomingMatches),
                         const SizedBox(height: 12),
                         ..._upcoming
                             .take(5)
@@ -294,14 +299,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                       // ── Availability grid ────────────────────────────────
                       const SizedBox(height: 28),
-                      const _SectionLabel('My Availability'),
+                      _SectionLabel(l.myAvailability),
                       const SizedBox(height: 12),
                       const _AvailabilityGrid(),
 
                       // ── Favourite sports (edit mode only) ───────────────
                       if (_editing) ...[
                         const SizedBox(height: 28),
-                        const _SectionLabel('Favourite Sports'),
+                        _SectionLabel(l.favouriteSports),
                         const SizedBox(height: 12),
                         _FavouriteSportsPicker(
                           selected: _favoriteSports,
@@ -346,6 +351,7 @@ class _AvatarHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final initial = profile.username.isNotEmpty
         ? profile.username[0].toUpperCase()
         : '?';
@@ -422,7 +428,7 @@ class _AvatarHeader extends StatelessWidget {
                       fontSize: 13,
                       color: Colors.white.withValues(alpha: 0.7)),
                   decoration: InputDecoration(
-                    hintText: 'A short bio…',
+                    hintText: l.bioHint,
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 0, vertical: 4),
@@ -445,7 +451,7 @@ class _AvatarHeader extends StatelessWidget {
                 )
               else
                 Text(
-                  'No bio yet — tap ✏️ to add one',
+                  l.noBioYet,
                   style: TextStyle(
                       fontSize: 13,
                       fontStyle: FontStyle.italic,
@@ -531,21 +537,22 @@ class _StatsStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Row(
       children: [
         Expanded(
           child: _MiniStat(
             icon: PhosphorIconsLight.chartBar,
-            label: 'All time',
+            label: l.allTime,
             value: '$totalCount',
-            sub: 'activities',
+            sub: l.activities,
           ),
         ),
         const SizedBox(width: 10),
         Expanded(
           child: _MiniStat(
             icon: PhosphorIconsLight.clockCountdown,
-            label: 'Last 7 days',
+            label: l.last7Days,
             value: '$lastWeekCount',
             sub: _timeLabel(lastWeekMins),
           ),
@@ -554,9 +561,9 @@ class _StatsStrip extends StatelessWidget {
         Expanded(
           child: _MiniStat(
             icon: PhosphorIconsLight.trophy,
-            label: 'Top sport',
+            label: l.topSport,
             value: '—',
-            sub: topSport?.label ?? 'None yet',
+            sub: topSport?.l10nLabel(context) ?? l.noneYet,
             sportIcon: topSport?.icon,
           ),
         ),
@@ -671,9 +678,9 @@ class _SportDonutChart extends StatelessWidget {
                       height: 1,
                     ),
                   ),
-                  const Text(
-                    'total',
-                    style: TextStyle(
+                  Text(
+                    AppLocalizations.of(context)!.total,
+                    style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                       color: Colors.white54,
@@ -711,7 +718,7 @@ class _SportDonutChart extends StatelessWidget {
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              e.key.label,
+                              e.key.l10nLabel(context),
                               style: const TextStyle(
                                   fontSize: 12, fontWeight: FontWeight.w600),
                               overflow: TextOverflow.ellipsis,
@@ -801,7 +808,7 @@ class _MatchRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(match.sportType.label,
+                Text(match.sportType.l10nLabel(context),
                     style: const TextStyle(
                         fontWeight: FontWeight.w700, fontSize: 13)),
                 Text(
@@ -819,7 +826,7 @@ class _MatchRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                DateFormat('d MMM').format(match.dateTime),
+                DateFormat('d MMM', Localizations.localeOf(context).languageCode).format(match.dateTime),
                 style: const TextStyle(
                     fontSize: 12, fontWeight: FontWeight.w700),
               ),
@@ -951,7 +958,7 @@ class _FavouriteSportsPicker extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
-          'No favourites yet — tap ✏️ to add',
+          AppLocalizations.of(context)!.noFavouritesYet,
           style: TextStyle(
               fontSize: 13,
               fontStyle: FontStyle.italic,
@@ -994,7 +1001,7 @@ class _FavouriteSportsPicker extends StatelessWidget {
                 PhosphorIcon(sport.icon, size: 16, color: GameOnBrand.saffron),
                 const SizedBox(width: 6),
                 Text(
-                  sport.label,
+                  sport.l10nLabel(context),
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
@@ -1024,6 +1031,7 @@ class _SignOutButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton.icon(
@@ -1031,18 +1039,18 @@ class _SignOutButton extends StatelessWidget {
           final confirmed = await showDialog<bool>(
             context: context,
             builder: (ctx) => AlertDialog(
-              title: const Text('Sign out?'),
-              content: const Text('You will need to sign in again.'),
+              title: Text(l.signOut),
+              content: Text(l.signOutBody),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Cancel'),
+                  child: Text(l.cancel),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, true),
                   style: TextButton.styleFrom(
                       foregroundColor: Colors.redAccent),
-                  child: const Text('Sign out'),
+                  child: Text(l.signOutConfirm),
                 ),
               ],
             ),
@@ -1052,8 +1060,8 @@ class _SignOutButton extends StatelessWidget {
           }
         },
         icon: const Icon(Icons.logout_rounded, size: 18),
-        label: const Text('Sign out',
-            style: TextStyle(fontWeight: FontWeight.w700)),
+        label: Text(l.signOutConfirm,
+            style: const TextStyle(fontWeight: FontWeight.w700)),
         style: OutlinedButton.styleFrom(
           foregroundColor: Colors.redAccent.withValues(alpha: 0.8),
           side:

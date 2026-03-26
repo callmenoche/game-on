@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../l10n/app_localizations.dart';
 import '../models/match.dart';
 import '../providers/profile_provider.dart';
 import '../widgets/game_on_logo.dart';
@@ -131,6 +132,7 @@ class _Step1 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
@@ -140,14 +142,14 @@ class _Step1 extends StatelessWidget {
           const GameOnLogo(size: 36),
           const SizedBox(height: 32),
           Text(
-            'Welcome to GameOn!',
+            l.welcomeToGameOn,
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.w900,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Pick the sports you play:',
+            l.pickSports,
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
@@ -185,7 +187,7 @@ class _Step1 extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          sport.label,
+                          sport.l10nLabel(context),
                           style: TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
@@ -251,6 +253,7 @@ class _Step2 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
@@ -262,7 +265,7 @@ class _Step2 extends StatelessWidget {
             TextButton.icon(
               onPressed: onBack,
               icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 14),
-              label: const Text('Back'),
+              label: Text(l.back),
               style: TextButton.styleFrom(
                 foregroundColor:
                     theme.colorScheme.onSurface.withValues(alpha: 0.5),
@@ -271,14 +274,14 @@ class _Step2 extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Your Profile',
+              l.yourProfile,
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w900,
               ),
             ),
             const SizedBox(height: 24),
             Text(
-              'What should we call you?',
+              l.whatShouldWeCallYou,
               style: theme.textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -306,14 +309,14 @@ class _Step2 extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  'A few words about you',
+                  l.aFewWordsAboutYou,
                   style: theme.textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '(optional)',
+                  l.optional,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color:
                         theme.colorScheme.onSurface.withValues(alpha: 0.4),
@@ -352,8 +355,8 @@ class _Step2 extends StatelessWidget {
                             strokeWidth: 2.5,
                             color: GameOnBrand.slateDark),
                       )
-                    : const Text("Let's Go!",
-                        style: TextStyle(
+                    : Text(l.letsGo,
+                        style: const TextStyle(
                             fontSize: 16, fontWeight: FontWeight.w800)),
               ),
             ),

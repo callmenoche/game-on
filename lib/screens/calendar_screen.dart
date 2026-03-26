@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
+import '../l10n/app_localizations.dart';
 import '../models/match.dart';
 import '../providers/match_provider.dart';
 import '../providers/profile_provider.dart';
@@ -64,8 +65,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Calendar',
-            style: TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(AppLocalizations.of(context)!.myCalendar,
+            style: const TextStyle(fontWeight: FontWeight.w800)),
       ),
       body: Column(
         children: [
@@ -181,8 +182,10 @@ class _SelectedDaySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final isToday = isSameDay(day, DateTime.now());
-    final label   = isToday ? 'Today' : DateFormat('EEEE, d MMM').format(day);
+    final locale  = Localizations.localeOf(context).languageCode;
+    final label   = isToday ? l.today : DateFormat('EEEE, d MMM', locale).format(day);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,7 +205,7 @@ class _SelectedDaySection extends StatelessWidget {
                     size: 18, color: Colors.white.withValues(alpha: 0.25)),
                 const SizedBox(width: 12),
                 Text(
-                  'No matches scheduled',
+                  l.noMatchesScheduled,
                   style: TextStyle(
                       fontSize: 14,
                       color: Colors.white.withValues(alpha: 0.35)),
@@ -239,7 +242,7 @@ class _MatchEventRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(match.sportType.label,
+                Text(match.sportType.l10nLabel(context),
                     style: const TextStyle(
                         fontWeight: FontWeight.w700, fontSize: 14)),
                 Text(
@@ -292,13 +295,14 @@ class _AvailabilitySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionLabel('Weekly Availability'),
+        _SectionLabel(l.weeklyAvailability),
         const SizedBox(height: 4),
         Text(
-          'When are you usually free to play?',
+          l.whenFreeToPlay,
           style: TextStyle(
               fontSize: 12, color: Colors.white.withValues(alpha: 0.4)),
         ),

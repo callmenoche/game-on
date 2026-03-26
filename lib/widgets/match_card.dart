@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
+import '../l10n/app_localizations.dart';
 import '../models/match.dart';
 import '../providers/match_provider.dart';
 import 'game_on_logo.dart';
@@ -86,7 +87,7 @@ class _Header extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                match.sportType.label,
+                match.sportType.l10nLabel(context),
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: match.title != null && match.title!.isNotEmpty
                       ? FontWeight.w500
@@ -166,7 +167,7 @@ class _InfoRow extends StatelessWidget {
             Icon(Icons.access_time_rounded, size: 14, color: color),
             const SizedBox(width: 4),
             Text(
-              DateFormat('EEE d MMM  •  HH:mm').format(match.dateTime),
+              DateFormat('EEE d MMM  •  HH:mm', Localizations.localeOf(context).languageCode).format(match.dateTime),
               style: theme.textTheme.bodySmall
                   ?.copyWith(color: color, fontWeight: FontWeight.w500),
             ),
@@ -247,9 +248,9 @@ class _StatusBadge extends StatelessWidget {
           color: Colors.green.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(20),
         ),
-        child: const Text(
-          'CONFIRMED',
-          style: TextStyle(
+        child: Text(
+          AppLocalizations.of(context)!.confirmed,
+          style: const TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.w900,
             color: Colors.green,
@@ -269,7 +270,7 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        isFull ? 'FULL' : 'OPEN',
+        isFull ? AppLocalizations.of(context)!.fullBadge : AppLocalizations.of(context)!.open,
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w900,
@@ -301,7 +302,7 @@ class _SkillBadge extends StatelessWidget {
           PhosphorIcon(level.icon, size: 10, color: level.color),
           const SizedBox(width: 3),
           Text(
-            level.label,
+            level.l10nLabel(context),
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w800,
@@ -333,7 +334,7 @@ class _SpotsIndicator extends StatelessWidget {
               color: GameOnBrand.saffron.withValues(alpha: 0.7)),
           const SizedBox(width: 6),
           Text(
-            'Open to all',
+            AppLocalizations.of(context)!.openToAll,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
               fontWeight: FontWeight.w600,
@@ -349,7 +350,7 @@ class _SpotsIndicator extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '$taken / $total players',
+          AppLocalizations.of(context)!.spotsCount(taken, total),
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
             fontWeight: FontWeight.w600,
@@ -409,7 +410,7 @@ class _JoinButton extends StatelessWidget {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
         child:
-            const Text('Leave', style: TextStyle(fontWeight: FontWeight.w700)),
+            Text(AppLocalizations.of(context)!.leave, style: const TextStyle(fontWeight: FontWeight.w700)),
       );
     }
 
@@ -423,7 +424,7 @@ class _JoinButton extends StatelessWidget {
         disabledBackgroundColor: GameOnBrand.saffron.withValues(alpha: 0.25),
       ),
       child: Text(
-        match.isFull ? 'Full' : 'Join',
+        match.isFull ? AppLocalizations.of(context)!.full : AppLocalizations.of(context)!.join,
         style: const TextStyle(fontWeight: FontWeight.w800),
       ),
     );

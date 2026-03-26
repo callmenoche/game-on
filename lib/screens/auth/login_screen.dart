@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../l10n/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/game_on_logo.dart';
 
@@ -107,6 +108,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildHeader(ThemeData theme) {
+    final l = AppLocalizations.of(context)!;
     return Column(
       children: [
         const GameOnLogoContainer(size: 88),
@@ -122,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         const SizedBox(height: 6),
         Text(
-          'Find your next match',
+          l.findYourNextMatch,
           style: TextStyle(
             color: Colors.white.withValues(alpha: 0.5),
             fontSize: 15,
@@ -133,6 +135,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildTabBar(ThemeData theme) {
+    final l = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF243044),
@@ -150,7 +153,7 @@ class _LoginScreenState extends State<LoginScreen>
         unselectedLabelColor: Colors.white54,
         labelStyle:
             const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-        tabs: const [Tab(text: 'Sign In'), Tab(text: 'Sign Up')],
+        tabs: [Tab(text: l.signIn), Tab(text: l.signUp)],
       ),
     );
   }
@@ -184,6 +187,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildSubmitButton() {
+    final l = AppLocalizations.of(context)!;
     return Consumer<AuthProvider>(
       builder: (_, auth, __) {
         return FilledButton(
@@ -205,7 +209,7 @@ class _LoginScreenState extends State<LoginScreen>
                   ),
                 )
               : Text(
-                  _tabController.index == 0 ? 'Sign In' : 'Create Account',
+                  _tabController.index == 0 ? l.signIn : l.createAccount,
                   style: const TextStyle(
                       fontSize: 16, fontWeight: FontWeight.w800),
                 ),
@@ -251,22 +255,23 @@ class _SignInForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Form(
       key: formKey,
       child: Column(
         children: [
           _GameOnField(
             controller: emailController,
-            label: 'Email',
+            label: l.email,
             icon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
             validator: (v) =>
-                (v == null || !v.contains('@')) ? 'Enter a valid email' : null,
+                (v == null || !v.contains('@')) ? l.invalidEmail : null,
           ),
           const SizedBox(height: 14),
           _GameOnField(
             controller: passwordController,
-            label: 'Password',
+            label: l.password,
             icon: Icons.lock_outline,
             obscureText: obscurePassword,
             suffixIcon: IconButton(
@@ -277,7 +282,7 @@ class _SignInForm extends StatelessWidget {
               onPressed: onToggleObscure,
             ),
             validator: (v) =>
-                (v == null || v.length < 6) ? 'Min 6 characters' : null,
+                (v == null || v.length < 6) ? l.passwordTooShort : null,
           ),
         ],
       ),
@@ -304,22 +309,23 @@ class _SignUpForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Form(
       key: formKey,
       child: Column(
         children: [
           _GameOnField(
             controller: emailController,
-            label: 'Email',
+            label: l.email,
             icon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
             validator: (v) =>
-                (v == null || !v.contains('@')) ? 'Enter a valid email' : null,
+                (v == null || !v.contains('@')) ? l.invalidEmail : null,
           ),
           const SizedBox(height: 14),
           _GameOnField(
             controller: passwordController,
-            label: 'Password',
+            label: l.password,
             icon: Icons.lock_outline,
             obscureText: obscurePassword,
             suffixIcon: IconButton(
@@ -330,7 +336,7 @@ class _SignUpForm extends StatelessWidget {
               onPressed: onToggleObscure,
             ),
             validator: (v) =>
-                (v == null || v.length < 6) ? 'Min 6 characters' : null,
+                (v == null || v.length < 6) ? l.passwordTooShort : null,
           ),
         ],
       ),

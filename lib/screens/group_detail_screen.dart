@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../l10n/app_localizations.dart';
 import '../models/group.dart';
 import '../providers/auth_provider.dart';
 import '../providers/group_provider.dart';
@@ -43,23 +44,23 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
   }
 
   Future<void> _leave() async {
+    final l = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: GameOnBrand.slateCard,
-        title: const Text('Leave Group',
-            style: TextStyle(fontWeight: FontWeight.w800)),
-        content: const Text(
-            'You will no longer see private matches from this group.'),
+        title: Text(l.leaveGroup,
+            style: const TextStyle(fontWeight: FontWeight.w800)),
+        content: Text(l.leaveGroupBody),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
+              child: Text(l.cancel)),
           FilledButton(
             style:
                 FilledButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Leave'),
+            child: Text(l.leave),
           ),
         ],
       ),
@@ -94,8 +95,8 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
           if (!isCreator)
             TextButton(
               onPressed: _leave,
-              child: const Text('Leave',
-                  style: TextStyle(color: Colors.redAccent)),
+              child: Text(AppLocalizations.of(context)!.leave,
+                  style: const TextStyle(color: Colors.redAccent)),
             ),
         ],
       ),
@@ -119,8 +120,8 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                   const Icon(Icons.vpn_key_rounded,
                       color: GameOnBrand.saffron, size: 28),
                   const SizedBox(height: 8),
-                  const Text('Invite Code',
-                      style: TextStyle(
+                  Text(AppLocalizations.of(context)!.inviteCode,
+                      style: const TextStyle(
                           fontWeight: FontWeight.w700, fontSize: 13)),
                   const SizedBox(height: 10),
                   GestureDetector(
@@ -128,9 +129,9 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                       Clipboard.setData(
                           ClipboardData(text: group.inviteCode));
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Code copied to clipboard!'),
-                          duration: Duration(seconds: 2),
+                        SnackBar(
+                          content: Text(AppLocalizations.of(context)!.codeCopiedToClipboard),
+                          duration: const Duration(seconds: 2),
                         ),
                       );
                     },
@@ -165,7 +166,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Share this code so others can join',
+                    AppLocalizations.of(context)!.shareCodeToJoin,
                     style: TextStyle(
                       fontSize: 12,
                       color:
@@ -192,8 +193,8 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
             const SizedBox(height: 24),
             Row(
               children: [
-                const Text('Members',
-                    style: TextStyle(
+                Text(AppLocalizations.of(context)!.members,
+                    style: const TextStyle(
                         fontWeight: FontWeight.w800, fontSize: 15)),
                 const SizedBox(width: 8),
                 Container(
@@ -261,9 +262,9 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                                 GameOnBrand.saffron.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Text(
-                            'Admin',
-                            style: TextStyle(
+                          child: Text(
+                            AppLocalizations.of(context)!.admin,
+                            style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w800,
                               color: GameOnBrand.saffron,

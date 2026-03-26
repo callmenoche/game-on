@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../l10n/app_localizations.dart';
 import '../models/match.dart';
 import '../providers/group_provider.dart';
 import '../providers/match_provider.dart';
@@ -90,10 +91,11 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New Match',
-            style: TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(l.newMatchTitle,
+            style: const TextStyle(fontWeight: FontWeight.w800)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => context.pop(),
@@ -104,7 +106,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
           children: [
-            const _SectionLabel('Match title'),
+            _SectionLabel(l.matchTitle),
             const SizedBox(height: 12),
             TextFormField(
               controller: _titleController,
@@ -114,15 +116,15 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
                 counterText: '',
               ),
               validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Title required' : null,
+                  (v == null || v.trim().isEmpty) ? l.titleRequired : null,
             ),
             const SizedBox(height: 24),
             Row(
               children: [
-                const _SectionLabel('Description'),
+                _SectionLabel(l.description),
                 const SizedBox(width: 8),
                 Text(
-                  '(optional)',
+                  l.optional,
                   style: TextStyle(
                     fontSize: 11,
                     color: Theme.of(context)
@@ -138,26 +140,26 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
               controller: _descController,
               maxLines: 3,
               maxLength: 200,
-              decoration: const InputDecoration(
-                hintText: 'Any details for players…',
+              decoration: InputDecoration(
+                hintText: l.anyDetailsForPlayers,
               ),
             ),
             const SizedBox(height: 24),
-            const _SectionLabel('Sport'),
+            _SectionLabel(l.sport),
             const SizedBox(height: 12),
             _SportPicker(
               selected: _sport,
               onChanged: (s) => setState(() => _sport = s),
             ),
             const SizedBox(height: 24),
-            const _SectionLabel('Skill level'),
+            _SectionLabel(l.skillLevel),
             const SizedBox(height: 12),
             _SkillLevelPicker(
               selected: _skillLevel,
               onChanged: (s) => setState(() => _skillLevel = s),
             ),
             const SizedBox(height: 24),
-            const _SectionLabel('Location'),
+            _SectionLabel(l.location),
             const SizedBox(height: 12),
             _LocationField(
               controller: _locationController,
@@ -180,21 +182,21 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
               },
             ),
             const SizedBox(height: 24),
-            const _SectionLabel('Post to'),
+            _SectionLabel(l.postTo),
             const SizedBox(height: 12),
             _GroupPicker(
               selectedGroupId: _selectedGroupId,
               onChanged: (id) => setState(() => _selectedGroupId = id),
             ),
             const SizedBox(height: 24),
-            const _SectionLabel('Date & Time'),
+            _SectionLabel(l.dateAndTime),
             const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
                   child: _PickerButton(
                     icon: Icons.calendar_today_rounded,
-                    label: DateFormat('EEE, d MMM yyyy').format(_date),
+                    label: DateFormat('EEE, d MMM yyyy', Localizations.localeOf(context).languageCode).format(_date),
                     onTap: _pickDate,
                   ),
                 ),
@@ -209,14 +211,14 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
               ],
             ),
             const SizedBox(height: 24),
-            const _SectionLabel('Duration'),
+            _SectionLabel(l.duration),
             const SizedBox(height: 12),
             _DurationStepper(
               minutes: _durationMinutes,
               onChanged: (v) => setState(() => _durationMinutes = v),
             ),
             const SizedBox(height: 24),
-            const _SectionLabel('Players'),
+            _SectionLabel(l.players),
             const SizedBox(height: 12),
             // Unlimited toggle
             _UnlimitedToggle(
@@ -237,7 +239,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
                 }),
               ),
               const SizedBox(height: 16),
-              const _SectionLabel('Bring friends (guests)'),
+              _SectionLabel(l.bringFriends),
               const SizedBox(height: 12),
               _GuestCountStepper(
                 value: _guestCount,
@@ -250,7 +252,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
               sport: _sport,
               skillLevel: _skillLevel,
               location: _locationController.text.isEmpty
-                  ? 'Your location'
+                  ? l.yourLocation
                   : _locationController.text,
               dateTime: _combinedDateTime,
               totalSpots: _totalSpots,
@@ -330,9 +332,10 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
     setState(() => _isSubmitting = false);
 
     if (success) {
+      final l = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Match created! 🎉'),
+        SnackBar(
+          content: Text(l.matchCreated),
           backgroundColor: GameOnBrand.saffron,
         ),
       );
@@ -406,7 +409,7 @@ class _SportPicker extends StatelessWidget {
                     color: isSelected ? GameOnBrand.slateDark : GameOnBrand.saffron),
                 const SizedBox(width: 6),
                 Text(
-                  sport.label,
+                  sport.l10nLabel(context),
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
@@ -462,7 +465,7 @@ class _SkillLevelPicker extends StatelessWidget {
                 PhosphorIcon(level.icon, size: 16, color: isSelected ? level.color : Colors.white.withValues(alpha: 0.55)),
                 const SizedBox(width: 6),
                 Text(
-                  level.label,
+                  level.l10nLabel(context),
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
@@ -674,6 +677,7 @@ class _GroupPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final groups = context.watch<GroupProvider>().groups;
 
     return Wrap(
@@ -682,7 +686,7 @@ class _GroupPicker extends StatelessWidget {
       children: [
         // Public option
         _GroupChip(
-          label: 'Public',
+          label: l.public,
           icon: Icons.public_rounded,
           selected: selectedGroupId == null,
           onTap: () => onChanged(null),
@@ -1088,6 +1092,7 @@ class _MatchPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final filledSpots = 1 + guestCount;
 
     return Column(
@@ -1124,7 +1129,7 @@ class _MatchPreview extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         Text(
-                          sport.label,
+                          sport.l10nLabel(context),
                           style: TextStyle(
                             fontWeight: title != null && title!.isNotEmpty
                                 ? FontWeight.w500
@@ -1159,8 +1164,8 @@ class _MatchPreview extends StatelessWidget {
                           color: GameOnBrand.saffron.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Text('OPEN',
-                            style: TextStyle(
+                        child: Text(l.open,
+                            style: const TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w900,
                                 color: GameOnBrand.saffron,
@@ -1180,7 +1185,7 @@ class _MatchPreview extends StatelessWidget {
                             PhosphorIcon(skillLevel.icon, size: 10, color: skillLevel.color),
                             const SizedBox(width: 3),
                             Text(
-                              skillLevel.label,
+                              skillLevel.l10nLabel(context),
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
@@ -1202,7 +1207,7 @@ class _MatchPreview extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.5)),
                   const SizedBox(width: 4),
                   Text(
-                    DateFormat('EEE d MMM  •  HH:mm').format(dateTime),
+                    DateFormat('EEE d MMM  •  HH:mm', Localizations.localeOf(context).languageCode).format(dateTime),
                     style: TextStyle(
                         fontSize: 12,
                         color: Colors.white.withValues(alpha: 0.6)),
@@ -1244,7 +1249,7 @@ class _MatchPreview extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('$filledSpots / $totalSpots players',
+                        Text(l.spotsCount(filledSpots, totalSpots),
                             style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -1321,6 +1326,7 @@ class _DurationStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -1336,7 +1342,7 @@ class _DurationStepper extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Duration',
+              l.duration,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 15,
@@ -1534,6 +1540,7 @@ class _SubmitBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
@@ -1553,9 +1560,9 @@ class _SubmitBar extends StatelessWidget {
                   child: CircularProgressIndicator(
                       strokeWidth: 2.5, color: GameOnBrand.slateDark),
                 )
-              : const Text('Create Match',
+              : Text(l.createMatchButton,
                   style:
-                      TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                      const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
         ),
       ),
     );

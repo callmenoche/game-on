@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../l10n/app_localizations.dart';
 import '../providers/group_provider.dart';
 import '../widgets/game_on_logo.dart';
 
@@ -42,8 +43,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
       context.push('/groups/${group.id}');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not create group. Try again.'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.couldNotCreateGroup),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -53,10 +54,11 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New Group',
-            style: TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(l.newGroup,
+            style: const TextStyle(fontWeight: FontWeight.w800)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => context.pop(),
@@ -82,13 +84,13 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       size: 40, color: GameOnBrand.saffron),
                   const SizedBox(height: 10),
                   Text(
-                    'Create a private group',
+                    l.createPrivateGroup,
                     style: theme.textTheme.titleMedium
                         ?.copyWith(fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Matches posted to this group are only visible to members. Share the invite code to grow your group.',
+                    l.createGroupBody,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 13,
@@ -100,7 +102,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
               ),
             ),
             const SizedBox(height: 28),
-            _label('Group name'),
+            _label(l.groupName),
             const SizedBox(height: 10),
             TextFormField(
               controller: _nameCtrl,
@@ -110,10 +112,10 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                 prefixIcon: Icon(Icons.group_rounded, size: 20),
               ),
               validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Enter a group name' : null,
+                  (v == null || v.trim().isEmpty) ? l.groupName : null,
             ),
             const SizedBox(height: 20),
-            _label('Description (optional)'),
+            _label(l.descriptionOptional),
             const SizedBox(height: 10),
             TextFormField(
               controller: _descCtrl,
@@ -144,8 +146,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       child: CircularProgressIndicator(
                           strokeWidth: 2.5, color: GameOnBrand.slateDark),
                     )
-                  : const Text('Create Group',
-                      style: TextStyle(
+                  : Text(l.createGroup,
+                      style: const TextStyle(
                           fontSize: 16, fontWeight: FontWeight.w800)),
             ),
           ],

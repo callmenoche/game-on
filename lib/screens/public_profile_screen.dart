@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../l10n/app_localizations.dart';
 import '../models/match.dart';
 import '../models/profile.dart';
 import '../services/match_service.dart';
@@ -65,7 +66,7 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          _profile?.username ?? 'Player',
+          _profile?.username ?? AppLocalizations.of(context)!.player,
           style: const TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
@@ -190,7 +191,7 @@ class _ProfileBody extends StatelessWidget {
           // ── Activity breakdown (donut) ─────────────────────────────────────
           if (sportCounts.isNotEmpty) ...[
             const SizedBox(height: 28),
-            const _SectionLabel('Activity Breakdown'),
+            _SectionLabel(AppLocalizations.of(context)!.activityBreakdown),
             const SizedBox(height: 14),
             _SportDonutChart(counts: sportCounts),
           ],
@@ -198,7 +199,7 @@ class _ProfileBody extends StatelessWidget {
           // ── Upcoming matches ───────────────────────────────────────────────
           if (upcoming.isNotEmpty) ...[
             const SizedBox(height: 28),
-            const _SectionLabel('Upcoming Matches'),
+            _SectionLabel(AppLocalizations.of(context)!.upcomingMatches),
             const SizedBox(height: 12),
             ...upcoming.take(5).map((m) => _HistoryRow(match: m)),
           ],
@@ -206,7 +207,7 @@ class _ProfileBody extends StatelessWidget {
           // ── Recent matches ─────────────────────────────────────────────────
           if (history.isNotEmpty) ...[
             const SizedBox(height: 28),
-            const _SectionLabel('Recent Matches'),
+            _SectionLabel(AppLocalizations.of(context)!.recentMatches),
             const SizedBox(height: 12),
             ...history.take(5).map((m) => _HistoryRow(match: m)),
           ],
@@ -277,16 +278,16 @@ class _StatsStrip extends StatelessWidget {
         Expanded(
           child: _MiniStat(
             icon: PhosphorIconsLight.chartBar,
-            label: 'All time',
+            label: AppLocalizations.of(context)!.allTime,
             value: '$totalCount',
-            sub: 'activities',
+            sub: AppLocalizations.of(context)!.activities,
           ),
         ),
         const SizedBox(width: 10),
         Expanded(
           child: _MiniStat(
             icon: PhosphorIconsLight.clockCountdown,
-            label: 'Last 7 days',
+            label: AppLocalizations.of(context)!.last7Days,
             value: '$lastWeekCount',
             sub: _timeLabel(lastWeekMins),
           ),
@@ -295,9 +296,9 @@ class _StatsStrip extends StatelessWidget {
         Expanded(
           child: _MiniStat(
             icon: PhosphorIconsLight.trophy,
-            label: 'Top sport',
+            label: AppLocalizations.of(context)!.topSport,
             value: '—',
-            sub: topSport?.label ?? 'None yet',
+            sub: topSport?.l10nLabel(context) ?? AppLocalizations.of(context)!.noneYet,
             sportIcon: topSport?.icon,
           ),
         ),
@@ -412,9 +413,9 @@ class _SportDonutChart extends StatelessWidget {
                       height: 1,
                     ),
                   ),
-                  const Text(
-                    'total',
-                    style: TextStyle(
+                  Text(
+                    AppLocalizations.of(context)!.total,
+                    style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                       color: Colors.white54,
@@ -452,7 +453,7 @@ class _SportDonutChart extends StatelessWidget {
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              e.key.label,
+                              e.key.l10nLabel(context),
                               style: const TextStyle(
                                   fontSize: 12, fontWeight: FontWeight.w600),
                               overflow: TextOverflow.ellipsis,
@@ -542,7 +543,7 @@ class _HistoryRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(match.sportType.label,
+                Text(match.sportType.l10nLabel(context),
                     style: const TextStyle(
                         fontWeight: FontWeight.w700, fontSize: 13)),
                 Text(
@@ -560,7 +561,7 @@ class _HistoryRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                DateFormat('d MMM').format(match.dateTime),
+                DateFormat('d MMM', Localizations.localeOf(context).languageCode).format(match.dateTime),
                 style: const TextStyle(
                     fontSize: 12, fontWeight: FontWeight.w700),
               ),
