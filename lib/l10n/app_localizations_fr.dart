@@ -217,6 +217,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get noneYet => 'Aucun encore';
 
   @override
+  String nTied(int n) {
+    return '$n ex æquo';
+  }
+
+  @override
   String get activityBreakdown => 'Répartition des activités';
 
   @override
@@ -614,4 +619,95 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chooseLanguage => 'Choisir la langue';
+
+  @override
+  String get almostThere => 'Presque prêt !';
+
+  @override
+  String get optionalInfoSubtitle => 'Optionnel — modifiable plus tard';
+
+  @override
+  String get dateOfBirth => 'Date de naissance';
+
+  @override
+  String get selectDate => 'Sélectionner une date';
+
+  @override
+  String get gender => 'Genre';
+
+  @override
+  String get male => 'Homme';
+
+  @override
+  String get female => 'Femme';
+
+  @override
+  String get nonBinary => 'Non-binaire';
+
+  @override
+  String get privacySection => 'Confidentialité';
+
+  @override
+  String get showAgeOnProfile => 'Afficher l\'âge sur le profil';
+
+  @override
+  String get showGenderOnProfile => 'Afficher le genre sur le profil';
+
+  @override
+  String get connectionLost => 'Pas de connexion internet';
+
+  @override
+  String get connectionRestored => 'Connexion rétablie';
+
+  @override
+  String get couldNotSaveAvailability =>
+      'Impossible de sauvegarder la disponibilité';
+
+  @override
+  String get couldNotSaveProfile => 'Impossible de sauvegarder le profil';
+
+  @override
+  String get couldNotLeaveMatch => 'Impossible de quitter le match';
+
+  @override
+  String get couldNotConfirmMatch => 'Impossible de confirmer le match';
+
+  @override
+  String get leaveMatchQuestion => 'Quitter le match ?';
+
+  @override
+  String get leaveMatchBody => 'Vous perdrez votre place dans ce match.';
+
+  @override
+  String get matchNotFound => 'Ce match n\'existe plus';
+
+  @override
+  String get locationRequired => 'Le lieu est obligatoire';
+
+  @override
+  String get dateInPast => 'La date du match doit être dans le futur';
+
+  @override
+  String get usernameTaken => 'Ce pseudo est déjà pris';
+
+  @override
+  String get checkingUsername => 'Vérification…';
+
+  @override
+  String get usernameAvailable => 'Pseudo disponible';
+
+  @override
+  String get next => 'Suivant →';
+
+  @override
+  String get somethingWentWrong => 'Un problème est survenu';
+
+  @override
+  String get retry => 'Réessayer';
+
+  @override
+  String get noMatchesYet => 'Aucun match encore';
+
+  @override
+  String get createOrJoin => 'Crée un match ou rejoins-en un depuis le fil !';
 }

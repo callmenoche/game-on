@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -13,6 +14,7 @@ class ProfileProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool _isUploadingAvatar = false;
   String? _error;
+  StreamSubscription? _authSub;
 
   Profile? get profile => _profile;
   bool get isLoading => _isLoading;
@@ -23,7 +25,7 @@ class ProfileProvider extends ChangeNotifier {
 
   ProfileProvider() {
     // When the signed-in user changes, clear the cached profile and reload.
-    SupabaseService.authStateChanges.listen((data) {
+    _authSub = SupabaseService.authStateChanges.listen((data) {
       final newUserId = data.session?.user.id;
       if (newUserId != _profile?.id) {
         _profile = null;
@@ -94,15 +96,33 @@ class ProfileProvider extends ChangeNotifier {
     }
   }
 
-  /// Saves bio and favoriteSports. Username is immutable and never changed here.
+  /// Saves profile fields. Username is immutable and never changed here.
+  /// [birthDate] and [gender] can be null to clear the value.
   Future<void> saveProfile({
     String? bio,
     required List<String> favoriteSports,
+    DateTime? birthDate,
+    String? gender,
+    required bool showAge,
+    required bool showGender,
   }) async {
     if (_profile == null) return;
-    final updated = _profile!.copyWith(
-      bio: bio?.isEmpty == true ? null : bio,
+    final current = _profile!;
+    // Build directly to allow clearing nullable fields (birthDate, gender)
+    final updated = Profile(
+      id: current.id,
+      username: current.username,
+      bio: bio == null || bio.isEmpty ? null : bio,
       favoriteSports: favoriteSports,
+      availabilityJson: current.availabilityJson,
+      avatarUrl: current.avatarUrl,
+      createdAt: current.createdAt,
+      updatedAt: DateTime.now(),
+      onboarded: current.onboarded,
+      birthDate: birthDate,
+      gender: gender,
+      showAge: showAge,
+      showGender: showGender,
     );
     _profile = updated;
     notifyListeners();
@@ -135,6 +155,8 @@ class ProfileProvider extends ChangeNotifier {
     required String username,
     required List<String> favoriteSports,
     String? bio,
+    DateTime? birthDate,
+    String? gender,
   }) async {
     if (_profile == null) return;
     _isLoading = true;
@@ -145,6 +167,8 @@ class ProfileProvider extends ChangeNotifier {
         username: username,
         favoriteSports: favoriteSports,
         bio: bio,
+        birthDate: birthDate,
+        gender: gender,
       );
     } catch (_) {
       _error = 'Failed to complete setup.';
@@ -156,5 +180,11 @@ class ProfileProvider extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
   }
 }

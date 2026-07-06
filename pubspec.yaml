@@ -51,6 +51,9 @@ dependencies:
   # Icons
   phosphor_flutter: ^2.1.0
 
+  # Connectivity
+  connectivity_plus: ^6.0.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

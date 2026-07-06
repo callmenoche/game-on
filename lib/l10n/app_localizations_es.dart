@@ -216,6 +216,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get noneYet => 'Ninguno aún';
 
   @override
+  String nTied(int n) {
+    return '$n empatados';
+  }
+
+  @override
   String get activityBreakdown => 'Desglose de actividad';
 
   @override
@@ -613,4 +618,94 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get chooseLanguage => 'Elegir idioma';
+
+  @override
+  String get almostThere => '¡Casi listo!';
+
+  @override
+  String get optionalInfoSubtitle => 'Opcional — puedes cambiarlo después';
+
+  @override
+  String get dateOfBirth => 'Fecha de nacimiento';
+
+  @override
+  String get selectDate => 'Seleccionar fecha';
+
+  @override
+  String get gender => 'Género';
+
+  @override
+  String get male => 'Hombre';
+
+  @override
+  String get female => 'Mujer';
+
+  @override
+  String get nonBinary => 'No binario';
+
+  @override
+  String get privacySection => 'Privacidad';
+
+  @override
+  String get showAgeOnProfile => 'Mostrar edad en el perfil';
+
+  @override
+  String get showGenderOnProfile => 'Mostrar género en el perfil';
+
+  @override
+  String get connectionLost => 'Sin conexión a internet';
+
+  @override
+  String get connectionRestored => 'Conexión restablecida';
+
+  @override
+  String get couldNotSaveAvailability => 'No se pudo guardar la disponibilidad';
+
+  @override
+  String get couldNotSaveProfile => 'No se pudo guardar el perfil';
+
+  @override
+  String get couldNotLeaveMatch => 'No se pudo salir del partido';
+
+  @override
+  String get couldNotConfirmMatch => 'No se pudo confirmar el partido';
+
+  @override
+  String get leaveMatchQuestion => '¿Salir del partido?';
+
+  @override
+  String get leaveMatchBody => 'Perderás tu lugar en este partido.';
+
+  @override
+  String get matchNotFound => 'Este partido ya no existe';
+
+  @override
+  String get locationRequired => 'El lugar es obligatorio';
+
+  @override
+  String get dateInPast => 'La fecha del partido debe ser en el futuro';
+
+  @override
+  String get usernameTaken => 'Este nombre de usuario ya está en uso';
+
+  @override
+  String get checkingUsername => 'Verificando…';
+
+  @override
+  String get usernameAvailable => 'Nombre de usuario disponible';
+
+  @override
+  String get next => 'Siguiente →';
+
+  @override
+  String get somethingWentWrong => 'Algo salió mal';
+
+  @override
+  String get retry => 'Reintentar';
+
+  @override
+  String get noMatchesYet => 'Sin partidos aún';
+
+  @override
+  String get createOrJoin => '¡Crea un partido o únete a uno desde el inicio!';
 }

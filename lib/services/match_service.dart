@@ -10,21 +10,20 @@ class MatchService {
 
   // ── Feed ──────────────────────────────────────────────────────────────────
 
-  Future<List<Match>> fetchOpenMatches({SportType? sport}) async {
+  static const int pageSize = 30;
+
+  Future<List<Match>> fetchOpenMatches({SportType? sport, int offset = 0}) async {
     var query = _matches
         .select()
-        .eq('status', 'open')
-        .order('date_time', ascending: true);
+        .eq('status', 'open');
 
     if (sport != null) {
-      query = _matches
-          .select()
-          .eq('status', 'open')
-          .eq('sport_type', sport.name)
-          .order('date_time', ascending: true);
+      query = query.eq('sport_type', sport.name);
     }
 
-    final data = await query;
+    final data = await query
+        .order('date_time', ascending: true)
+        .range(offset, offset + pageSize - 1);
     return (data as List).map((e) => Match.fromJson(e)).toList();
   }
 

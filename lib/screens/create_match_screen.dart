@@ -306,6 +306,14 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    final l = AppLocalizations.of(context)!;
+    if (_combinedDateTime.isBefore(DateTime.now())) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(l.dateInPast),
+        backgroundColor: Colors.redAccent,
+      ));
+      return;
+    }
     setState(() => _isSubmitting = true);
 
     final success = await context.read<MatchProvider>().createMatch(

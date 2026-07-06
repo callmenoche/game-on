@@ -496,6 +496,12 @@ abstract class AppLocalizations {
   /// **'None yet'**
   String get noneYet;
 
+  /// Label shown when n sports are equally top-ranked
+  ///
+  /// In en, this message translates to:
+  /// **'{n} tied'**
+  String nTied(int n);
+
   /// No description provided for @activityBreakdown.
   ///
   /// In en, this message translates to:
@@ -1251,6 +1257,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose Language'**
   String get chooseLanguage;
+
+  /// No description provided for @almostThere.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost there!'**
+  String get almostThere;
+
+  /// No description provided for @optionalInfoSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — you can change this later'**
+  String get optionalInfoSubtitle;
+
+  /// No description provided for @dateOfBirth.
+  ///
+  /// In en, this message translates to:
+  /// **'Date of birth'**
+  String get dateOfBirth;
+
+  /// No description provided for @selectDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select date'**
+  String get selectDate;
+
+  /// No description provided for @gender.
+  ///
+  /// In en, this message translates to:
+  /// **'Gender'**
+  String get gender;
+
+  /// No description provided for @male.
+  ///
+  /// In en, this message translates to:
+  /// **'Man'**
+  String get male;
+
+  /// No description provided for @female.
+  ///
+  /// In en, this message translates to:
+  /// **'Woman'**
+  String get female;
+
+  /// No description provided for @nonBinary.
+  ///
+  /// In en, this message translates to:
+  /// **'Non-binary'**
+  String get nonBinary;
+
+  /// No description provided for @privacySection.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get privacySection;
+
+  /// No description provided for @showAgeOnProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Show age on profile'**
+  String get showAgeOnProfile;
+
+  /// No description provided for @showGenderOnProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Show gender on profile'**
+  String get showGenderOnProfile;
+
+  /// No description provided for @connectionLost.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection'**
+  String get connectionLost;
+
+  /// No description provided for @connectionRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Back online'**
+  String get connectionRestored;
+
+  /// No description provided for @couldNotSaveAvailability.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save availability'**
+  String get couldNotSaveAvailability;
+
+  /// No description provided for @couldNotSaveProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save profile'**
+  String get couldNotSaveProfile;
+
+  /// No description provided for @couldNotLeaveMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not leave match'**
+  String get couldNotLeaveMatch;
+
+  /// No description provided for @couldNotConfirmMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not confirm match'**
+  String get couldNotConfirmMatch;
+
+  /// No description provided for @leaveMatchQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave match?'**
+  String get leaveMatchQuestion;
+
+  /// No description provided for @leaveMatchBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You will lose your spot in this match.'**
+  String get leaveMatchBody;
+
+  /// No description provided for @matchNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This match no longer exists'**
+  String get matchNotFound;
+
+  /// No description provided for @locationRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Location is required'**
+  String get locationRequired;
+
+  /// No description provided for @dateInPast.
+  ///
+  /// In en, this message translates to:
+  /// **'Match date must be in the future'**
+  String get dateInPast;
+
+  /// No description provided for @usernameTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'This username is already taken'**
+  String get usernameTaken;
+
+  /// No description provided for @checkingUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking…'**
+  String get checkingUsername;
+
+  /// No description provided for @usernameAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Username available'**
+  String get usernameAvailable;
+
+  /// No description provided for @next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next →'**
+  String get next;
+
+  /// No description provided for @somethingWentWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get somethingWentWrong;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @noMatchesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches yet'**
+  String get noMatchesYet;
+
+  /// No description provided for @createOrJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a match or join one from the feed!'**
+  String get createOrJoin;
 }
 
 class _AppLocalizationsDelegate

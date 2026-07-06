@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/auth_provider.dart';
+import 'providers/connectivity_provider.dart';
 import 'providers/group_provider.dart';
 import 'providers/language_provider.dart';
 import 'providers/match_provider.dart';
@@ -24,6 +25,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => ProfileProvider()),
         ChangeNotifierProvider(create: (_) => GroupProvider()),
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
+        ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
       ],
       child: const GameOnApp(),
     ),
@@ -89,28 +91,32 @@ class _GameOnAppState extends State<GameOnApp> {
     _appLinks = AppLinks();
     final initialUri = await _appLinks.getInitialLink();
     if (initialUri != null) _handleDeepLink(initialUri);
-    _appLinks.uriLinkStream.listen(_handleDeepLink);
+    _appLinks.uriLinkStream.listen(_handleDeepLink, onError: (_) {});
   }
+
+  static final _uuidPattern = RegExp(
+      r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+      caseSensitive: false);
 
   void _handleDeepLink(Uri uri) {
     if (uri.scheme == 'io.supabase.gameon' && uri.host == 'claim') {
       final code = uri.queryParameters['code'];
       final matchId = uri.queryParameters['match'];
-      if (code != null && matchId != null) {
-        final auth = context.read<AuthProvider>();
-        final profile = context.read<ProfileProvider>();
-        if (auth.isAuthenticated && profile.profile != null) {
-          // App already ready — navigate immediately on next frame
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              _router.push('/match/$matchId', extra: {'claimCode': code});
-            }
-          });
-        } else {
-          // Auth / profile still loading — store and navigate once ready
-          _pendingMatchId = matchId;
-          _pendingClaimCode = code;
-        }
+      if (code == null || code.isEmpty || matchId == null || matchId.isEmpty) {
+        return;
+      }
+      if (!_uuidPattern.hasMatch(matchId)) return;
+      final auth = context.read<AuthProvider>();
+      final profile = context.read<ProfileProvider>();
+      if (auth.isAuthenticated && profile.profile != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _router.push('/match/$matchId', extra: {'claimCode': code});
+          }
+        });
+      } else {
+        _pendingMatchId = matchId;
+        _pendingClaimCode = code;
       }
     }
   }

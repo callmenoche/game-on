@@ -49,6 +49,8 @@ class ProfileService {
     required String username,
     required List<String> favoriteSports,
     String? bio,
+    DateTime? birthDate,
+    String? gender,
   }) async {
     final data = await _profiles
         .update({
@@ -56,11 +58,24 @@ class ProfileService {
           'favorite_sports': favoriteSports,
           'bio': bio,
           'onboarded': true,
+          if (birthDate != null)
+            'birth_date': birthDate.toIso8601String().split('T').first,
+          if (gender != null) 'gender': gender,
         })
         .eq('id', userId)
         .select()
         .single();
     return Profile.fromJson(data);
+  }
+
+  /// Returns true if [username] is not already taken by another user.
+  Future<bool> isUsernameAvailable(String username) async {
+    final currentId = SupabaseService.currentUser?.id;
+    final builder = _profiles.select('id').ilike('username', username);
+    final data = currentId != null
+        ? await builder.neq('id', currentId).limit(1)
+        : await builder.limit(1);
+    return (data as List).isEmpty;
   }
 
   /// Returns up to 20 profiles whose username matches [query] (case-insensitive),

@@ -9,12 +9,13 @@ class NotificationProvider extends ChangeNotifier {
 
   List<NotificationItem> _items = [];
   StreamSubscription<List<NotificationItem>>? _sub;
+  StreamSubscription? _authSub;
 
   List<NotificationItem> get items => _items;
   int get unreadCount => _items.where((n) => !n.isRead).length;
 
   NotificationProvider() {
-    SupabaseService.authStateChanges.listen((data) {
+    _authSub = SupabaseService.authStateChanges.listen((data) {
       final newUserId = data.session?.user.id;
       if (newUserId != null) {
         start();
@@ -59,6 +60,7 @@ class NotificationProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _authSub?.cancel();
     _sub?.cancel();
     super.dispose();
   }

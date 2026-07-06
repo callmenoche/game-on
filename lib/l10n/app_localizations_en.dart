@@ -215,6 +215,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noneYet => 'None yet';
 
   @override
+  String nTied(int n) {
+    return '$n tied';
+  }
+
+  @override
   String get activityBreakdown => 'Activity Breakdown';
 
   @override
@@ -609,4 +614,94 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chooseLanguage => 'Choose Language';
+
+  @override
+  String get almostThere => 'Almost there!';
+
+  @override
+  String get optionalInfoSubtitle => 'Optional — you can change this later';
+
+  @override
+  String get dateOfBirth => 'Date of birth';
+
+  @override
+  String get selectDate => 'Select date';
+
+  @override
+  String get gender => 'Gender';
+
+  @override
+  String get male => 'Man';
+
+  @override
+  String get female => 'Woman';
+
+  @override
+  String get nonBinary => 'Non-binary';
+
+  @override
+  String get privacySection => 'Privacy';
+
+  @override
+  String get showAgeOnProfile => 'Show age on profile';
+
+  @override
+  String get showGenderOnProfile => 'Show gender on profile';
+
+  @override
+  String get connectionLost => 'No internet connection';
+
+  @override
+  String get connectionRestored => 'Back online';
+
+  @override
+  String get couldNotSaveAvailability => 'Could not save availability';
+
+  @override
+  String get couldNotSaveProfile => 'Could not save profile';
+
+  @override
+  String get couldNotLeaveMatch => 'Could not leave match';
+
+  @override
+  String get couldNotConfirmMatch => 'Could not confirm match';
+
+  @override
+  String get leaveMatchQuestion => 'Leave match?';
+
+  @override
+  String get leaveMatchBody => 'You will lose your spot in this match.';
+
+  @override
+  String get matchNotFound => 'This match no longer exists';
+
+  @override
+  String get locationRequired => 'Location is required';
+
+  @override
+  String get dateInPast => 'Match date must be in the future';
+
+  @override
+  String get usernameTaken => 'This username is already taken';
+
+  @override
+  String get checkingUsername => 'Checking…';
+
+  @override
+  String get usernameAvailable => 'Username available';
+
+  @override
+  String get next => 'Next →';
+
+  @override
+  String get somethingWentWrong => 'Something went wrong';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get noMatchesYet => 'No matches yet';
+
+  @override
+  String get createOrJoin => 'Create a match or join one from the feed!';
 }

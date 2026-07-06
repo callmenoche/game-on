@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../models/group.dart';
 import '../services/group_service.dart';
@@ -9,9 +11,10 @@ class GroupProvider extends ChangeNotifier {
   List<Group> _groups = [];
   bool _isLoading = false;
   String? _error;
+  StreamSubscription? _authSub;
 
   GroupProvider() {
-    SupabaseService.authStateChanges.listen((data) {
+    _authSub = SupabaseService.authStateChanges.listen((data) {
       final newUserId = data.session?.user.id;
       _groups = [];
       _error = null;
@@ -86,5 +89,11 @@ class GroupProvider extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
   }
 }

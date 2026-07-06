@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:provider/provider.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/auth_provider.dart';
+import 'providers/connectivity_provider.dart';
 import 'providers/profile_provider.dart';
 import 'widgets/game_on_logo.dart';
 import 'screens/auth/login_screen.dart';
@@ -148,8 +150,29 @@ class AppShell extends StatelessWidget {
     final location = GoRouterState.of(context).matchedLocation;
     final currentIndex = _paths.indexWhere((p) => p == location).clamp(0, 3);
 
+    final isOffline = !context.watch<ConnectivityProvider>().isOnline;
+
     return Scaffold(
-      body: child,
+      body: Column(
+        children: [
+          if (isOffline)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              color: Colors.redAccent,
+              child: Text(
+                l.connectionLost,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          Expanded(child: child),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,
         onDestinationSelected: (i) => context.go(_paths[i]),

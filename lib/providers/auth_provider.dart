@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/supabase_client.dart';
@@ -6,6 +8,7 @@ class AuthProvider extends ChangeNotifier {
   User? _user;
   bool _isLoading = false;
   String? _error;
+  StreamSubscription? _authSub;
 
   User? get user => _user;
   bool get isLoading => _isLoading;
@@ -17,7 +20,7 @@ class AuthProvider extends ChangeNotifier {
     _user = SupabaseService.currentUser;
 
     // React to sign-in / sign-out events
-    SupabaseService.authStateChanges.listen((data) {
+    _authSub = SupabaseService.authStateChanges.listen((data) {
       _user = data.session?.user;
       notifyListeners();
     });
@@ -68,5 +71,11 @@ class AuthProvider extends ChangeNotifier {
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
   }
 }

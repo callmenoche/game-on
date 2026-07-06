@@ -175,6 +175,29 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
     return StreamBuilder<Match>(
       stream: _matchStream,
       builder: (context, matchSnap) {
+        if (matchSnap.hasError) {
+          return Scaffold(
+            appBar: AppBar(
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                onPressed: () => context.pop(),
+              ),
+            ),
+            body: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.error_outline_rounded,
+                      size: 48, color: Colors.white.withValues(alpha: 0.3)),
+                  const SizedBox(height: 12),
+                  Text(l.matchNotFound,
+                      style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.5))),
+                ],
+              ),
+            ),
+          );
+        }
         if (!matchSnap.hasData) {
           return Scaffold(
             appBar: AppBar(
@@ -269,8 +292,36 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
                 isCreator: isCreator,
                 currentUserId: currentUserId ?? '',
                 participantCount: participantCount,
-                onLeave: () =>
-                    context.read<MatchProvider>().leaveMatch(match.id),
+                onLeave: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Text(l.leaveMatchQuestion),
+                      content: Text(l.leaveMatchBody),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: Text(l.keepIt),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          style: TextButton.styleFrom(
+                              foregroundColor: Colors.redAccent),
+                          child: Text(l.leaveMatch),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed == true && context.mounted) {
+                    final ok = await context.read<MatchProvider>().leaveMatch(match.id);
+                    if (!ok && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(l.couldNotLeaveMatch),
+                        backgroundColor: Colors.redAccent,
+                      ));
+                    }
+                  }
+                },
               ),
             );
           },

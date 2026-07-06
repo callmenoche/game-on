@@ -687,26 +687,61 @@ class _MatchList extends StatelessWidget {
       );
     }
 
+    final itemCount = provider.matches.length + (provider.hasMore ? 1 : 0);
+
     return RefreshIndicator(
       onRefresh: context.read<MatchProvider>().fetchMatches,
       color: GameOnBrand.saffron,
-      child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
-        itemCount: provider.matches.length,
-        itemBuilder: (context, i) {
-          final match = provider.matches[i];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: MatchCard(
-              match: match,
-              isJoined: provider.isJoined(match.id),
-              onJoin: () => context.read<MatchProvider>().joinMatch(match.id),
-              onLeave: () =>
-                  context.read<MatchProvider>().leaveMatch(match.id),
-              onTap: () => context.push('/match/${match.id}'),
-            ),
-          );
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (scroll) {
+          if (scroll.metrics.pixels >= scroll.metrics.maxScrollExtent - 200 &&
+              provider.hasMore &&
+              !provider.isLoadingMore) {
+            context.read<MatchProvider>().fetchMoreMatches();
+          }
+          return false;
         },
+        child: ListView.builder(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+          itemCount: itemCount,
+          itemBuilder: (context, i) {
+            if (i >= provider.matches.length) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: CircularProgressIndicator(color: GameOnBrand.saffron),
+                ),
+              );
+            }
+            final match = provider.matches[i];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: MatchCard(
+                match: match,
+                isJoined: provider.isJoined(match.id),
+                onJoin: () async {
+                  final ok = await context.read<MatchProvider>().joinMatch(match.id);
+                  if (!ok && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(context.read<MatchProvider>().error ?? AppLocalizations.of(context)!.somethingWentWrong),
+                      backgroundColor: Colors.redAccent,
+                    ));
+                  }
+                },
+                onLeave: () async {
+                  final ok = await context.read<MatchProvider>().leaveMatch(match.id);
+                  if (!ok && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(AppLocalizations.of(context)!.couldNotLeaveMatch),
+                      backgroundColor: Colors.redAccent,
+                    ));
+                  }
+                },
+                onTap: () => context.push('/match/${match.id}'),
+              ),
+            );
+          },
+        ),
       ),
     );
   }

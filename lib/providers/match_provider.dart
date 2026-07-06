@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -15,6 +16,8 @@ class MatchProvider extends ChangeNotifier {
 
   List<Match> _allMatches = [];
   bool _isLoading = false;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
   String? _error;
   SportType? _selectedSport;
   DateFilter _dateFilter = DateFilter.upcoming;
@@ -27,6 +30,7 @@ class MatchProvider extends ChangeNotifier {
   DateTimeRange? _customDateRange;
   final Set<String> _joinedIds = {};
   RealtimeChannel? _channel;
+  StreamSubscription? _authSub;
 
   // ── Getters ───────────────────────────────────────────────────────────────
 
@@ -64,6 +68,8 @@ class MatchProvider extends ChangeNotifier {
   }
 
   bool get isLoading => _isLoading;
+  bool get isLoadingMore => _isLoadingMore;
+  bool get hasMore => _hasMore;
   String? get error => _error;
   SportType? get selectedSport => _selectedSport;
   DateFilter get dateFilter => _dateFilter;
@@ -92,7 +98,7 @@ class MatchProvider extends ChangeNotifier {
     _currentUserId = SupabaseService.currentUser?.id;
     _init();
 
-    SupabaseService.authStateChanges.listen((data) {
+    _authSub = SupabaseService.authStateChanges.listen((data) {
       final newUserId = data.session?.user.id;
       if (newUserId == _currentUserId) return;
       _currentUserId = newUserId;
@@ -117,11 +123,29 @@ class MatchProvider extends ChangeNotifier {
     _setLoading(true);
     try {
       _allMatches = await _service.fetchOpenMatches();
+      _hasMore = _allMatches.length >= MatchService.pageSize;
       _error = null;
     } catch (_) {
       _error = 'Failed to load matches.';
     } finally {
       _setLoading(false);
+    }
+  }
+
+  Future<void> fetchMoreMatches() async {
+    if (_isLoadingMore || !_hasMore) return;
+    _isLoadingMore = true;
+    notifyListeners();
+    try {
+      final more = await _service.fetchOpenMatches(offset: _allMatches.length);
+      _allMatches.addAll(more);
+      _hasMore = more.length >= MatchService.pageSize;
+      _error = null;
+    } catch (_) {
+      // Non-fatal — user can scroll to try again
+    } finally {
+      _isLoadingMore = false;
+      notifyListeners();
     }
   }
 
@@ -221,16 +245,19 @@ class MatchProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> leaveMatch(String matchId) async {
+  Future<bool> leaveMatch(String matchId) async {
     _joinedIds.remove(matchId);
     _updateMatchLocally(matchId, delta: 1);
+    notifyListeners();
     try {
       await _service.leaveMatch(matchId);
+      return true;
     } catch (_) {
       _joinedIds.add(matchId);
       _updateMatchLocally(matchId, delta: -1);
       _error = 'Could not leave match.';
       notifyListeners();
+      return false;
     }
   }
 
@@ -301,7 +328,7 @@ class MatchProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> confirmMatch(String matchId) async {
+  Future<bool> confirmMatch(String matchId) async {
     final now = DateTime.now();
     // Optimistic update
     final idx = _allMatches.indexWhere((m) => m.id == matchId);
@@ -311,6 +338,7 @@ class MatchProvider extends ChangeNotifier {
     }
     try {
       await _service.confirmMatch(matchId);
+      return true;
     } catch (_) {
       // Roll back
       if (idx != -1) {
@@ -319,6 +347,7 @@ class MatchProvider extends ChangeNotifier {
       }
       _error = 'Could not confirm match.';
       notifyListeners();
+      return false;
     }
   }
 
@@ -448,6 +477,7 @@ class MatchProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _authSub?.cancel();
     _channel?.unsubscribe();
     super.dispose();
   }

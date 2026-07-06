@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/match.dart';
 import '../providers/profile_provider.dart';
+import '../services/profile_service.dart';
 import '../widgets/game_on_logo.dart';
+import '../widgets/profile_form_fields.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -25,6 +29,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   late final TextEditingController _usernameController;
   final _bioController = TextEditingController();
   bool _isSubmitting = false;
+
+  // Step 3 state
+  DateTime? _birthDate;
+  String?   _gender;
+  bool      _showAge     = true;
+  bool      _showGender  = true;
 
   @override
   void initState() {
@@ -60,6 +70,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           bio: _bioController.text.trim().isEmpty
               ? null
               : _bioController.text.trim(),
+          birthDate: _birthDate,
+          gender: _gender,
         );
 
     if (!mounted) return;
@@ -104,7 +116,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 bioController: _bioController,
                 isSubmitting: _isSubmitting,
                 onBack: () => _goToPage(0),
+                onNext: () {
+                  if (_formKey.currentState!.validate()) _goToPage(2);
+                },
+                currentPage: _currentPage,
+              ),
+              _Step3(
+                birthDate: _birthDate,
+                gender: _gender,
+                showAge: _showAge,
+                showGender: _showGender,
+                onBirthDateChanged: (d) => setState(() => _birthDate = d),
+                onGenderChanged: (g) => setState(() => _gender = g),
+                onShowAgeChanged: (v) => setState(() => _showAge = v),
+                onShowGenderChanged: (v) => setState(() => _showGender = v),
+                onBack: () => _goToPage(1),
                 onFinish: _finish,
+                isSubmitting: _isSubmitting,
                 currentPage: _currentPage,
               ),
             ],
@@ -204,7 +232,7 @@ class _Step1 extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          const _ProgressDots(total: 2, current: 0),
+          const _ProgressDots(total: 3, current: 0),
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
@@ -232,13 +260,13 @@ class _Step1 extends StatelessWidget {
 
 // ─── Step 2: Profile setup ──────────────────────────────────────────────────
 
-class _Step2 extends StatelessWidget {
+class _Step2 extends StatefulWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController usernameController;
   final TextEditingController bioController;
   final bool isSubmitting;
   final VoidCallback onBack;
-  final VoidCallback onFinish;
+  final VoidCallback onNext;
   final int currentPage;
 
   const _Step2({
@@ -247,23 +275,85 @@ class _Step2 extends StatelessWidget {
     required this.bioController,
     required this.isSubmitting,
     required this.onBack,
-    required this.onFinish,
+    required this.onNext,
     required this.currentPage,
   });
+
+  @override
+  State<_Step2> createState() => _Step2State();
+}
+
+class _Step2State extends State<_Step2> {
+  final _profileService = ProfileService();
+  Timer? _debounce;
+  bool? _usernameAvailable;
+  bool _checkingUsername = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.usernameController.addListener(_onUsernameChanged);
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    widget.usernameController.removeListener(_onUsernameChanged);
+    super.dispose();
+  }
+
+  void _onUsernameChanged() {
+    _debounce?.cancel();
+    final text = widget.usernameController.text.trim();
+    if (text.length < 3) {
+      setState(() {
+        _usernameAvailable = null;
+        _checkingUsername = false;
+      });
+      return;
+    }
+    setState(() => _checkingUsername = true);
+    _debounce = Timer(const Duration(milliseconds: 500), () async {
+      try {
+        final available = await _profileService.isUsernameAvailable(text);
+        if (mounted && widget.usernameController.text.trim() == text) {
+          setState(() {
+            _usernameAvailable = available;
+            _checkingUsername = false;
+          });
+        }
+      } catch (_) {
+        if (mounted) setState(() => _checkingUsername = false);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+
+    Widget? usernameSuffix;
+    if (_checkingUsername) {
+      usernameSuffix = const SizedBox(
+        width: 18, height: 18,
+        child: CircularProgressIndicator(strokeWidth: 2, color: GameOnBrand.saffron),
+      );
+    } else if (_usernameAvailable == true) {
+      usernameSuffix = const Icon(Icons.check_circle_rounded, color: Colors.green, size: 20);
+    } else if (_usernameAvailable == false) {
+      usernameSuffix = const Icon(Icons.cancel_rounded, color: Colors.redAccent, size: 20);
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
       child: Form(
-        key: formKey,
+        key: widget.formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextButton.icon(
-              onPressed: onBack,
+              onPressed: widget.onBack,
               icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 14),
               label: Text(l.back),
               style: TextButton.styleFrom(
@@ -288,12 +378,18 @@ class _Step2 extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             TextFormField(
-              controller: usernameController,
+              controller: widget.usernameController,
               autofocus: true,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'e.g. striker99',
-                prefixIcon: Icon(Icons.alternate_email_rounded,
+                prefixIcon: const Icon(Icons.alternate_email_rounded,
                     size: 18, color: GameOnBrand.saffron),
+                suffixIcon: usernameSuffix != null
+                    ? Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: usernameSuffix,
+                      )
+                    : null,
               ),
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return 'Username required';
@@ -302,6 +398,7 @@ class _Step2 extends StatelessWidget {
                 if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(v.trim())) {
                   return 'Letters, numbers, and _ only';
                 }
+                if (_usernameAvailable == false) return l.usernameTaken;
                 return null;
               },
             ),
@@ -326,7 +423,7 @@ class _Step2 extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             TextFormField(
-              controller: bioController,
+              controller: widget.bioController,
               maxLines: 3,
               maxLength: 120,
               decoration: const InputDecoration(
@@ -334,34 +431,186 @@ class _Step2 extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            const _ProgressDots(total: 2, current: 1),
+            const _ProgressDots(total: 3, current: 1),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: isSubmitting ? null : onFinish,
+                onPressed: _usernameAvailable == false || _checkingUsername
+                    ? null
+                    : widget.onNext,
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(54),
                   backgroundColor: GameOnBrand.saffron,
                   foregroundColor: GameOnBrand.slateDark,
+                  disabledBackgroundColor:
+                      GameOnBrand.saffron.withValues(alpha: 0.3),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14)),
                 ),
-                child: isSubmitting
-                    ? const SizedBox(
-                        height: 22,
-                        width: 22,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: GameOnBrand.slateDark),
-                      )
-                    : Text(l.letsGo,
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w800)),
+                child: Text(l.next,
+                    style:
+                        const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ─── Step 3: Birthdate + gender ─────────────────────────────────────────────
+
+class _Step3 extends StatelessWidget {
+  final DateTime? birthDate;
+  final String? gender;
+  final bool showAge;
+  final bool showGender;
+  final ValueChanged<DateTime?> onBirthDateChanged;
+  final ValueChanged<String?> onGenderChanged;
+  final ValueChanged<bool> onShowAgeChanged;
+  final ValueChanged<bool> onShowGenderChanged;
+  final VoidCallback onBack;
+  final VoidCallback onFinish;
+  final bool isSubmitting;
+  final int currentPage;
+
+  const _Step3({
+    required this.birthDate,
+    required this.gender,
+    required this.showAge,
+    required this.showGender,
+    required this.onBirthDateChanged,
+    required this.onGenderChanged,
+    required this.onShowAgeChanged,
+    required this.onShowGenderChanged,
+    required this.onBack,
+    required this.onFinish,
+    required this.isSubmitting,
+    required this.currentPage,
+  });
+
+  Future<void> _pickDate(BuildContext context) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: birthDate ?? DateTime(1990),
+      firstDate: DateTime(1920),
+      lastDate: DateTime.now().subtract(const Duration(days: 365 * 13)),
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(
+          colorScheme: Theme.of(ctx).colorScheme.copyWith(
+                primary: GameOnBrand.saffron,
+                onPrimary: GameOnBrand.slateDark,
+              ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) onBirthDateChanged(picked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextButton.icon(
+            onPressed: onBack,
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 14),
+            label: Text(l.back),
+            style: TextButton.styleFrom(
+              foregroundColor:
+                  theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              padding: EdgeInsets.zero,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            l.almostThere,
+            style: theme.textTheme.headlineMedium
+                ?.copyWith(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l.optionalInfoSubtitle,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+          ),
+          const SizedBox(height: 28),
+
+          // ── Date of birth ──────────────────────────────────────────────
+          Text(
+            l.dateOfBirth,
+            style:
+                theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          DateField(
+            value: birthDate,
+            onTap: () => _pickDate(context),
+          ),
+          if (birthDate != null) ...[
+            const SizedBox(height: 8),
+            PrivacyToggle(
+              label: l.showAgeOnProfile,
+              value: showAge,
+              onChanged: onShowAgeChanged,
+            ),
+          ],
+          const SizedBox(height: 24),
+
+          // ── Gender ─────────────────────────────────────────────────────
+          Text(
+            l.gender,
+            style:
+                theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          GenderPicker(
+            value: gender,
+            onChanged: onGenderChanged,
+          ),
+          if (gender != null) ...[
+            const SizedBox(height: 8),
+            PrivacyToggle(
+              label: l.showGenderOnProfile,
+              value: showGender,
+              onChanged: onShowGenderChanged,
+            ),
+          ],
+          const SizedBox(height: 16),
+          const _ProgressDots(total: 3, current: 2),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: isSubmitting ? null : onFinish,
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(54),
+                backgroundColor: GameOnBrand.saffron,
+                foregroundColor: GameOnBrand.slateDark,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+              ),
+              child: isSubmitting
+                  ? const SizedBox(
+                      height: 22,
+                      width: 22,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2.5, color: GameOnBrand.slateDark),
+                    )
+                  : Text(l.letsGo,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w800)),
+            ),
+          ),
+        ],
       ),
     );
   }

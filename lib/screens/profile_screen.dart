@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -15,25 +13,10 @@ import '../providers/auth_provider.dart';
 import '../providers/profile_provider.dart';
 import '../services/match_service.dart';
 import '../services/supabase_client.dart';
+import '../widgets/availability_grid.dart';
 import '../widgets/game_on_logo.dart';
-
-// ── Weekday / slot constants ──────────────────────────────────────────────────
-
-const _weekdays = [
-  ('monday', 'Mon'),
-  ('tuesday', 'Tue'),
-  ('wednesday', 'Wed'),
-  ('thursday', 'Thu'),
-  ('friday', 'Fri'),
-  ('saturday', 'Sat'),
-  ('sunday', 'Sun'),
-];
-
-final _slots = [
-  ('morning',   PhosphorIconsLight.sun,      'Morning'),
-  ('afternoon', PhosphorIconsLight.cloudSun, 'Afternoon'),
-  ('evening',   PhosphorIconsLight.moon,     'Evening'),
-];
+import '../widgets/profile_form_fields.dart';
+import '../widgets/profile_stats.dart';
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -52,6 +35,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   List<Match> _history = [];
   List<Match> _upcoming = [];
   bool _dataLoaded = false;
+
+  // Edit-mode state for new fields
+  DateTime? _editBirthDate;
+  String?   _editGender;
+  bool      _editShowAge     = true;
+  bool      _editShowGender  = true;
 
   @override
   void initState() {
@@ -83,6 +72,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _refresh() async {
+    await context.read<ProfileProvider>().reload();
+    await _loadMatchData();
+  }
+
   @override
   void dispose() {
     _bioCtrl.dispose();
@@ -92,6 +86,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _startEdit(Profile profile) {
     _bioCtrl.text = profile.bio ?? '';
     _favoriteSports = List<String>.from(profile.favoriteSports);
+    _editBirthDate = profile.birthDate;
+    _editGender = profile.gender;
+    _editShowAge = profile.showAge;
+    _editShowGender = profile.showGender;
     setState(() => _editing = true);
   }
 
@@ -102,12 +100,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await context.read<ProfileProvider>().saveProfile(
           bio: _bioCtrl.text.trim(),
           favoriteSports: _favoriteSports,
+          birthDate: _editBirthDate,
+          gender: _editGender,
+          showAge: _editShowAge,
+          showGender: _editShowGender,
         );
     if (!mounted) return;
+    final err = context.read<ProfileProvider>().error;
+    if (err != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppLocalizations.of(context)!.couldNotSaveProfile),
+        backgroundColor: Colors.redAccent,
+      ));
+      context.read<ProfileProvider>().clearError();
+    }
     setState(() {
       _saving = false;
       _editing = false;
     });
+  }
+
+  Future<void> _pickBirthDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _editBirthDate ?? DateTime(1990),
+      firstDate: DateTime(1920),
+      lastDate: DateTime.now().subtract(const Duration(days: 365 * 13)),
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(
+          colorScheme: Theme.of(ctx).colorScheme.copyWith(
+                primary: GameOnBrand.saffron,
+                onPrimary: GameOnBrand.slateDark,
+              ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null && mounted) setState(() => _editBirthDate = picked);
   }
 
   Future<void> _pickAvatar() async {
@@ -194,12 +223,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final lastWeek =
         _history.where((m) => m.dateTime.isAfter(sevenDaysAgo)).toList();
     final lastWeekMins = lastWeek.fold(0, (s, m) => s + m.durationMinutes);
-    SportType? topSport;
-    if (sportCounts.isNotEmpty) {
-      topSport = sportCounts.entries
-          .reduce((a, b) => a.value >= b.value ? a : b)
-          .key;
-    }
+    final topSports = computeTopSports(_history);
 
     return Scaffold(
       appBar: AppBar(
@@ -256,7 +280,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             )
           : profile == null
               ? const SizedBox.shrink()
-              : SingleChildScrollView(
+              : RefreshIndicator(
+                  onRefresh: _refresh,
+                  color: GameOnBrand.saffron,
+                  child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 60),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,12 +299,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 24),
 
+                      // ── Birthdate + gender (edit mode) ───────────────────
+                      if (_editing) ...[
+                        _SectionLabel(l.dateOfBirth),
+                        const SizedBox(height: 8),
+                        DateField(
+                          value: _editBirthDate,
+                          onTap: _pickBirthDate,
+                        ),
+                        if (_editBirthDate != null) ...[
+                          const SizedBox(height: 8),
+                          PrivacyToggle(
+                            label: l.showAgeOnProfile,
+                            value: _editShowAge,
+                            onChanged: (v) =>
+                                setState(() => _editShowAge = v),
+                          ),
+                        ],
+                        const SizedBox(height: 20),
+                        _SectionLabel(l.gender),
+                        const SizedBox(height: 8),
+                        GenderPicker(
+                          value: _editGender,
+                          onChanged: (g) =>
+                              setState(() => _editGender = g),
+                        ),
+                        if (_editGender != null) ...[
+                          const SizedBox(height: 8),
+                          PrivacyToggle(
+                            label: l.showGenderOnProfile,
+                            value: _editShowGender,
+                            onChanged: (v) =>
+                                setState(() => _editShowGender = v),
+                          ),
+                        ],
+                        const SizedBox(height: 28),
+                      ],
+
                       // ── Stats strip ──────────────────────────────────────
-                      _StatsStrip(
-                        totalCount: _history.length,
+                      StatsStrip(
                         lastWeekCount: lastWeek.length,
                         lastWeekMins: lastWeekMins,
-                        topSport: topSport,
+                        topSports: topSports,
                       ),
 
                       // ── Activity breakdown (donut) ───────────────────────
@@ -284,7 +348,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 28),
                         _SectionLabel(l.activityBreakdown),
                         const SizedBox(height: 14),
-                        _SportDonutChart(counts: sportCounts),
+                        SportDonutChart(counts: sportCounts),
                       ],
 
                       // ── Upcoming matches ─────────────────────────────────
@@ -299,9 +363,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                       // ── Availability grid ────────────────────────────────
                       const SizedBox(height: 28),
-                      _SectionLabel(l.myAvailability),
-                      const SizedBox(height: 12),
-                      const _AvailabilityGrid(),
+                      const AvailabilityGrid(),
 
                       // ── Favourite sports (edit mode only) ───────────────
                       if (_editing) ...[
@@ -328,6 +390,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
+              ),
     );
   }
 }
@@ -419,6 +482,7 @@ class _AvatarHeader extends StatelessWidget {
                     fontSize: 22, fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 4),
+              if (!editing) _AgeGenderLine(profile: profile),
               if (editing)
                 TextField(
                   controller: bioCtrl,
@@ -511,275 +575,6 @@ class _InitialsAvatar extends StatelessWidget {
   }
 }
 
-// ─── Stats strip ──────────────────────────────────────────────────────────────
-
-class _StatsStrip extends StatelessWidget {
-  final int totalCount;
-  final int lastWeekCount;
-  final int lastWeekMins;
-  final SportType? topSport;
-
-  const _StatsStrip({
-    required this.totalCount,
-    required this.lastWeekCount,
-    required this.lastWeekMins,
-    required this.topSport,
-  });
-
-  String _timeLabel(int mins) {
-    if (mins == 0) return '—';
-    final h = mins ~/ 60;
-    final m = mins % 60;
-    if (h == 0) return '${m}min';
-    if (m == 0) return '${h}h';
-    return '${h}h ${m}m';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    return Row(
-      children: [
-        Expanded(
-          child: _MiniStat(
-            icon: PhosphorIconsLight.chartBar,
-            label: l.allTime,
-            value: '$totalCount',
-            sub: l.activities,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _MiniStat(
-            icon: PhosphorIconsLight.clockCountdown,
-            label: l.last7Days,
-            value: '$lastWeekCount',
-            sub: _timeLabel(lastWeekMins),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _MiniStat(
-            icon: PhosphorIconsLight.trophy,
-            label: l.topSport,
-            value: '—',
-            sub: topSport?.l10nLabel(context) ?? l.noneYet,
-            sportIcon: topSport?.icon,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _MiniStat extends StatelessWidget {
-  final PhosphorIconData icon;
-  final String label;
-  final String value;
-  final String sub;
-  final PhosphorIconData? sportIcon;
-
-  const _MiniStat({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.sub,
-    this.sportIcon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
-        color: GameOnBrand.slateCard,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              PhosphorIcon(icon, size: 13, color: GameOnBrand.saffron),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white.withValues(alpha: 0.45),
-                    letterSpacing: 0.4,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 5),
-          if (sportIcon != null)
-            PhosphorIcon(sportIcon!, size: 26, color: GameOnBrand.saffron)
-          else
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                height: 1.1,
-              ),
-            ),
-          Text(
-            sub,
-            style: TextStyle(
-              fontSize: 10,
-              color: Colors.white.withValues(alpha: 0.5),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Activity donut chart ─────────────────────────────────────────────────────
-
-class _SportDonutChart extends StatelessWidget {
-  final Map<SportType, int> counts;
-  const _SportDonutChart({required this.counts});
-
-  @override
-  Widget build(BuildContext context) {
-    final sorted = counts.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    final total = counts.values.fold(0, (a, b) => a + b);
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        SizedBox(
-          width: 130,
-          height: 130,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              CustomPaint(
-                size: const Size(130, 130),
-                painter: _DonutPainter(counts: counts, total: total),
-              ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '$total',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      height: 1,
-                    ),
-                  ),
-                  Text(
-                    AppLocalizations.of(context)!.total,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white54,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 20),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: sorted.map((e) {
-              final pct =
-                  total > 0 ? (e.value / total * 100).round() : 0;
-              final color = e.key.color;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration:
-                          BoxDecoration(color: color, shape: BoxShape.circle),
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Row(
-                        children: [
-                          PhosphorIcon(e.key.icon, size: 12, color: color),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              e.key.l10nLabel(context),
-                              style: const TextStyle(
-                                  fontSize: 12, fontWeight: FontWeight.w600),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      '${e.value} ($pct%)',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.white.withValues(alpha: 0.5),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _DonutPainter extends CustomPainter {
-  final Map<SportType, int> counts;
-  final int total;
-
-  const _DonutPainter({required this.counts, required this.total});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (total == 0) return;
-    final cx = size.width / 2;
-    final cy = size.height / 2;
-    final outerR = size.width / 2;
-    final innerR = outerR * 0.55;
-    final arcR = (outerR + innerR) / 2;
-    final strokeW = outerR - innerR;
-    final rect = Rect.fromCircle(center: Offset(cx, cy), radius: arcR);
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeW
-      ..strokeCap = StrokeCap.butt;
-
-    double start = -pi / 2;
-    for (final entry in counts.entries) {
-      final sweep = 2 * pi * entry.value / total;
-      paint.color = entry.key.color;
-      canvas.drawArc(rect, start, sweep - 0.04, false, paint);
-      start += sweep;
-    }
-  }
-
-  @override
-  bool shouldRepaint(_DonutPainter old) =>
-      old.counts != counts || old.total != total;
-}
-
 // ─── Upcoming match row ───────────────────────────────────────────────────────
 
 class _MatchRow extends StatelessWidget {
@@ -841,96 +636,6 @@ class _MatchRow extends StatelessWidget {
         ],
       ),
     ),
-    );
-  }
-}
-
-// ─── Availability grid ────────────────────────────────────────────────────────
-
-class _AvailabilityGrid extends StatelessWidget {
-  const _AvailabilityGrid();
-
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<ProfileProvider>();
-    return Column(
-      children: [
-        // Slot header row
-        Row(
-          children: [
-            const SizedBox(width: 36),
-            ..._slots.map((s) => Expanded(
-                  child: Center(
-                    child: PhosphorIcon(s.$2, size: 15,
-                        color: Colors.white.withValues(alpha: 0.5)),
-                  ),
-                )),
-          ],
-        ),
-        const SizedBox(height: 6),
-        // One row per weekday
-        ..._weekdays.map(
-          (day) => Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 36,
-                  child: Text(
-                    day.$2,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ),
-                ..._slots.map((slot) {
-                  final active = provider.isAvailable(day.$1, slot.$1);
-                  return Expanded(
-                    child: Padding(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 2),
-                      child: GestureDetector(
-                        onTap: () =>
-                            provider.toggleSlot(day.$1, slot.$1),
-                        child: AnimatedContainer(
-                          duration:
-                              const Duration(milliseconds: 120),
-                          height: 30,
-                          decoration: BoxDecoration(
-                            color: active
-                                ? GameOnBrand.saffron
-                                    .withValues(alpha: 0.22)
-                                : GameOnBrand.slateCard,
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: active
-                                  ? GameOnBrand.saffron
-                                      .withValues(alpha: 0.55)
-                                  : Colors.white
-                                      .withValues(alpha: 0.07),
-                            ),
-                          ),
-                          child: active
-                              ? const Center(
-                                  child: Icon(
-                                    Icons.check_rounded,
-                                    size: 14,
-                                    color: GameOnBrand.saffron,
-                                  ),
-                                )
-                              : null,
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -1069,6 +774,31 @@ class _SignOutButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 14),
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Age / gender display line ────────────────────────────────────────────────
+
+class _AgeGenderLine extends StatelessWidget {
+  final Profile profile;
+  const _AgeGenderLine({required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = <String>[];
+    if (profile.showAge && profile.age != null) parts.add('${profile.age}');
+    if (profile.showGender && profile.gender != null) parts.add(profile.gender!);
+    if (parts.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 2),
+      child: Text(
+        parts.join(' · '),
+        style: TextStyle(
+          fontSize: 12,
+          color: Colors.white.withValues(alpha: 0.4),
         ),
       ),
     );

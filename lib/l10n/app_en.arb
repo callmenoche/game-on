@@ -85,6 +85,13 @@
   "last7Days": "Last 7 days",
   "topSport": "Top sport",
   "noneYet": "None yet",
+  "nTied": "{n} tied",
+  "@nTied": {
+    "description": "Label shown when n sports are equally top-ranked",
+    "placeholders": {
+      "n": { "type": "int" }
+    }
+  },
   "activityBreakdown": "Activity Breakdown",
   "upcomingMatches": "Upcoming Matches",
   "recentMatches": "Recent Matches",
@@ -248,5 +255,37 @@
   "english": "English",
   "french": "Français",
   "spanish": "Español",
-  "chooseLanguage": "Choose Language"
+  "chooseLanguage": "Choose Language",
+
+  "almostThere": "Almost there!",
+  "optionalInfoSubtitle": "Optional — you can change this later",
+  "dateOfBirth": "Date of birth",
+  "selectDate": "Select date",
+  "gender": "Gender",
+  "male": "Man",
+  "female": "Woman",
+  "nonBinary": "Non-binary",
+  "privacySection": "Privacy",
+  "showAgeOnProfile": "Show age on profile",
+  "showGenderOnProfile": "Show gender on profile",
+
+  "connectionLost": "No internet connection",
+  "connectionRestored": "Back online",
+  "couldNotSaveAvailability": "Could not save availability",
+  "couldNotSaveProfile": "Could not save profile",
+  "couldNotLeaveMatch": "Could not leave match",
+  "couldNotConfirmMatch": "Could not confirm match",
+  "leaveMatchQuestion": "Leave match?",
+  "leaveMatchBody": "You will lose your spot in this match.",
+  "matchNotFound": "This match no longer exists",
+  "locationRequired": "Location is required",
+  "dateInPast": "Match date must be in the future",
+  "usernameTaken": "This username is already taken",
+  "checkingUsername": "Checking…",
+  "usernameAvailable": "Username available",
+  "next": "Next →",
+  "somethingWentWrong": "Something went wrong",
+  "retry": "Retry",
+  "noMatchesYet": "No matches yet",
+  "createOrJoin": "Create a match or join one from the feed!"
 }
