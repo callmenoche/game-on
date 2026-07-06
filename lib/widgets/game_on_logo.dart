@@ -61,7 +61,7 @@ class GameOnLogoContainer extends StatelessWidget {
 class GameOnBrand {
   GameOnBrand._();
 
-  static const Color saffron    = Color(0xFFFDBA30); // primary / logo
+  static const Color saffron    = Color(0xFFF5C542); // primary / logo (warmer gold)
   static const Color slateDark  = Color(0xFF1E293B); // scaffold / bg
   static const Color slateCard  = Color(0xFF243044); // card / surface
   static const Color slateLight = Color(0xFF334155); // hover / border

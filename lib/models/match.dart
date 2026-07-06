@@ -123,6 +123,8 @@ class Match {
   final String? groupId; // null = public match
   final String? title;
   final String? description;
+  final String? creatorUsername;
+  final String? creatorAvatarUrl;
 
   const Match({
     required this.id,
@@ -142,6 +144,8 @@ class Match {
     this.groupId,
     this.title,
     this.description,
+    this.creatorUsername,
+    this.creatorAvatarUrl,
   });
 
   bool get isUnlimited => totalSpots == null;
@@ -187,6 +191,8 @@ class Match {
         groupId: json['group_id'] as String?,
         title: json['title'] as String?,
         description: json['description'] as String?,
+        creatorUsername: (json['profiles'] as Map<String, dynamic>?)?['username'] as String?,
+        creatorAvatarUrl: (json['profiles'] as Map<String, dynamic>?)?['avatar_url'] as String?,
       );
 
   // Keep label as English fallback (used in non-UI contexts like search).
@@ -213,6 +219,8 @@ class Match {
     DateTime? confirmedAt,
     String? title,
     String? description,
+    String? creatorUsername,
+    String? creatorAvatarUrl,
   }) =>
       Match(
         id: id,
@@ -232,6 +240,8 @@ class Match {
         groupId: groupId,
         title: title ?? this.title,
         description: description ?? this.description,
+        creatorUsername: creatorUsername ?? this.creatorUsername,
+        creatorAvatarUrl: creatorAvatarUrl ?? this.creatorAvatarUrl,
       );
 }
 

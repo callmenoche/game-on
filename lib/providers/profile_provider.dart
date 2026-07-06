@@ -129,6 +129,7 @@ class ProfileProvider extends ChangeNotifier {
     try {
       _profile = await _service.updateProfile(updated);
     } catch (_) {
+      _profile = current; // revert optimistic update
       _error = 'Failed to save profile.';
     }
     notifyListeners();

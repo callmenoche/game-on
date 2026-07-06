@@ -60,9 +60,9 @@ class Profile {
         showGender: json['show_gender'] as bool? ?? true,
       );
 
+  /// Serialises mutable fields for DB updates.
+  /// Excludes [id] (PK) and [username] (immutable after onboarding).
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'username': username,
         'bio': bio,
         'favorite_sports': favoriteSports,
         'availability_json': availabilityJson,

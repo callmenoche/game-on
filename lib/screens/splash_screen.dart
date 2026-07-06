@@ -16,29 +16,33 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 1200));
+      vsync: this, duration: const Duration(milliseconds: 1400));
 
-  // Logo: fade + very subtle scale (0.82→1.0) — no bitmap-scaling artefacts
+  // Logo: fade in early
   late final Animation<double> _logoFade = CurvedAnimation(
       parent: _ctrl,
-      curve: const Interval(0.0, 0.5, curve: Curves.easeOut));
-  late final Animation<double> _logoScale = Tween<double>(begin: 0.82, end: 1.0)
-      .animate(CurvedAnimation(
+      curve: const Interval(0.0, 0.35, curve: Curves.easeOut));
+
+  // Logo: subtle scale 0.92→1.0 — minimal bitmap interpolation
+  late final Animation<double> _logoScale =
+      Tween<double>(begin: 0.92, end: 1.0).animate(CurvedAnimation(
           parent: _ctrl,
-          curve: const Interval(0.0, 0.6, curve: Curves.easeOutCubic)));
-  // Glow blooms after the logo lands
+          curve: const Interval(0.0, 0.55, curve: Curves.easeOutCubic)));
+
+  // Glow blooms after logo lands
   late final Animation<double> _glowA = CurvedAnimation(
       parent: _ctrl,
-      curve: const Interval(0.4, 0.85, curve: Curves.easeOut));
+      curve: const Interval(0.30, 0.75, curve: Curves.easeOut));
+
   // Text slides up and fades in last
   late final Animation<double> _txtFade = CurvedAnimation(
       parent: _ctrl,
-      curve: const Interval(0.55, 1.0, curve: Curves.easeOut));
+      curve: const Interval(0.50, 0.85, curve: Curves.easeOut));
   late final Animation<Offset> _txtSlide =
-      Tween<Offset>(begin: const Offset(0, 0.4), end: Offset.zero).animate(
+      Tween<Offset>(begin: const Offset(0, 0.35), end: Offset.zero).animate(
           CurvedAnimation(
               parent: _ctrl,
-              curve: const Interval(0.55, 1.0, curve: Curves.easeOutCubic)));
+              curve: const Interval(0.50, 0.85, curve: Curves.easeOutCubic)));
 
   @override
   void initState() {
@@ -87,17 +91,14 @@ class _SplashScreenState extends State<SplashScreen>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Logo — scale+fade via AnimatedBuilder, no Opacity layer
-                  AnimatedBuilder(
-                    animation: _ctrl,
-                    builder: (_, child) => Opacity(
-                      opacity: _logoFade.value,
-                      child: Transform.scale(
-                        scale: _logoScale.value,
-                        child: child,
-                      ),
+                  // Logo — FadeTransition + ScaleTransition avoid offscreen
+                  // rasterisation that causes bitmap blur.
+                  FadeTransition(
+                    opacity: _logoFade,
+                    child: ScaleTransition(
+                      scale: _logoScale,
+                      child: _GlowingLogo(glowAnimation: _glowA),
                     ),
-                    child: _GlowingLogo(glowAnimation: _glowA),
                   ),
                   const SizedBox(height: 28),
                   // Wordmark — slide + fade

@@ -113,6 +113,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Colors.redAccent,
       ));
       context.read<ProfileProvider>().clearError();
+      // Stay in edit mode so the user can retry
+      setState(() => _saving = false);
+      return;
     }
     setState(() {
       _saving = false;

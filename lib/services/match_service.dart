@@ -14,7 +14,7 @@ class MatchService {
 
   Future<List<Match>> fetchOpenMatches({SportType? sport, int offset = 0}) async {
     var query = _matches
-        .select()
+        .select('*, profiles!matches_creator_id_fkey(username, avatar_url)')
         .eq('status', 'open');
 
     if (sport != null) {

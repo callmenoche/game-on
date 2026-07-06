@@ -126,15 +126,17 @@ class _FeedModeToggle extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
       child: SegmentedButton<FeedMode>(
         style: SegmentedButton.styleFrom(
-          backgroundColor: Colors.transparent,
+          backgroundColor: GameOnBrand.slateCard.withValues(alpha: 0.5),
           selectedBackgroundColor:
-              GameOnBrand.saffron.withValues(alpha: 0.15),
+              GameOnBrand.saffron.withValues(alpha: 0.18),
           selectedForegroundColor: GameOnBrand.saffron,
           side: BorderSide(
               color: Theme.of(context)
                   .colorScheme
                   .onSurface
                   .withValues(alpha: 0.15)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12)),
         ),
         segments: [
           ButtonSegment(
@@ -173,33 +175,41 @@ class _SportFilterBar extends StatelessWidget {
     final provider = context.watch<MatchProvider>();
 
     return SizedBox(
-      height: 38,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(right: 6),
-            child: _SportChip(
-              label: AppLocalizations.of(context)!.all,
-              icon: null,
-              sport: null,
-              selected: provider.selectedSport == null,
-              onTap: () => provider.setSportFilter(null),
+      height: 42,
+      child: ShaderMask(
+        shaderCallback: (bounds) => const LinearGradient(
+          begin: Alignment(0.85, 0),
+          end: Alignment.centerRight,
+          colors: [Colors.white, Colors.transparent],
+        ).createShader(bounds),
+        blendMode: BlendMode.dstIn,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: _SportChip(
+                label: AppLocalizations.of(context)!.all,
+                icon: null,
+                sport: null,
+                selected: provider.selectedSport == null,
+                onTap: () => provider.setSportFilter(null),
+              ),
             ),
-          ),
-          ..._kSportOrder.map((sport) => Padding(
-                padding: const EdgeInsets.only(right: 6),
-                child: _SportChip(
-                  label: sport.l10nLabel(context),
-                  icon: sport.icon,
-                  sport: sport,
-                  selected: provider.selectedSport == sport,
-                  onTap: () => provider.setSportFilter(
-                      provider.selectedSport == sport ? null : sport),
-                ),
-              )),
-        ],
+            ..._kSportOrder.map((sport) => Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: _SportChip(
+                    label: sport.l10nLabel(context),
+                    icon: sport.icon,
+                    sport: sport,
+                    selected: provider.selectedSport == sport,
+                    onTap: () => provider.setSportFilter(
+                        provider.selectedSport == sport ? null : sport),
+                  ),
+                )),
+          ],
+        ),
       ),
     );
   }
@@ -534,7 +544,7 @@ class _GeoChip extends StatelessWidget {
             ),
             if (enabled) ...[
               const SizedBox(width: 2),
-              Icon(Icons.expand_more_rounded,
+              const Icon(Icons.expand_more_rounded,
                   size: 13, color: GameOnBrand.saffron),
             ],
           ],

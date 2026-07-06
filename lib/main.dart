@@ -242,10 +242,19 @@ class _GameOnAppState extends State<GameOnApp> {
         ),
       ),
 
-      textTheme: const TextTheme(
-        headlineLarge: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -1),
-        headlineMedium: TextStyle(fontWeight: FontWeight.w800),
-        titleLarge: TextStyle(fontWeight: FontWeight.w700),
+      textTheme: TextTheme(
+        headlineLarge: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: -1),
+        headlineMedium: const TextStyle(fontWeight: FontWeight.w800),
+        titleLarge: const TextStyle(fontWeight: FontWeight.w700),
+        bodyLarge: isDark
+            ? TextStyle(color: Colors.white.withValues(alpha: 0.87))
+            : null,
+        bodyMedium: isDark
+            ? TextStyle(color: Colors.white.withValues(alpha: 0.87))
+            : null,
+        bodySmall: isDark
+            ? TextStyle(color: Colors.white.withValues(alpha: 0.70))
+            : null,
       ),
     );
   }
