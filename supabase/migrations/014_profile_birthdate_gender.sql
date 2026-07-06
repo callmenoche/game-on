@@ -1,0 +1,5 @@
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS birth_date   DATE,
+  ADD COLUMN IF NOT EXISTS gender       TEXT CHECK (gender IN ('M','F','X')),
+  ADD COLUMN IF NOT EXISTS show_age     BOOLEAN NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS show_gender  BOOLEAN NOT NULL DEFAULT true;

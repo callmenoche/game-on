@@ -8,6 +8,10 @@ class Profile {
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool onboarded;
+  final DateTime? birthDate;
+  final String? gender; // 'M', 'F', or 'X'
+  final bool showAge;
+  final bool showGender;
 
   const Profile({
     required this.id,
@@ -19,7 +23,23 @@ class Profile {
     required this.createdAt,
     required this.updatedAt,
     this.onboarded = true,
+    this.birthDate,
+    this.gender,
+    this.showAge = true,
+    this.showGender = true,
   });
+
+  /// Computed age from [birthDate]. Returns null if birthDate is null.
+  int? get age {
+    if (birthDate == null) return null;
+    final today = DateTime.now();
+    int years = today.year - birthDate!.year;
+    if (today.month < birthDate!.month ||
+        (today.month == birthDate!.month && today.day < birthDate!.day)) {
+      years--;
+    }
+    return years;
+  }
 
   factory Profile.fromJson(Map<String, dynamic> json) => Profile(
         id: json['id'] as String,
@@ -32,6 +52,12 @@ class Profile {
         createdAt: DateTime.parse(json['created_at'] as String),
         updatedAt: DateTime.parse(json['updated_at'] as String),
         onboarded: json['onboarded'] as bool? ?? true,
+        birthDate: json['birth_date'] != null
+            ? DateTime.tryParse(json['birth_date'] as String)
+            : null,
+        gender: json['gender'] as String?,
+        showAge: json['show_age'] as bool? ?? true,
+        showGender: json['show_gender'] as bool? ?? true,
       );
 
   Map<String, dynamic> toJson() => {
@@ -41,6 +67,10 @@ class Profile {
         'favorite_sports': favoriteSports,
         'availability_json': availabilityJson,
         'avatar_url': avatarUrl,
+        'birth_date': birthDate?.toIso8601String().split('T').first,
+        'gender': gender,
+        'show_age': showAge,
+        'show_gender': showGender,
       };
 
   Profile copyWith({
@@ -50,6 +80,10 @@ class Profile {
     Map<String, dynamic>? availabilityJson,
     String? avatarUrl,
     bool? onboarded,
+    DateTime? birthDate,
+    String? gender,
+    bool? showAge,
+    bool? showGender,
   }) =>
       Profile(
         id: id,
@@ -61,5 +95,9 @@ class Profile {
         createdAt: createdAt,
         updatedAt: DateTime.now(),
         onboarded: onboarded ?? this.onboarded,
+        birthDate: birthDate ?? this.birthDate,
+        gender: gender ?? this.gender,
+        showAge: showAge ?? this.showAge,
+        showGender: showGender ?? this.showGender,
       );
 }

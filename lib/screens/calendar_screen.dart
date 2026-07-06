@@ -7,25 +7,8 @@ import '../l10n/app_localizations.dart';
 import '../models/match.dart';
 import '../providers/match_provider.dart';
 import '../providers/profile_provider.dart';
+import '../widgets/availability_grid.dart';
 import '../widgets/game_on_logo.dart';
-
-// ─── Availability metadata ─────────────────────────────────────────────────
-
-const _weekdays = [
-  ('monday',    'Mon'),
-  ('tuesday',   'Tue'),
-  ('wednesday', 'Wed'),
-  ('thursday',  'Thu'),
-  ('friday',    'Fri'),
-  ('saturday',  'Sat'),
-  ('sunday',    'Sun'),
-];
-
-final _slots = [
-  ('morning',   PhosphorIconsLight.sun,      'Morning'),
-  ('afternoon', PhosphorIconsLight.cloudSun, 'Afternoon'),
-  ('evening',   PhosphorIconsLight.moon,     'Evening'),
-];
 
 // ─── Screen ────────────────────────────────────────────────────────────────
 
@@ -59,7 +42,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     final matchProvider  = context.watch<MatchProvider>();
-    final profileProvider = context.watch<ProfileProvider>();
     final joinedMatches  = matchProvider.joinedMatches;
     final selectedEvents = _eventsForDay(_selectedDay, joinedMatches);
 
@@ -161,7 +143,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     matches: selectedEvents,
                   ),
                   const SizedBox(height: 28),
-                  _AvailabilitySection(provider: profileProvider),
+                  const AvailabilityGrid(),
                 ],
               ),
             ),
@@ -282,175 +264,6 @@ class _MatchEventRow extends StatelessWidget {
                 size: 14, color: Colors.green.shade400),
           ],
         ],
-      ),
-    );
-  }
-}
-
-// ─── Weekly availability section ───────────────────────────────────────────
-
-class _AvailabilitySection extends StatelessWidget {
-  final ProfileProvider provider;
-  const _AvailabilitySection({required this.provider});
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionLabel(l.weeklyAvailability),
-        const SizedBox(height: 4),
-        Text(
-          l.whenFreeToPlay,
-          style: TextStyle(
-              fontSize: 12, color: Colors.white.withValues(alpha: 0.4)),
-        ),
-        const SizedBox(height: 14),
-        if (provider.isLoading)
-          const Center(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: CircularProgressIndicator(color: GameOnBrand.saffron),
-            ),
-          )
-        else ...[
-          // Grid
-          Container(
-            decoration: BoxDecoration(
-              color: GameOnBrand.slateCard,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              children: _weekdays.asMap().entries.map((entry) {
-                final i = entry.key;
-                final (day, label) = entry.value;
-                final isWeekend = day == 'saturday' || day == 'sunday';
-                final isLast = i == _weekdays.length - 1;
-
-                return Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 10),
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: 34,
-                            child: Text(
-                              label,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: isWeekend
-                                    ? GameOnBrand.saffron
-                                        .withValues(alpha: 0.75)
-                                    : Colors.white.withValues(alpha: 0.65),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: _slots.map((s) {
-                                final (slot, icon, _) = s;
-                                final active = provider.isAvailable(day, slot);
-                                return _SlotChip(
-                                  icon: icon,
-                                  active: active,
-                                  onTap: () => provider.toggleSlot(day, slot),
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (!isLast)
-                      Divider(
-                        height: 1,
-                        indent: 16,
-                        endIndent: 16,
-                        color: GameOnBrand.slateLight.withValues(alpha: 0.25),
-                      ),
-                  ],
-                );
-              }).toList(),
-            ),
-          ),
-
-          // Legend
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: _slots.map((s) {
-              final (_, icon, label) = s;
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Row(
-                  children: [
-                    PhosphorIcon(icon, size: 11,
-                        color: Colors.white.withValues(alpha: 0.45)),
-                    const SizedBox(width: 4),
-                    Text(
-                      label,
-                      style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.white.withValues(alpha: 0.35)),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-// ─── Slot chip ─────────────────────────────────────────────────────────────
-
-class _SlotChip extends StatelessWidget {
-  final PhosphorIconData icon;
-  final bool active;
-  final VoidCallback onTap;
-
-  const _SlotChip({
-    required this.icon,
-    required this.active,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        width: 52,
-        height: 38,
-        decoration: BoxDecoration(
-          color: active
-              ? GameOnBrand.saffron.withValues(alpha: 0.2)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: active
-                ? GameOnBrand.saffron.withValues(alpha: 0.6)
-                : GameOnBrand.slateLight.withValues(alpha: 0.3),
-          ),
-        ),
-        child: Center(
-          child: PhosphorIcon(
-            icon,
-            size: 18,
-            color: active
-                ? GameOnBrand.saffron
-                : Colors.white.withValues(alpha: 0.4),
-          ),
-        ),
       ),
     );
   }

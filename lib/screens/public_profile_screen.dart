@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -11,6 +9,7 @@ import '../models/profile.dart';
 import '../services/match_service.dart';
 import '../services/profile_service.dart';
 import '../widgets/game_on_logo.dart';
+import '../widgets/profile_stats.dart';
 
 class PublicProfileScreen extends StatefulWidget {
   final String userId;
@@ -101,11 +100,7 @@ class _ProfileBody extends StatelessWidget {
     final lastWeek =
         history.where((m) => m.dateTime.isAfter(sevenDaysAgo)).toList();
     final lastWeekMins = lastWeek.fold(0, (s, m) => s + m.durationMinutes);
-    SportType? topSport = sportCounts.isEmpty
-        ? null
-        : sportCounts.entries
-            .reduce((a, b) => a.value >= b.value ? a : b)
-            .key;
+    final topSports = computeTopSports(history);
 
     final initial = profile.username.isNotEmpty
         ? profile.username[0].toUpperCase()
@@ -147,6 +142,7 @@ class _ProfileBody extends StatelessWidget {
                           fontSize: 22, fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 4),
+                    _AgeGenderLine(profile: profile),
                     if (profile.bio != null && profile.bio!.isNotEmpty)
                       Text(
                         profile.bio!,
@@ -181,11 +177,10 @@ class _ProfileBody extends StatelessWidget {
           const SizedBox(height: 24),
 
           // ── Stats strip ────────────────────────────────────────────────────
-          _StatsStrip(
-            totalCount: history.length,
+          StatsStrip(
             lastWeekCount: lastWeek.length,
             lastWeekMins: lastWeekMins,
-            topSport: topSport,
+            topSports: topSports,
           ),
 
           // ── Activity breakdown (donut) ─────────────────────────────────────
@@ -193,7 +188,7 @@ class _ProfileBody extends StatelessWidget {
             const SizedBox(height: 28),
             _SectionLabel(AppLocalizations.of(context)!.activityBreakdown),
             const SizedBox(height: 14),
-            _SportDonutChart(counts: sportCounts),
+            SportDonutChart(counts: sportCounts),
           ],
 
           // ── Upcoming matches ───────────────────────────────────────────────
@@ -245,274 +240,6 @@ class _InitialsAvatar extends StatelessWidget {
       ),
     );
   }
-}
-
-// ─── Stats strip ──────────────────────────────────────────────────────────────
-
-class _StatsStrip extends StatelessWidget {
-  final int totalCount;
-  final int lastWeekCount;
-  final int lastWeekMins;
-  final SportType? topSport;
-
-  const _StatsStrip({
-    required this.totalCount,
-    required this.lastWeekCount,
-    required this.lastWeekMins,
-    required this.topSport,
-  });
-
-  String _timeLabel(int mins) {
-    if (mins == 0) return '—';
-    final h = mins ~/ 60;
-    final m = mins % 60;
-    if (h == 0) return '${m}min';
-    if (m == 0) return '${h}h';
-    return '${h}h ${m}m';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _MiniStat(
-            icon: PhosphorIconsLight.chartBar,
-            label: AppLocalizations.of(context)!.allTime,
-            value: '$totalCount',
-            sub: AppLocalizations.of(context)!.activities,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _MiniStat(
-            icon: PhosphorIconsLight.clockCountdown,
-            label: AppLocalizations.of(context)!.last7Days,
-            value: '$lastWeekCount',
-            sub: _timeLabel(lastWeekMins),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _MiniStat(
-            icon: PhosphorIconsLight.trophy,
-            label: AppLocalizations.of(context)!.topSport,
-            value: '—',
-            sub: topSport?.l10nLabel(context) ?? AppLocalizations.of(context)!.noneYet,
-            sportIcon: topSport?.icon,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _MiniStat extends StatelessWidget {
-  final PhosphorIconData icon;
-  final String label;
-  final String value;
-  final String sub;
-  final PhosphorIconData? sportIcon;
-
-  const _MiniStat({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.sub,
-    this.sportIcon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
-        color: GameOnBrand.slateCard,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              PhosphorIcon(icon, size: 13, color: GameOnBrand.saffron),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white.withValues(alpha: 0.45),
-                    letterSpacing: 0.4,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 5),
-          if (sportIcon != null)
-            PhosphorIcon(sportIcon!, size: 26, color: GameOnBrand.saffron)
-          else
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                height: 1.1,
-              ),
-            ),
-          Text(
-            sub,
-            style: TextStyle(
-              fontSize: 10,
-              color: Colors.white.withValues(alpha: 0.5),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Activity donut chart ─────────────────────────────────────────────────────
-
-class _SportDonutChart extends StatelessWidget {
-  final Map<SportType, int> counts;
-  const _SportDonutChart({required this.counts});
-
-  @override
-  Widget build(BuildContext context) {
-    final sorted = counts.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    final total = counts.values.fold(0, (a, b) => a + b);
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        SizedBox(
-          width: 130,
-          height: 130,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              CustomPaint(
-                size: const Size(130, 130),
-                painter: _DonutPainter(counts: counts, total: total),
-              ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '$total',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      height: 1,
-                    ),
-                  ),
-                  Text(
-                    AppLocalizations.of(context)!.total,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white54,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 20),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: sorted.map((e) {
-              final pct =
-                  total > 0 ? (e.value / total * 100).round() : 0;
-              final color = e.key.color;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration:
-                          BoxDecoration(color: color, shape: BoxShape.circle),
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Row(
-                        children: [
-                          PhosphorIcon(e.key.icon, size: 12, color: color),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              e.key.l10nLabel(context),
-                              style: const TextStyle(
-                                  fontSize: 12, fontWeight: FontWeight.w600),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      '${e.value} ($pct%)',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.white.withValues(alpha: 0.5),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _DonutPainter extends CustomPainter {
-  final Map<SportType, int> counts;
-  final int total;
-
-  const _DonutPainter({required this.counts, required this.total});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (total == 0) return;
-    final cx = size.width / 2;
-    final cy = size.height / 2;
-    final outerR = size.width / 2;
-    final innerR = outerR * 0.55;
-    final arcR = (outerR + innerR) / 2;
-    final strokeW = outerR - innerR;
-    final rect = Rect.fromCircle(center: Offset(cx, cy), radius: arcR);
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeW
-      ..strokeCap = StrokeCap.butt;
-
-    double start = -pi / 2;
-    for (final entry in counts.entries) {
-      final sweep = 2 * pi * entry.value / total;
-      paint.color = entry.key.color;
-      canvas.drawArc(rect, start, sweep - 0.04, false, paint);
-      start += sweep;
-    }
-  }
-
-  @override
-  bool shouldRepaint(_DonutPainter old) =>
-      old.counts != counts || old.total != total;
 }
 
 // ─── History row ──────────────────────────────────────────────────────────────
@@ -576,6 +303,31 @@ class _HistoryRow extends StatelessWidget {
         ],
       ),
     ),
+    );
+  }
+}
+
+// ─── Age / gender display line ────────────────────────────────────────────────
+
+class _AgeGenderLine extends StatelessWidget {
+  final Profile profile;
+  const _AgeGenderLine({required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = <String>[];
+    if (profile.showAge && profile.age != null) parts.add('${profile.age}');
+    if (profile.showGender && profile.gender != null) parts.add(profile.gender!);
+    if (parts.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 2),
+      child: Text(
+        parts.join(' · '),
+        style: TextStyle(
+          fontSize: 12,
+          color: Colors.white.withValues(alpha: 0.4),
+        ),
+      ),
     );
   }
 }
