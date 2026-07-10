@@ -9,3 +9,8 @@
 # Supabase / Realtime
 -keep class io.supabase.** { *; }
 -dontwarn io.supabase.**
+
+# Play Core (deferred components) — referenced by Flutter's
+# FlutterPlayStoreSplitApplication but not bundled; we don't use
+# deferred components, so silencing R8 is safe.
+-dontwarn com.google.android.play.core.**

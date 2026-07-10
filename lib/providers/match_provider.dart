@@ -35,6 +35,7 @@ class MatchProvider extends ChangeNotifier {
   Set<String> _favoriteSports = {};
   double? _homeLat;
   double? _homeLng;
+  Set<String> _blockedUserIds = {};
   final Set<String> _joinedIds = {};
   RealtimeChannel? _channel;
   StreamSubscription? _authSub;
@@ -45,6 +46,11 @@ class MatchProvider extends ChangeNotifier {
 
   List<Match> get matches {
     var result = _allMatches;
+    // Hide matches created by blocked users
+    if (_blockedUserIds.isNotEmpty) {
+      result =
+          result.where((m) => !_blockedUserIds.contains(m.creatorId)).toList();
+    }
     // Feed mode: public vs group matches
     if (_feedMode == FeedMode.public) {
       result = result.where((m) => m.groupId == null).toList();
@@ -400,6 +406,16 @@ class MatchProvider extends ChangeNotifier {
     _homeLat = homeLat;
     _homeLng = homeLng;
     // Deferred: this is called from ProxyProvider.update during build.
+    scheduleMicrotask(notifyListeners);
+  }
+
+  /// Called from ProxyProvider when the block list changes.
+  void setBlockedUsers(Set<String> ids) {
+    if (ids.length == _blockedUserIds.length &&
+        ids.containsAll(_blockedUserIds)) {
+      return;
+    }
+    _blockedUserIds = Set.of(ids);
     scheduleMicrotask(notifyListeners);
   }
 

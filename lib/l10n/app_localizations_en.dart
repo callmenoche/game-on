@@ -1082,4 +1082,50 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get reportUser => 'Report user';
+
+  @override
+  String get reportMatch => 'Report match';
+
+  @override
+  String get blockUser => 'Block user';
+
+  @override
+  String get unblockUser => 'Unblock user';
+
+  @override
+  String get block => 'Block';
+
+  @override
+  String get blockUserBody =>
+      'You won\'t see their matches anymore. They won\'t be notified.';
+
+  @override
+  String get userBlocked => 'User blocked';
+
+  @override
+  String get userUnblocked => 'User unblocked';
+
+  @override
+  String get reportSent => 'Report sent. Thanks for keeping GameOn safe.';
+
+  @override
+  String get reportReason => 'Reason';
+
+  @override
+  String get reasonSpam => 'Spam';
+
+  @override
+  String get reasonHarassment => 'Harassment';
+
+  @override
+  String get reasonInappropriate => 'Inappropriate content';
+
+  @override
+  String get reasonFake => 'Fake profile';
+
+  @override
+  String get reportDetailsHint => 'Add details (optional)';
 }

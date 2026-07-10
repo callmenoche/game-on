@@ -3,13 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/match.dart';
 import '../models/profile.dart';
+import '../providers/moderation_provider.dart';
 import '../services/match_service.dart';
 import '../services/profile_service.dart';
+import '../utils/app_snackbar.dart';
 import '../widgets/game_on_logo.dart';
 import '../widgets/profile_stats.dart';
+import '../widgets/report_sheet.dart';
 
 class PublicProfileScreen extends StatefulWidget {
   final String userId;
@@ -68,6 +72,9 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
           _profile?.username ?? AppLocalizations.of(context)!.player,
           style: const TextStyle(fontWeight: FontWeight.w800),
         ),
+        actions: [
+          _ModerationMenu(userId: widget.userId),
+        ],
       ),
       body: _loading
           ? const Center(
@@ -78,6 +85,91 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                       style: TextStyle(
                           color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5))))
               : _ProfileBody(profile: _profile!, history: _history, upcoming: _upcoming),
+    );
+  }
+}
+
+// ─── Report / block menu ─────────────────────────────────────────────────
+
+class _ModerationMenu extends StatelessWidget {
+  final String userId;
+  const _ModerationMenu({required this.userId});
+
+  Future<void> _confirmBlock(BuildContext context) async {
+    final l = AppLocalizations.of(context)!;
+    final moderation = context.read<ModerationProvider>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(ctx).cardTheme.color,
+        title: Text(l.blockUser,
+            style: const TextStyle(fontWeight: FontWeight.w800)),
+        content: Text(l.blockUserBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l.block),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    final ok = await moderation.blockUser(userId);
+    if (context.mounted && ok) showSuccessSnackBar(context, l.userBlocked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final isBlocked = context.watch<ModerationProvider>().isBlocked(userId);
+
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.more_vert_rounded),
+      onSelected: (value) async {
+        switch (value) {
+          case 'report':
+            await showReportSheet(context, reportedUserId: userId);
+          case 'block':
+            await _confirmBlock(context);
+          case 'unblock':
+            final ok =
+                await context.read<ModerationProvider>().unblockUser(userId);
+            if (context.mounted && ok) {
+              showSuccessSnackBar(context, l.userUnblocked);
+            }
+        }
+      },
+      itemBuilder: (_) => [
+        PopupMenuItem(
+          value: 'report',
+          child: Row(
+            children: [
+              const Icon(Icons.flag_outlined,
+                  size: 18, color: Colors.redAccent),
+              const SizedBox(width: 10),
+              Text(l.reportUser),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: isBlocked ? 'unblock' : 'block',
+          child: Row(
+            children: [
+              Icon(isBlocked ? Icons.lock_open_rounded : Icons.block_rounded,
+                  size: 18, color: Colors.redAccent),
+              const SizedBox(width: 10),
+              Text(isBlocked ? l.unblockUser : l.blockUser),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

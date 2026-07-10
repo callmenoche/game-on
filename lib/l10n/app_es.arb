@@ -388,5 +388,21 @@
   "guestsCount": "{count, plural, =1{1 invitado} other{{count} invitados}}",
   "@guestsCount": {
     "placeholders": { "count": { "type": "int" } }
-  }
+  },
+
+  "reportUser": "Denunciar al jugador",
+  "reportMatch": "Denunciar el partido",
+  "blockUser": "Bloquear al jugador",
+  "unblockUser": "Desbloquear al jugador",
+  "block": "Bloquear",
+  "blockUserBody": "Ya no verás sus partidos. No se le notificará.",
+  "userBlocked": "Jugador bloqueado",
+  "userUnblocked": "Jugador desbloqueado",
+  "reportSent": "Denuncia enviada. Gracias por cuidar GameOn.",
+  "reportReason": "Motivo",
+  "reasonSpam": "Spam",
+  "reasonHarassment": "Acoso",
+  "reasonInappropriate": "Contenido inapropiado",
+  "reasonFake": "Perfil falso",
+  "reportDetailsHint": "Añade detalles (opcional)"
 }

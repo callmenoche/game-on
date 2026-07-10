@@ -1088,4 +1088,49 @@ class AppLocalizationsEs extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get reportUser => 'Denunciar al jugador';
+
+  @override
+  String get reportMatch => 'Denunciar el partido';
+
+  @override
+  String get blockUser => 'Bloquear al jugador';
+
+  @override
+  String get unblockUser => 'Desbloquear al jugador';
+
+  @override
+  String get block => 'Bloquear';
+
+  @override
+  String get blockUserBody => 'Ya no verás sus partidos. No se le notificará.';
+
+  @override
+  String get userBlocked => 'Jugador bloqueado';
+
+  @override
+  String get userUnblocked => 'Jugador desbloqueado';
+
+  @override
+  String get reportSent => 'Denuncia enviada. Gracias por cuidar GameOn.';
+
+  @override
+  String get reportReason => 'Motivo';
+
+  @override
+  String get reasonSpam => 'Spam';
+
+  @override
+  String get reasonHarassment => 'Acoso';
+
+  @override
+  String get reasonInappropriate => 'Contenido inapropiado';
+
+  @override
+  String get reasonFake => 'Perfil falso';
+
+  @override
+  String get reportDetailsHint => 'Añade detalles (opcional)';
 }

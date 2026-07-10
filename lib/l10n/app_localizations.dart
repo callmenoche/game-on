@@ -2133,6 +2133,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 guest} other{{count} guests}}'**
   String guestsCount(int count);
+
+  /// No description provided for @reportUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Report user'**
+  String get reportUser;
+
+  /// No description provided for @reportMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Report match'**
+  String get reportMatch;
+
+  /// No description provided for @blockUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Block user'**
+  String get blockUser;
+
+  /// No description provided for @unblockUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock user'**
+  String get unblockUser;
+
+  /// No description provided for @block.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get block;
+
+  /// No description provided for @blockUserBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You won\'t see their matches anymore. They won\'t be notified.'**
+  String get blockUserBody;
+
+  /// No description provided for @userBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'User blocked'**
+  String get userBlocked;
+
+  /// No description provided for @userUnblocked.
+  ///
+  /// In en, this message translates to:
+  /// **'User unblocked'**
+  String get userUnblocked;
+
+  /// No description provided for @reportSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Report sent. Thanks for keeping GameOn safe.'**
+  String get reportSent;
+
+  /// No description provided for @reportReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get reportReason;
+
+  /// No description provided for @reasonSpam.
+  ///
+  /// In en, this message translates to:
+  /// **'Spam'**
+  String get reasonSpam;
+
+  /// No description provided for @reasonHarassment.
+  ///
+  /// In en, this message translates to:
+  /// **'Harassment'**
+  String get reasonHarassment;
+
+  /// No description provided for @reasonInappropriate.
+  ///
+  /// In en, this message translates to:
+  /// **'Inappropriate content'**
+  String get reasonInappropriate;
+
+  /// No description provided for @reasonFake.
+  ///
+  /// In en, this message translates to:
+  /// **'Fake profile'**
+  String get reasonFake;
+
+  /// No description provided for @reportDetailsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add details (optional)'**
+  String get reportDetailsHint;
 }
 
 class _AppLocalizationsDelegate

@@ -14,6 +14,7 @@ import '../services/supabase_client.dart';
 import '../utils/app_snackbar.dart';
 import '../utils/error_helpers.dart';
 import '../widgets/game_on_logo.dart';
+import '../widgets/report_sheet.dart';
 
 class MatchDetailScreen extends StatefulWidget {
   final String matchId;
@@ -256,7 +257,16 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
                       tooltip: l.doCancelMatch,
                       onPressed: () => _confirmCancel(context, match),
                     ),
-                  ],
+                  ] else if (!isCreator && currentUserId != null)
+                    IconButton(
+                      icon: const Icon(Icons.flag_outlined, size: 20),
+                      tooltip: l.reportMatch,
+                      onPressed: () => showReportSheet(
+                        context,
+                        reportedUserId: match.creatorId,
+                        matchId: match.id,
+                      ),
+                    ),
                 ],
               ),
               body: SingleChildScrollView(

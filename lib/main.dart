@@ -12,6 +12,7 @@ import 'providers/connectivity_provider.dart';
 import 'providers/group_provider.dart';
 import 'providers/language_provider.dart';
 import 'providers/match_provider.dart';
+import 'providers/moderation_provider.dart';
 import 'providers/profile_provider.dart';
 import 'providers/theme_provider.dart';
 import 'router.dart';
@@ -28,16 +29,21 @@ Future<void> main() async {
     providers: [
       ChangeNotifierProvider(create: (_) => AuthProvider()),
       ChangeNotifierProvider(create: (_) => ProfileProvider()),
-      // Feed sorting needs the profile's favorite sports + default location.
-      ChangeNotifierProxyProvider<ProfileProvider, MatchProvider>(
+      ChangeNotifierProvider(create: (_) => ModerationProvider()),
+      // Feed sorting needs the profile's favorite sports + default location;
+      // feed filtering needs the blocked-user ids.
+      ChangeNotifierProxyProvider2<ProfileProvider, ModerationProvider,
+          MatchProvider>(
         create: (_) => MatchProvider(),
-        update: (_, profileProvider, matchProvider) {
+        update: (_, profileProvider, moderationProvider, matchProvider) {
           final p = profileProvider.profile;
-          matchProvider!.updateUserContext(
-            favoriteSports: p?.favoriteSports ?? const [],
-            homeLat: p?.defaultGeoLat,
-            homeLng: p?.defaultGeoLng,
-          );
+          matchProvider!
+            ..updateUserContext(
+              favoriteSports: p?.favoriteSports ?? const [],
+              homeLat: p?.defaultGeoLat,
+              homeLng: p?.defaultGeoLng,
+            )
+            ..setBlockedUsers(moderationProvider.blockedIds);
           return matchProvider;
         },
       ),

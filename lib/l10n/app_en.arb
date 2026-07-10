@@ -436,5 +436,21 @@
   "guestsCount": "{count, plural, =1{1 guest} other{{count} guests}}",
   "@guestsCount": {
     "placeholders": { "count": { "type": "int" } }
-  }
+  },
+
+  "reportUser": "Report user",
+  "reportMatch": "Report match",
+  "blockUser": "Block user",
+  "unblockUser": "Unblock user",
+  "block": "Block",
+  "blockUserBody": "You won't see their matches anymore. They won't be notified.",
+  "userBlocked": "User blocked",
+  "userUnblocked": "User unblocked",
+  "reportSent": "Report sent. Thanks for keeping GameOn safe.",
+  "reportReason": "Reason",
+  "reasonSpam": "Spam",
+  "reasonHarassment": "Harassment",
+  "reasonInappropriate": "Inappropriate content",
+  "reasonFake": "Fake profile",
+  "reportDetailsHint": "Add details (optional)"
 }
