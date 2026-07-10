@@ -384,5 +384,9 @@
   "usernameRequired": "Se requiere un nombre de usuario",
   "usernameTooShort": "Mínimo 3 caracteres",
   "usernameTooLong": "Máximo 20 caracteres",
-  "usernameCharset": "Solo letras, números y _"
+  "usernameCharset": "Solo letras, números y _",
+  "guestsCount": "{count, plural, =1{1 invitado} other{{count} invitados}}",
+  "@guestsCount": {
+    "placeholders": { "count": { "type": "int" } }
+  }
 }

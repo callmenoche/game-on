@@ -74,7 +74,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: GameOnBrand.slateCard,
+        backgroundColor: Theme.of(context).cardTheme.color,
         title: Text(l.leaveGroup,
             style: const TextStyle(fontWeight: FontWeight.w800)),
         content: Text(l.leaveGroupBody),
@@ -165,7 +165,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 12),
                       decoration: BoxDecoration(
-                        color: GameOnBrand.slateDark,
+                        color: Theme.of(context).scaffoldBackgroundColor,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                             color:

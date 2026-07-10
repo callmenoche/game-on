@@ -384,5 +384,9 @@
   "usernameRequired": "Pseudo requis",
   "usernameTooShort": "3 caractères minimum",
   "usernameTooLong": "20 caractères maximum",
-  "usernameCharset": "Lettres, chiffres et _ uniquement"
+  "usernameCharset": "Lettres, chiffres et _ uniquement",
+  "guestsCount": "{count, plural, =1{1 invité} other{{count} invités}}",
+  "@guestsCount": {
+    "placeholders": { "count": { "type": "int" } }
+  }
 }

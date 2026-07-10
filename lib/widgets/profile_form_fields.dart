@@ -38,7 +38,7 @@ class DateField extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: GameOnBrand.slateCard,
+          color: Theme.of(context).cardTheme.color,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: hasValue
@@ -53,7 +53,7 @@ class DateField extends StatelessWidget {
               size: 18,
               color: hasValue
                   ? GameOnBrand.saffron
-                  : Colors.white.withValues(alpha: 0.35),
+                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -62,8 +62,8 @@ class DateField extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   color: hasValue
-                      ? Colors.white.withValues(alpha: 0.85)
-                      : Colors.white.withValues(alpha: 0.35),
+                      ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.85)
+                      : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
                 ),
               ),
             ),
@@ -89,7 +89,7 @@ class DateField extends StatelessWidget {
             Icon(
               Icons.chevron_right_rounded,
               size: 18,
-              color: Colors.white.withValues(alpha: 0.25),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.25),
             ),
           ],
         ),
@@ -145,7 +145,7 @@ class GenderPicker extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                         color: isSelected
                             ? GameOnBrand.saffron
-                            : Colors.white.withValues(alpha: 0.6),
+                            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -155,7 +155,7 @@ class GenderPicker extends StatelessWidget {
                         fontSize: 10,
                         color: isSelected
                             ? GameOnBrand.saffron.withValues(alpha: 0.7)
-                            : Colors.white.withValues(alpha: 0.35),
+                            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
                       ),
                       textAlign: TextAlign.center,
                       maxLines: 1,
@@ -194,7 +194,7 @@ class PrivacyToggle extends StatelessWidget {
         Icon(
           Icons.visibility_rounded,
           size: 14,
-          color: Colors.white.withValues(alpha: 0.35),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
         ),
         const SizedBox(width: 8),
         Expanded(
@@ -202,7 +202,7 @@ class PrivacyToggle extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.white.withValues(alpha: 0.5),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
         ),

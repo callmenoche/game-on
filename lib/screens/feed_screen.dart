@@ -65,7 +65,7 @@ class _FeedScreenState extends State<FeedScreen> {
                   filled: false,
                   contentPadding: EdgeInsets.zero,
                   hintStyle: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.4)),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)),
                 ),
                 onChanged: (q) =>
                     context.read<MatchProvider>().setSearchQuery(q),
@@ -124,7 +124,8 @@ class _FeedModeToggle extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
       child: SegmentedButton<FeedMode>(
         style: SegmentedButton.styleFrom(
-          backgroundColor: GameOnBrand.slateCard.withValues(alpha: 0.5),
+          backgroundColor:
+              Theme.of(context).cardTheme.color?.withValues(alpha: 0.5),
           selectedBackgroundColor:
               GameOnBrand.saffron.withValues(alpha: 0.18),
           selectedForegroundColor: GameOnBrand.saffron,
@@ -235,7 +236,7 @@ class _FilterRow extends StatelessWidget {
   void _openFilterSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: GameOnBrand.slateCard,
+      backgroundColor: Theme.of(context).cardTheme.color,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -491,7 +492,7 @@ class _FilterSheet extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected
               ? GameOnBrand.saffron.withValues(alpha: 0.15)
-              : GameOnBrand.slateDark,
+              : Theme.of(context).scaffoldBackgroundColor,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: selected

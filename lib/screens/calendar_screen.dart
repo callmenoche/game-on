@@ -85,9 +85,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 fontWeight: FontWeight.w800,
               ),
               defaultTextStyle: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.85)),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.85)),
               weekendTextStyle: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.7)),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
               markerDecoration: const BoxDecoration(
                 color: GameOnBrand.saffron,
                 shape: BoxShape.circle,
@@ -119,7 +119,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               weekdayStyle: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: Colors.white.withValues(alpha: 0.4),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
               ),
               weekendStyle: TextStyle(
                 fontSize: 12,
@@ -178,19 +178,19 @@ class _SelectedDaySection extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              color: GameOnBrand.slateCard,
+              color: Theme.of(context).cardTheme.color,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               children: [
                 Icon(Icons.event_available_rounded,
-                    size: 18, color: Colors.white.withValues(alpha: 0.25)),
+                    size: 18, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.25)),
                 const SizedBox(width: 12),
                 Text(
                   l.noMatchesScheduled,
                   style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.35)),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35)),
                 ),
               ],
             ),
@@ -212,7 +212,7 @@ class _MatchEventRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: GameOnBrand.slateCard,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(12),
         border: Border(left: BorderSide(color: match.sportType.color, width: 3)),
       ),
@@ -231,7 +231,7 @@ class _MatchEventRow extends StatelessWidget {
                   match.locationName,
                   style: TextStyle(
                       fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.45)),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45)),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -253,7 +253,7 @@ class _MatchEventRow extends StatelessWidget {
                 match.durationLabel,
                 style: TextStyle(
                   fontSize: 11,
-                  color: Colors.white.withValues(alpha: 0.35),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
                 ),
               ),
             ],

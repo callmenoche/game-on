@@ -215,7 +215,7 @@ class _VisibilityPicker extends StatelessWidget {
             decoration: BoxDecoration(
               color: isSelected
                   ? GameOnBrand.saffron.withValues(alpha: 0.10)
-                  : GameOnBrand.slateCard,
+                  : Theme.of(context).cardTheme.color,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: isSelected

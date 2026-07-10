@@ -76,7 +76,7 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
               ? Center(
                   child: Text(_error!,
                       style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5))))
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5))))
               : _ProfileBody(profile: _profile!, history: _history, upcoming: _upcoming),
     );
   }
@@ -148,7 +148,7 @@ class _ProfileBody extends StatelessWidget {
                         profile.bio!,
                         style: TextStyle(
                             fontSize: 13,
-                            color: Colors.white.withValues(alpha: 0.55)),
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55)),
                       ),
                     if (profile.favoriteSports.isNotEmpty)
                       Padding(
@@ -256,7 +256,7 @@ class _HistoryRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       decoration: BoxDecoration(
-        color: GameOnBrand.slateCard,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(12),
         border: Border(
             left: BorderSide(color: match.sportType.color, width: 3)),
@@ -277,7 +277,7 @@ class _HistoryRow extends StatelessWidget {
                   match.locationName,
                   style: TextStyle(
                       fontSize: 11,
-                      color: Colors.white.withValues(alpha: 0.4)),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -296,7 +296,7 @@ class _HistoryRow extends StatelessWidget {
                 DateFormat('HH:mm').format(match.dateTime),
                 style: TextStyle(
                     fontSize: 11,
-                    color: Colors.white.withValues(alpha: 0.45)),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45)),
               ),
             ],
           ),
@@ -325,7 +325,7 @@ class _AgeGenderLine extends StatelessWidget {
         parts.join(' · '),
         style: TextStyle(
           fontSize: 12,
-          color: Colors.white.withValues(alpha: 0.4),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
         ),
       ),
     );

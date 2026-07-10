@@ -152,7 +152,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
       return Center(
         child: Text(
           l.noResults,
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)),
         ),
       );
     }
@@ -208,7 +208,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: GameOnBrand.slateCard,
+        backgroundColor: Theme.of(context).cardTheme.color,
         title: Text(l.joinAGroup,
             style: const TextStyle(fontWeight: FontWeight.w800)),
         content: TextField(
@@ -314,7 +314,7 @@ class _PlayerTile extends StatelessWidget {
               profile.bio!,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
             )
           : null,
       onTap: () => context.push('/player/${profile.id}'),

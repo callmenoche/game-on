@@ -47,7 +47,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
     final code = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: GameOnBrand.slateCard,
+      backgroundColor: Theme.of(context).cardTheme.color,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -78,7 +78,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: GameOnBrand.slateCard,
+      backgroundColor: Theme.of(context).cardTheme.color,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -194,11 +194,11 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.error_outline_rounded,
-                      size: 48, color: Colors.white.withValues(alpha: 0.3)),
+                      size: 48, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
                   const SizedBox(height: 12),
                   Text(l.matchNotFound,
                       style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5))),
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5))),
                 ],
               ),
             ),
@@ -344,7 +344,7 @@ class _HeroCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: GameOnBrand.slateCard,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(20),
         border: Border(left: BorderSide(color: match.sportType.color, width: 4)),
       ),
@@ -390,12 +390,12 @@ class _HeroCard extends StatelessWidget {
           Row(
             children: [
               Icon(Icons.calendar_today_rounded,
-                  size: 14, color: Colors.white.withValues(alpha: 0.5)),
+                  size: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
               const SizedBox(width: 6),
               Text(
                 DateFormat('EEEE, d MMMM  •  HH:mm', Localizations.localeOf(context).languageCode).format(match.dateTime),
                 style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.7), fontSize: 14),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7), fontSize: 14),
               ),
             ],
           ),
@@ -403,24 +403,24 @@ class _HeroCard extends StatelessWidget {
           Row(
             children: [
               Icon(Icons.timer_outlined,
-                  size: 14, color: Colors.white.withValues(alpha: 0.5)),
+                  size: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
               const SizedBox(width: 6),
               Text(
                 match.durationLabel,
                 style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6), fontSize: 13),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 13),
               ),
             ],
           ),
           const SizedBox(height: 20),
           _SpotsRow(match: match, participantCount: participantCount),
           if (match.description != null && match.description!.isNotEmpty) ...[
-            const Divider(height: 24, color: Colors.white12),
+            Divider(height: 24, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12)),
             Text(
               match.description!,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.white.withValues(alpha: 0.6),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ],
@@ -451,7 +451,7 @@ class _SpotsRow extends StatelessWidget {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Colors.white.withValues(alpha: 0.6),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -468,7 +468,7 @@ class _SpotsRow extends StatelessWidget {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w700,
-            color: Colors.white.withValues(alpha: 0.6),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
         const SizedBox(height: 8),
@@ -589,7 +589,7 @@ class _ParticipantsListState extends State<_ParticipantsList> {
     final code = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: GameOnBrand.slateCard,
+      backgroundColor: Theme.of(context).cardTheme.color,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -684,7 +684,7 @@ class _ParticipantsListState extends State<_ParticipantsList> {
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: GameOnBrand.slateCard,
+              color: Theme.of(context).cardTheme.color,
               borderRadius: BorderRadius.circular(12),
               border: isGuestRow
                   ? Border.all(
@@ -696,7 +696,7 @@ class _ParticipantsListState extends State<_ParticipantsList> {
                 CircleAvatar(
                   radius: 18,
                   backgroundColor: isGuestRow
-                      ? Colors.white.withValues(alpha: 0.06)
+                      ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06)
                       : GameOnBrand.saffron.withValues(alpha: 0.2),
                   backgroundImage: avatarUrl != null
                       ? NetworkImage(avatarUrl)
@@ -707,7 +707,7 @@ class _ParticipantsListState extends State<_ParticipantsList> {
                           style: TextStyle(
                             fontWeight: FontWeight.w800,
                             color: isGuestRow
-                                ? Colors.white.withValues(alpha: 0.35)
+                                ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35)
                                 : GameOnBrand.saffron,
                             fontSize: 14,
                           ),
@@ -725,8 +725,8 @@ class _ParticipantsListState extends State<_ParticipantsList> {
                           fontWeight: FontWeight.w600,
                           fontSize: 15,
                           color: isGuestRow
-                              ? Colors.white.withValues(alpha: 0.4)
-                              : Colors.white,
+                              ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)
+                              : Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                       if (isGuestRow)
@@ -734,7 +734,7 @@ class _ParticipantsListState extends State<_ParticipantsList> {
                           l.unclaimedSpot,
                           style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withValues(alpha: 0.25)),
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.25)),
                         ),
                     ],
                   ),
@@ -742,7 +742,7 @@ class _ParticipantsListState extends State<_ParticipantsList> {
                 if (isMe && !isGuestRow)
                   _Badge(
                       label: l.you,
-                      color: Colors.white.withValues(alpha: 0.4)),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)),
                 if (isCreator)
                   _Badge(label: l.host, color: GameOnBrand.saffron),
                 if (isGuestRow && isHost) ...[
@@ -774,7 +774,7 @@ class _ParticipantsListState extends State<_ParticipantsList> {
                     style: TextButton.styleFrom(
                       foregroundColor: GameOnBrand.saffron,
                       disabledForegroundColor:
-                          Colors.white.withValues(alpha: 0.25),
+                          Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.25),
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                     ),
                     child: Text(l.claim,
@@ -812,7 +812,7 @@ class _ActionBar extends StatelessWidget {
   void _openJoinSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: GameOnBrand.slateCard,
+      backgroundColor: Theme.of(context).cardTheme.color,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -829,7 +829,7 @@ class _ActionBar extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: GameOnBrand.slateCard,
+      backgroundColor: Theme.of(context).cardTheme.color,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -1018,7 +1018,7 @@ class _JoinOptionsSheetState extends State<_JoinOptionsSheet> {
           Text(
             l.joinBringFriendsInfo,
             style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.55), fontSize: 13),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55), fontSize: 13),
           ),
           const SizedBox(height: 24),
           Container(
@@ -1042,7 +1042,7 @@ class _JoinOptionsSheetState extends State<_JoinOptionsSheet> {
                         size: 18,
                         color: _guestCount > 0
                             ? GameOnBrand.saffron
-                            : Colors.white.withValues(alpha: 0.35)),
+                            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35)),
                     const SizedBox(width: 10),
                     Text(
                       _guestLabel,
@@ -1050,8 +1050,8 @@ class _JoinOptionsSheetState extends State<_JoinOptionsSheet> {
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
                         color: _guestCount > 0
-                            ? Colors.white
-                            : Colors.white.withValues(alpha: 0.55),
+                            ? Theme.of(context).colorScheme.onSurface
+                            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
                       ),
                     ),
                   ],
@@ -1075,7 +1075,7 @@ class _JoinOptionsSheetState extends State<_JoinOptionsSheet> {
                           fontWeight: FontWeight.w900,
                           color: _guestCount > 0
                               ? GameOnBrand.saffron
-                              : Colors.white.withValues(alpha: 0.25),
+                              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.25),
                         ),
                       ),
                     ),
@@ -1172,7 +1172,7 @@ class _AddGuestSheetState extends State<_AddGuestSheet> {
               height: 4,
               margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -1184,7 +1184,7 @@ class _AddGuestSheetState extends State<_AddGuestSheet> {
           Text(
             AppLocalizations.of(context)!.guestClaimCodeInfo,
             style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.55), fontSize: 13),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55), fontSize: 13),
           ),
           const SizedBox(height: 24),
           Container(
@@ -1205,11 +1205,11 @@ class _AddGuestSheetState extends State<_AddGuestSheet> {
                         size: 18, color: GameOnBrand.saffron),
                     const SizedBox(width: 10),
                     Text(
-                      _count == 1 ? '1 guest' : '$_count guests',
-                      style: const TextStyle(
+                      AppLocalizations.of(context)!.guestsCount(_count),
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                   ],
@@ -1308,7 +1308,7 @@ class _SheetStepButton extends StatelessWidget {
             size: 16,
             color: enabled
                 ? GameOnBrand.saffron
-                : Colors.white.withValues(alpha: 0.2)),
+                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2)),
       ),
     );
   }
@@ -1483,7 +1483,7 @@ class _ClaimSheetState extends State<_ClaimSheet> {
           const SizedBox(height: 6),
           Text(l.enterClaimCode,
               style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.55), fontSize: 13)),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55), fontSize: 13)),
           const SizedBox(height: 16),
           TextField(
             controller: _controller,

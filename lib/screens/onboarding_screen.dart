@@ -203,7 +203,7 @@ class _Step1 extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: isSelected
                           ? GameOnBrand.saffron
-                          : GameOnBrand.slateCard,
+                          : Theme.of(context).cardTheme.color,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: isSelected
@@ -226,7 +226,7 @@ class _Step1 extends StatelessWidget {
                             fontSize: 14,
                             color: isSelected
                                 ? GameOnBrand.slateDark
-                                : Colors.white.withValues(alpha: 0.85),
+                                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.85),
                           ),
                         ),
                       ],

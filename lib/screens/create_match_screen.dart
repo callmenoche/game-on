@@ -210,7 +210,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
             Text(l.genderRestrictionHint,
                 style: TextStyle(
                     fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.4))),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4))),
             const SizedBox(height: 12),
             _GenderRestrictionPicker(
               selected: _allowedGenders,
@@ -329,7 +329,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
     final picked = await showModalBottomSheet<TimeOfDay>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: GameOnBrand.slateDark,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -475,7 +475,7 @@ class _SportPicker extends StatelessWidget {
                     fontSize: 13,
                     color: isSelected
                         ? GameOnBrand.slateDark
-                        : Colors.white.withValues(alpha: 0.85),
+                        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.85),
                   ),
                 ),
               ],
@@ -522,7 +522,7 @@ class _SkillLevelPicker extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                PhosphorIcon(level.icon, size: 16, color: isSelected ? level.color : Colors.white.withValues(alpha: 0.55)),
+                PhosphorIcon(level.icon, size: 16, color: isSelected ? level.color : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55)),
                 const SizedBox(width: 6),
                 Text(
                   level.l10nLabel(context),
@@ -531,7 +531,7 @@ class _SkillLevelPicker extends StatelessWidget {
                     fontSize: 13,
                     color: isSelected
                         ? level.color
-                        : Colors.white.withValues(alpha: 0.85),
+                        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.85),
                   ),
                 ),
               ],
@@ -641,7 +641,7 @@ class _LocationFieldState extends State<_LocationField> {
         ),
         if (_suggestions.isNotEmpty)
           Material(
-            color: GameOnBrand.slateCard,
+            color: Theme.of(context).cardTheme.color,
             borderRadius:
                 const BorderRadius.vertical(bottom: Radius.circular(8)),
             child: Column(
@@ -674,7 +674,7 @@ class _LocationFieldState extends State<_LocationField> {
                                   s.secondaryText,
                                   style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.white
+                                      color: Theme.of(context).colorScheme.onSurface
                                           .withValues(alpha: 0.5)),
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -707,7 +707,12 @@ class _LocationFieldState extends State<_LocationField> {
     // Show clear button when there's text and field is not pinned
     if (widget.controller.text.isNotEmpty && !widget.isGeoPinned) {
       return IconButton(
-        icon: const Icon(Icons.close, size: 18, color: Colors.white54),
+        icon: Icon(Icons.close,
+            size: 18,
+            color: Theme.of(context)
+                .colorScheme
+                .onSurface
+                .withValues(alpha: 0.54)),
         tooltip: 'Clear',
         onPressed: widget.onClear,
       );
@@ -718,7 +723,7 @@ class _LocationFieldState extends State<_LocationField> {
             ? Icons.my_location_rounded
             : Icons.location_searching_rounded,
         size: 20,
-        color: widget.isGeoPinned ? GameOnBrand.saffron : Colors.white38,
+        color: widget.isGeoPinned ? GameOnBrand.saffron : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38),
       ),
       tooltip: widget.isGeoPinned
           ? 'GPS pinned ✓'
@@ -799,7 +804,7 @@ class _GroupChip extends StatelessWidget {
                 size: 15,
                 color: selected
                     ? GameOnBrand.slateDark
-                    : Colors.white.withValues(alpha: 0.6)),
+                    : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
             const SizedBox(width: 6),
             Text(
               label,
@@ -808,7 +813,7 @@ class _GroupChip extends StatelessWidget {
                 fontSize: 13,
                 color: selected
                     ? GameOnBrand.slateDark
-                    : Colors.white.withValues(alpha: 0.85),
+                    : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.85),
               ),
             ),
           ],
@@ -838,7 +843,7 @@ class _PickerButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
-          color: GameOnBrand.slateCard,
+          color: Theme.of(context).cardTheme.color,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
               color: GameOnBrand.slateLight.withValues(alpha: 0.3)),
@@ -878,7 +883,7 @@ class _UnlimitedToggle extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: GameOnBrand.slateCard,
+          color: Theme.of(context).cardTheme.color,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: value
@@ -893,7 +898,7 @@ class _UnlimitedToggle extends StatelessWidget {
               size: 20,
               color: value
                   ? GameOnBrand.saffron
-                  : Colors.white.withValues(alpha: 0.35),
+                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -906,15 +911,15 @@ class _UnlimitedToggle extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
                       color: value
-                          ? Colors.white
-                          : Colors.white.withValues(alpha: 0.6),
+                          ? Theme.of(context).colorScheme.onSurface
+                          : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                   Text(
                     AppLocalizations.of(context)!.unlimitedSpotsHint,
                     style: TextStyle(
                       fontSize: 11,
-                      color: Colors.white.withValues(alpha: 0.35),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
                     ),
                   ),
                 ],
@@ -946,7 +951,7 @@ class _SpotsStepper extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: GameOnBrand.slateCard,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
             color: GameOnBrand.slateLight.withValues(alpha: 0.3)),
@@ -1014,7 +1019,7 @@ class _GuestCountStepper extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: GameOnBrand.slateCard,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: value > 0
@@ -1032,7 +1037,7 @@ class _GuestCountStepper extends StatelessWidget {
                 size: 18,
                 color: value > 0
                     ? GameOnBrand.saffron
-                    : Colors.white.withValues(alpha: 0.35),
+                    : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
               ),
               const SizedBox(width: 10),
               Text(
@@ -1041,8 +1046,8 @@ class _GuestCountStepper extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                   fontSize: 16,
                   color: value > 0
-                      ? Colors.white
-                      : Colors.white.withValues(alpha: 0.55),
+                      ? Theme.of(context).colorScheme.onSurface
+                      : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
                 ),
               ),
             ],
@@ -1064,7 +1069,7 @@ class _GuestCountStepper extends StatelessWidget {
                     fontWeight: FontWeight.w900,
                     color: value > 0
                         ? GameOnBrand.saffron
-                        : Colors.white.withValues(alpha: 0.25),
+                        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.25),
                   ),
                 ),
               ),
@@ -1111,7 +1116,7 @@ class _StepButton extends StatelessWidget {
           size: 18,
           color: enabled
               ? GameOnBrand.saffron
-              : Colors.white.withValues(alpha: 0.2),
+              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
         ),
       ),
     );
@@ -1181,12 +1186,12 @@ class _GenderRestrictionPicker extends StatelessWidget {
                 ? GameOnBrand.saffron.withValues(alpha: 0.5)
                 : GameOnBrand.slateLight.withValues(alpha: 0.3),
           ),
-          backgroundColor: GameOnBrand.slateCard,
+          backgroundColor: Theme.of(context).cardTheme.color,
           labelStyle: TextStyle(
             fontWeight: FontWeight.w600,
             color: isSelected
                 ? GameOnBrand.saffron
-                : Colors.white.withValues(alpha: 0.6),
+                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         );
       }).toList(),
@@ -1242,7 +1247,7 @@ class _MatchPreview extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: GameOnBrand.slateCard,
+            color: Theme.of(context).cardTheme.color,
             borderRadius: BorderRadius.circular(16),
             border: const Border(
               left: BorderSide(color: GameOnBrand.saffron, width: 4),
@@ -1277,15 +1282,15 @@ class _MatchPreview extends StatelessWidget {
                                 ? 13
                                 : 16,
                             color: title != null && title!.isNotEmpty
-                                ? Colors.white.withValues(alpha: 0.5)
-                                : Colors.white,
+                                ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)
+                                : Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                         Text(
                           location,
                           style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.55)),
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55)),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -1343,24 +1348,24 @@ class _MatchPreview extends StatelessWidget {
                 children: [
                   Icon(Icons.access_time_rounded,
                       size: 14,
-                      color: Colors.white.withValues(alpha: 0.5)),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                   const SizedBox(width: 4),
                   Text(
                     DateFormat('EEE d MMM  •  HH:mm', Localizations.localeOf(context).languageCode).format(dateTime),
                     style: TextStyle(
                         fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.6)),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
                   ),
                   const SizedBox(width: 8),
                   Icon(Icons.timer_outlined,
                       size: 13,
-                      color: Colors.white.withValues(alpha: 0.4)),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)),
                   const SizedBox(width: 3),
                   Text(
                     _durationLabel,
                     style: TextStyle(
                         fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.5)),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                   ),
                 ],
               ),
@@ -1370,7 +1375,7 @@ class _MatchPreview extends StatelessWidget {
                   children: [
                     Icon(PhosphorIconsLight.genderIntersex,
                         size: 13,
-                        color: Colors.white.withValues(alpha: 0.5)),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                     const SizedBox(width: 4),
                     Text(
                       allowedGenders.map((g) => switch (g) {
@@ -1381,7 +1386,7 @@ class _MatchPreview extends StatelessWidget {
                       }).join(', '),
                       style: TextStyle(
                           fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.6)),
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
                     ),
                   ],
                 ),
@@ -1402,7 +1407,7 @@ class _MatchPreview extends StatelessWidget {
                           style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white.withValues(alpha: 0.55)),
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55)),
                         ),
                       ],
                     )
@@ -1414,7 +1419,7 @@ class _MatchPreview extends StatelessWidget {
                             style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.white.withValues(alpha: 0.55))),
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55))),
                         const SizedBox(height: 4),
                         Row(
                           children: List.generate(totalSpots, (i) {
@@ -1491,7 +1496,7 @@ class _DurationStepper extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: GameOnBrand.slateCard,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
             color: GameOnBrand.slateLight.withValues(alpha: 0.3)),
@@ -1499,7 +1504,7 @@ class _DurationStepper extends StatelessWidget {
       child: Row(
         children: [
           Icon(Icons.timer_outlined,
-              size: 18, color: Colors.white.withValues(alpha: 0.5)),
+              size: 18, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -1507,7 +1512,7 @@ class _DurationStepper extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 15,
-                color: Colors.white.withValues(alpha: 0.65),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65),
               ),
             ),
           ),
@@ -1579,7 +1584,7 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white24,
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.24),
               borderRadius: BorderRadius.circular(2),
             ),
           ),

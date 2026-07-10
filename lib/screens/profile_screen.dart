@@ -146,7 +146,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _pickAvatar() async {
     final choice = await showModalBottomSheet<ImageSource>(
       context: context,
-      backgroundColor: GameOnBrand.slateCard,
+      backgroundColor: Theme.of(context).cardTheme.color,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -161,7 +161,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.24),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -250,7 +250,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onPressed: _saving ? null : _cancelEdit,
                 child: Text(l.cancel,
                     style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.6))),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
               ),
               TextButton(
                 onPressed: _saving ? null : _save,
@@ -279,7 +279,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Text(
                 friendlyError(profileProvider.error, AppLocalizations.of(context)!),
                 style:
-                    TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+                    TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
               ),
             )
           : profile == null
@@ -494,7 +494,7 @@ class _AvatarHeader extends StatelessWidget {
                   maxLength: 120,
                   style: TextStyle(
                       fontSize: 13,
-                      color: Colors.white.withValues(alpha: 0.7)),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
                   decoration: InputDecoration(
                     hintText: l.bioHint,
                     isDense: true,
@@ -507,7 +507,7 @@ class _AvatarHeader extends StatelessWidget {
                     ),
                     counterStyle: TextStyle(
                         fontSize: 10,
-                        color: Colors.white.withValues(alpha: 0.3)),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
                   ),
                 )
               else if (profile.bio != null && profile.bio!.isNotEmpty)
@@ -515,7 +515,7 @@ class _AvatarHeader extends StatelessWidget {
                   profile.bio!,
                   style: TextStyle(
                       fontSize: 13,
-                      color: Colors.white.withValues(alpha: 0.55)),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55)),
                 )
               else
                 Text(
@@ -523,7 +523,7 @@ class _AvatarHeader extends StatelessWidget {
                   style: TextStyle(
                       fontSize: 13,
                       fontStyle: FontStyle.italic,
-                      color: Colors.white.withValues(alpha: 0.3)),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
                 ),
               if (!editing && profile.favoriteSports.isNotEmpty)
                 Padding(
@@ -594,7 +594,7 @@ class _MatchRow extends StatelessWidget {
       padding:
           const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       decoration: BoxDecoration(
-        color: GameOnBrand.slateCard,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(12),
         border: Border(
             left: BorderSide(color: match.sportType.color, width: 3)),
@@ -614,7 +614,7 @@ class _MatchRow extends StatelessWidget {
                   match.locationName,
                   style: TextStyle(
                       fontSize: 11,
-                      color: Colors.white.withValues(alpha: 0.4)),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -633,7 +633,7 @@ class _MatchRow extends StatelessWidget {
                 DateFormat('HH:mm').format(match.dateTime),
                 style: TextStyle(
                     fontSize: 11,
-                    color: Colors.white.withValues(alpha: 0.45)),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45)),
               ),
             ],
           ),
@@ -663,7 +663,7 @@ class _FavouriteSportsPicker extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: GameOnBrand.slateCard,
+          color: Theme.of(context).cardTheme.color,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
@@ -671,7 +671,7 @@ class _FavouriteSportsPicker extends StatelessWidget {
           style: TextStyle(
               fontSize: 13,
               fontStyle: FontStyle.italic,
-              color: Colors.white.withValues(alpha: 0.3)),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
         ),
       );
     }
@@ -716,7 +716,7 @@ class _FavouriteSportsPicker extends StatelessWidget {
                     fontSize: 13,
                     color: isSelected
                         ? GameOnBrand.saffron
-                        : Colors.white.withValues(alpha: 0.7),
+                        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
                 if (editing && isSelected) ...[
@@ -802,7 +802,7 @@ class _AgeGenderLine extends StatelessWidget {
         parts.join(' · '),
         style: TextStyle(
           fontSize: 12,
-          color: Colors.white.withValues(alpha: 0.4),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
         ),
       ),
     );

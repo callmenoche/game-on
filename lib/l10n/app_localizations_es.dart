@@ -1077,4 +1077,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get usernameCharset => 'Solo letras, números y _';
+
+  @override
+  String guestsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count invitados',
+      one: '1 invitado',
+    );
+    return '$_temp0';
+  }
 }

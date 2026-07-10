@@ -432,5 +432,9 @@
   "usernameRequired": "Username required",
   "usernameTooShort": "At least 3 characters",
   "usernameTooLong": "Max 20 characters",
-  "usernameCharset": "Letters, numbers, and _ only"
+  "usernameCharset": "Letters, numbers, and _ only",
+  "guestsCount": "{count, plural, =1{1 guest} other{{count} guests}}",
+  "@guestsCount": {
+    "placeholders": { "count": { "type": "int" } }
+  }
 }

@@ -2127,6 +2127,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Letters, numbers, and _ only'**
   String get usernameCharset;
+
+  /// No description provided for @guestsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 guest} other{{count} guests}}'**
+  String guestsCount(int count);
 }
 
 class _AppLocalizationsDelegate

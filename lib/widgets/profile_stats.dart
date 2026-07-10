@@ -81,7 +81,7 @@ class _MiniStat extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        color: GameOnBrand.slateCard,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
@@ -97,7 +97,7 @@ class _MiniStat extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 9,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white.withValues(alpha: 0.45),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45),
                     letterSpacing: 0.4,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -137,7 +137,7 @@ class _MiniStat extends StatelessWidget {
                 : sub,
             style: TextStyle(
               fontSize: 10,
-              color: Colors.white.withValues(alpha: 0.5),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
             overflow: TextOverflow.ellipsis,
           ),
@@ -177,19 +177,22 @@ class SportDonutChart extends StatelessWidget {
                 children: [
                   Text(
                     '$total',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w900,
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onSurface,
                       height: 1,
                     ),
                   ),
                   Text(
                     AppLocalizations.of(context)!.total,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white54,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.54),
                     ),
                   ),
                 ],
@@ -236,7 +239,7 @@ class SportDonutChart extends StatelessWidget {
                       '${e.value} ($pct%)',
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                       ),
                     ),
                   ],

@@ -45,7 +45,7 @@ class AvailabilityGrid extends StatelessWidget {
         Text(
           l.whenFreeToPlay,
           style: TextStyle(
-              fontSize: 12, color: Colors.white.withValues(alpha: 0.4)),
+              fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)),
         ),
         const SizedBox(height: 14),
         if (provider.isLoading)
@@ -58,7 +58,7 @@ class AvailabilityGrid extends StatelessWidget {
         else ...[
           Container(
             decoration: BoxDecoration(
-              color: GameOnBrand.slateCard,
+              color: Theme.of(context).cardTheme.color,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -85,7 +85,7 @@ class AvailabilityGrid extends StatelessWidget {
                                 color: isWeekend
                                     ? GameOnBrand.saffron
                                         .withValues(alpha: 0.75)
-                                    : Colors.white.withValues(alpha: 0.65),
+                                    : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65),
                               ),
                             ),
                           ),
@@ -133,13 +133,13 @@ class AvailabilityGrid extends StatelessWidget {
                   children: [
                     PhosphorIcon(_slotIcons[i],
                         size: 11,
-                        color: Colors.white.withValues(alpha: 0.45)),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45)),
                     const SizedBox(width: 4),
                     Text(
                       slotLabels[i],
                       style: TextStyle(
                           fontSize: 11,
-                          color: Colors.white.withValues(alpha: 0.35)),
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35)),
                     ),
                   ],
                 ),
@@ -190,7 +190,7 @@ class _SlotChip extends StatelessWidget {
             size: 18,
             color: active
                 ? GameOnBrand.saffron
-                : Colors.white.withValues(alpha: 0.4),
+                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
           ),
         ),
       ),

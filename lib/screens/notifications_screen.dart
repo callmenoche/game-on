@@ -43,14 +43,14 @@ class NotificationsScreen extends StatelessWidget {
                 children: [
                   Icon(Icons.notifications_none_rounded,
                       size: 56,
-                      color: Colors.white.withValues(alpha: 0.2)),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2)),
                   const SizedBox(height: 16),
                   Text(
                     l.noNotificationsYet,
                     style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white.withValues(alpha: 0.4)),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)),
                   ),
                 ],
               ),
@@ -61,7 +61,7 @@ class NotificationsScreen extends StatelessWidget {
               separatorBuilder: (_, __) => Divider(
                 height: 1,
                 indent: 72,
-                color: Colors.white.withValues(alpha: 0.06),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06),
               ),
               itemBuilder: (context, i) =>
                   _NotifTile(item: items[i], onRead: provider.markRead),
@@ -116,8 +116,8 @@ class _NotifTile extends StatelessWidget {
                       fontWeight:
                           item.isRead ? FontWeight.w400 : FontWeight.w600,
                       color: item.isRead
-                          ? Colors.white.withValues(alpha: 0.7)
-                          : Colors.white,
+                          ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)
+                          : Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -125,7 +125,7 @@ class _NotifTile extends StatelessWidget {
                     _timeAgo(item.createdAt, AppLocalizations.of(context)!, Localizations.localeOf(context).languageCode),
                     style: TextStyle(
                         fontSize: 11,
-                        color: Colors.white.withValues(alpha: 0.35)),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35)),
                   ),
                 ],
               ),
