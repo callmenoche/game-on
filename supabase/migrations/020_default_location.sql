@@ -1,0 +1,4 @@
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS default_location_name TEXT,
+  ADD COLUMN IF NOT EXISTS default_geo_lat DOUBLE PRECISION,
+  ADD COLUMN IF NOT EXISTS default_geo_lng DOUBLE PRECISION;

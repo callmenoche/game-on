@@ -9,15 +9,8 @@ class SupabaseService {
 
   // ── Credentials ──────────────────────────────────────────────────────────
   // Store these in a .env file (or --dart-define) and NEVER commit secrets.
-  static const String _supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: 'https://jfhingwkrywnxtfapxsm.supabase.co',
-  );
-  static const String _supabaseAnonKey = String.fromEnvironment(
-    'SUPABASE_ANON_KEY',
-    defaultValue:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmaGluZ3drcnl3bnh0ZmFweHNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzOTQxMjksImV4cCI6MjA4Nzk3MDEyOX0.Jo9vJl5PED6ZjcsGy5mrTC6bZRyoZ-FLKX210gtUHJI',
-  );
+  static const String _supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  static const String _supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
   // ── Initialisation ────────────────────────────────────────────────────────
   static Future<void> initialize() async {
@@ -61,6 +54,19 @@ class SupabaseService {
       client.auth.signInWithPassword(email: email, password: password);
 
   static Future<void> signOut() => client.auth.signOut();
+
+  static Future<void> resetPasswordForEmail(String email) =>
+      client.auth.resetPasswordForEmail(email);
+
+  static Future<void> deleteAccount() => client.rpc('delete_own_account');
+
+  static Future<UserResponse> updatePassword(String newPassword) =>
+      client.auth.updateUser(UserAttributes(password: newPassword));
+
+  static Future<UserResponse> updatePhone(String phone) =>
+      client.auth.updateUser(UserAttributes(phone: phone));
+
+  static String? get currentUserPhone => client.auth.currentUser?.phone;
 
   static Stream<AuthState> get authStateChanges =>
       client.auth.onAuthStateChange;

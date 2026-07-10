@@ -158,6 +158,7 @@ class ProfileProvider extends ChangeNotifier {
     String? bio,
     DateTime? birthDate,
     String? gender,
+    required DateTime acceptedTermsAt,
   }) async {
     if (_profile == null) return;
     _isLoading = true;
@@ -170,11 +171,34 @@ class ProfileProvider extends ChangeNotifier {
         bio: bio,
         birthDate: birthDate,
         gender: gender,
+        acceptedTermsAt: acceptedTermsAt,
       );
     } catch (_) {
       _error = 'Failed to complete setup.';
     }
     _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> saveDefaultLocation({
+    required String name,
+    required double lat,
+    required double lng,
+  }) async {
+    if (_profile == null) return;
+    final current = _profile!;
+    _profile = current.copyWith(
+      defaultLocationName: name,
+      defaultGeoLat: lat,
+      defaultGeoLng: lng,
+    );
+    notifyListeners();
+    try {
+      _profile = await _service.updateProfile(_profile!);
+    } catch (_) {
+      _profile = current;
+      _error = 'Failed to save default location.';
+    }
     notifyListeners();
   }
 

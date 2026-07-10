@@ -29,6 +29,9 @@
   "dateNext30": " dans les 30 prochains jours",
   "dateThisPeriod": " sur cette période",
   "tapToCreate": "Appuie sur + Nouveau match pour en créer un !",
+  "createMatch": "Créer un match",
+  "widenFilters": "Essaie d'élargir ton filtre de date",
+  "joinGroup": "ou rejoins un groupe pour en voir plus",
 
   "settingsTitle": "Paramètres",
   "notifications": "Notifications",
@@ -242,5 +245,38 @@
   "somethingWentWrong": "Un problème est survenu",
   "retry": "Réessayer",
   "noMatchesYet": "Aucun match encore",
-  "createOrJoin": "Crée un match ou rejoins-en un depuis le fil !"
+  "createOrJoin": "Crée un match ou rejoins-en un depuis le fil !",
+
+  "genderRestriction": "Qui peut rejoindre",
+  "genderRestrictionHint": "Laisser vide pour tous",
+  "openToAllGenders": "Ouvert à tous",
+
+  "forgotPassword": "Mot de passe oublié ?",
+  "resetPasswordSent": "Si un compte existe pour cet e-mail, un lien de réinitialisation a été envoyé.",
+  "send": "Envoyer",
+
+  "deleteAccountTitle": "Supprimer le compte",
+  "deleteAccountWarning": "Cela supprimera définitivement votre compte, vos matchs et toutes les données associées. Cette action est irréversible.",
+  "typeDeleteToConfirm": "Tapez DELETE pour confirmer :",
+
+  "legalSection": "Juridique",
+  "lastUpdated": "Dernière mise à jour : {date}",
+
+  "iAcceptThe": "J'accepte les ",
+  "termsOfService": "conditions d'utilisation",
+  "andThe": " et la ",
+  "privacyPolicy": "politique de confidentialité",
+
+  "systemTheme": "Système",
+  "lightTheme": "Clair",
+  "darkTheme": "Sombre",
+  "chooseAppearance": "Choisir l'apparence",
+
+  "newPassword": "Nouveau mot de passe",
+  "confirmPassword": "Confirmer le mot de passe",
+  "passwordsDontMatch": "Les mots de passe ne correspondent pas",
+  "passwordChanged": "Mot de passe modifié",
+
+  "phoneSaved": "Numéro de téléphone enregistré",
+  "notSet": "Non défini"
 }

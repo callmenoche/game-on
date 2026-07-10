@@ -44,6 +44,9 @@
   "dateNext30": " in the next 30 days",
   "dateThisPeriod": " in this period",
   "tapToCreate": "Tap + New Match to create one!",
+  "createMatch": "Create a Match",
+  "widenFilters": "Try widening your date filter",
+  "joinGroup": "or join a group to see more",
 
   "settingsTitle": "Settings",
   "notifications": "Notifications",
@@ -287,5 +290,41 @@
   "somethingWentWrong": "Something went wrong",
   "retry": "Retry",
   "noMatchesYet": "No matches yet",
-  "createOrJoin": "Create a match or join one from the feed!"
+  "createOrJoin": "Create a match or join one from the feed!",
+
+  "genderRestriction": "Who can join",
+  "genderRestrictionHint": "Leave empty for everyone",
+  "openToAllGenders": "Open to all genders",
+
+  "forgotPassword": "Forgot password?",
+  "resetPasswordSent": "If an account exists for that email, a password reset link has been sent.",
+  "send": "Send",
+
+  "deleteAccountTitle": "Delete Account",
+  "deleteAccountWarning": "This will permanently delete your account, matches, and all associated data. This action cannot be undone.",
+  "typeDeleteToConfirm": "Type DELETE to confirm:",
+
+  "legalSection": "Legal",
+  "lastUpdated": "Last updated: {date}",
+  "@lastUpdated": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+
+  "iAcceptThe": "I accept the ",
+  "termsOfService": "Terms of Service",
+  "andThe": " and the ",
+  "privacyPolicy": "Privacy Policy",
+
+  "systemTheme": "System",
+  "lightTheme": "Light",
+  "darkTheme": "Dark",
+  "chooseAppearance": "Choose Appearance",
+
+  "newPassword": "New password",
+  "confirmPassword": "Confirm password",
+  "passwordsDontMatch": "Passwords don't match",
+  "passwordChanged": "Password changed",
+
+  "phoneSaved": "Phone number saved",
+  "notSet": "Not set"
 }

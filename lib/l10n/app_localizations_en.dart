@@ -101,6 +101,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tapToCreate => 'Tap + New Match to create one!';
 
   @override
+  String get createMatch => 'Create a Match';
+
+  @override
+  String get widenFilters => 'Try widening your date filter';
+
+  @override
+  String get joinGroup => 'or join a group to see more';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override
@@ -704,4 +713,83 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get createOrJoin => 'Create a match or join one from the feed!';
+
+  @override
+  String get genderRestriction => 'Who can join';
+
+  @override
+  String get genderRestrictionHint => 'Leave empty for everyone';
+
+  @override
+  String get openToAllGenders => 'Open to all genders';
+
+  @override
+  String get forgotPassword => 'Forgot password?';
+
+  @override
+  String get resetPasswordSent =>
+      'If an account exists for that email, a password reset link has been sent.';
+
+  @override
+  String get send => 'Send';
+
+  @override
+  String get deleteAccountTitle => 'Delete Account';
+
+  @override
+  String get deleteAccountWarning =>
+      'This will permanently delete your account, matches, and all associated data. This action cannot be undone.';
+
+  @override
+  String get typeDeleteToConfirm => 'Type DELETE to confirm:';
+
+  @override
+  String get legalSection => 'Legal';
+
+  @override
+  String lastUpdated(String date) {
+    return 'Last updated: $date';
+  }
+
+  @override
+  String get iAcceptThe => 'I accept the ';
+
+  @override
+  String get termsOfService => 'Terms of Service';
+
+  @override
+  String get andThe => ' and the ';
+
+  @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get systemTheme => 'System';
+
+  @override
+  String get lightTheme => 'Light';
+
+  @override
+  String get darkTheme => 'Dark';
+
+  @override
+  String get chooseAppearance => 'Choose Appearance';
+
+  @override
+  String get newPassword => 'New password';
+
+  @override
+  String get confirmPassword => 'Confirm password';
+
+  @override
+  String get passwordsDontMatch => 'Passwords don\'t match';
+
+  @override
+  String get passwordChanged => 'Password changed';
+
+  @override
+  String get phoneSaved => 'Phone number saved';
+
+  @override
+  String get notSet => 'Not set';
 }

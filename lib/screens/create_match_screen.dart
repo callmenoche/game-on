@@ -10,6 +10,7 @@ import '../l10n/app_localizations.dart';
 import '../models/match.dart';
 import '../providers/group_provider.dart';
 import '../providers/match_provider.dart';
+import '../providers/profile_provider.dart';
 import '../services/places_service.dart';
 import '../widgets/game_on_logo.dart';
 
@@ -40,6 +41,19 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
   double? _geoLng;
   bool _fetchingLocation = false;
   String? _selectedGroupId; // null = public
+  Set<String> _allowedGenders = {}; // empty = unrestricted
+
+  @override
+  void initState() {
+    super.initState();
+    final profile = context.read<ProfileProvider>().profile;
+    if (profile?.defaultLocationName != null &&
+        profile!.defaultLocationName!.isNotEmpty) {
+      _locationController.text = profile.defaultLocationName!;
+      _geoLat = profile.defaultGeoLat;
+      _geoLng = profile.defaultGeoLng;
+    }
+  }
 
   Future<void> _fetchGeoLocation() async {
     setState(() => _fetchingLocation = true);
@@ -189,6 +203,18 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
               onChanged: (id) => setState(() => _selectedGroupId = id),
             ),
             const SizedBox(height: 24),
+            _SectionLabel(l.genderRestriction),
+            const SizedBox(height: 4),
+            Text(l.genderRestrictionHint,
+                style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.4))),
+            const SizedBox(height: 12),
+            _GenderRestrictionPicker(
+              selected: _allowedGenders,
+              onChanged: (v) => setState(() => _allowedGenders = v),
+            ),
+            const SizedBox(height: 24),
             _SectionLabel(l.dateAndTime),
             const SizedBox(height: 12),
             Row(
@@ -262,6 +288,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
               title: _titleController.text.trim().isEmpty
                   ? null
                   : _titleController.text.trim(),
+              allowedGenders: _allowedGenders,
             ),
           ],
         ),
@@ -334,6 +361,8 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
           description: _descController.text.trim().isEmpty
               ? null
               : _descController.text.trim(),
+          allowedGenders:
+              _allowedGenders.isEmpty ? null : _allowedGenders.toList(),
         );
 
     if (!mounted) return;
@@ -870,7 +899,7 @@ class _UnlimitedToggle extends StatelessWidget {
             Switch(
               value: value,
               onChanged: onChanged,
-              activeColor: GameOnBrand.saffron,
+              activeTrackColor: GameOnBrand.saffron,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ],
@@ -1065,6 +1094,65 @@ class _StepButton extends StatelessWidget {
   }
 }
 
+// ─── Gender restriction picker ────────────────────────────────────────────
+
+class _GenderRestrictionPicker extends StatelessWidget {
+  final Set<String> selected;
+  final ValueChanged<Set<String>> onChanged;
+
+  const _GenderRestrictionPicker({
+    required this.selected,
+    required this.onChanged,
+  });
+
+  static const _options = ['M', 'F', 'X'];
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final labels = {'M': l.male, 'F': l.female, 'X': l.nonBinary};
+
+    return Wrap(
+      spacing: 8,
+      children: _options.map((g) {
+        final isSelected = selected.contains(g);
+        return FilterChip(
+          label: Text(labels[g]!),
+          selected: isSelected,
+          onSelected: (_) {
+            final next = Set<String>.from(selected);
+            if (isSelected) {
+              next.remove(g);
+            } else {
+              next.add(g);
+            }
+            // All 3 selected → clear to unrestricted
+            if (next.length == _options.length) {
+              onChanged({});
+            } else {
+              onChanged(next);
+            }
+          },
+          selectedColor: GameOnBrand.saffron.withValues(alpha: 0.25),
+          checkmarkColor: GameOnBrand.saffron,
+          side: BorderSide(
+            color: isSelected
+                ? GameOnBrand.saffron.withValues(alpha: 0.5)
+                : GameOnBrand.slateLight.withValues(alpha: 0.3),
+          ),
+          backgroundColor: GameOnBrand.slateCard,
+          labelStyle: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: isSelected
+                ? GameOnBrand.saffron
+                : Colors.white.withValues(alpha: 0.6),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
 // ─── Live preview card ─────────────────────────────────────────────────────
 
 class _MatchPreview extends StatelessWidget {
@@ -1077,6 +1165,7 @@ class _MatchPreview extends StatelessWidget {
   final bool isUnlimited;
   final int durationMinutes;
   final String? title;
+  final Set<String> allowedGenders;
 
   const _MatchPreview({
     required this.sport,
@@ -1088,6 +1177,7 @@ class _MatchPreview extends StatelessWidget {
     required this.isUnlimited,
     required this.durationMinutes,
     this.title,
+    this.allowedGenders = const {},
   });
 
   String get _durationLabel {
@@ -1233,6 +1323,28 @@ class _MatchPreview extends StatelessWidget {
                   ),
                 ],
               ),
+              if (allowedGenders.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(PhosphorIconsLight.genderIntersex,
+                        size: 13,
+                        color: Colors.white.withValues(alpha: 0.5)),
+                    const SizedBox(width: 4),
+                    Text(
+                      allowedGenders.map((g) => switch (g) {
+                        'M' => AppLocalizations.of(context)!.male,
+                        'F' => AppLocalizations.of(context)!.female,
+                        'X' => AppLocalizations.of(context)!.nonBinary,
+                        _ => g,
+                      }).join(', '),
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.6)),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

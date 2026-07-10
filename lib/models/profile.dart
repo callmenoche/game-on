@@ -12,6 +12,10 @@ class Profile {
   final String? gender; // 'M', 'F', or 'X'
   final bool showAge;
   final bool showGender;
+  final DateTime? acceptedTermsAt;
+  final String? defaultLocationName;
+  final double? defaultGeoLat;
+  final double? defaultGeoLng;
 
   const Profile({
     required this.id,
@@ -27,6 +31,10 @@ class Profile {
     this.gender,
     this.showAge = true,
     this.showGender = true,
+    this.acceptedTermsAt,
+    this.defaultLocationName,
+    this.defaultGeoLat,
+    this.defaultGeoLng,
   });
 
   /// Computed age from [birthDate]. Returns null if birthDate is null.
@@ -58,6 +66,12 @@ class Profile {
         gender: json['gender'] as String?,
         showAge: json['show_age'] as bool? ?? true,
         showGender: json['show_gender'] as bool? ?? true,
+        acceptedTermsAt: json['accepted_terms_at'] != null
+            ? DateTime.tryParse(json['accepted_terms_at'] as String)
+            : null,
+        defaultLocationName: json['default_location_name'] as String?,
+        defaultGeoLat: (json['default_geo_lat'] as num?)?.toDouble(),
+        defaultGeoLng: (json['default_geo_lng'] as num?)?.toDouble(),
       );
 
   /// Serialises mutable fields for DB updates.
@@ -71,6 +85,9 @@ class Profile {
         'gender': gender,
         'show_age': showAge,
         'show_gender': showGender,
+        'default_location_name': defaultLocationName,
+        'default_geo_lat': defaultGeoLat,
+        'default_geo_lng': defaultGeoLng,
       };
 
   Profile copyWith({
@@ -84,6 +101,10 @@ class Profile {
     String? gender,
     bool? showAge,
     bool? showGender,
+    DateTime? acceptedTermsAt,
+    String? defaultLocationName,
+    double? defaultGeoLat,
+    double? defaultGeoLng,
   }) =>
       Profile(
         id: id,
@@ -99,5 +120,9 @@ class Profile {
         gender: gender ?? this.gender,
         showAge: showAge ?? this.showAge,
         showGender: showGender ?? this.showGender,
+        acceptedTermsAt: acceptedTermsAt ?? this.acceptedTermsAt,
+        defaultLocationName: defaultLocationName ?? this.defaultLocationName,
+        defaultGeoLat: defaultGeoLat ?? this.defaultGeoLat,
+        defaultGeoLng: defaultGeoLng ?? this.defaultGeoLng,
       );
 }

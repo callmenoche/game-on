@@ -29,6 +29,9 @@
   "dateNext30": " en los próximos 30 días",
   "dateThisPeriod": " en este período",
   "tapToCreate": "¡Toca + Nuevo partido para crear uno!",
+  "createMatch": "Crear un partido",
+  "widenFilters": "Intenta ampliar tu filtro de fecha",
+  "joinGroup": "o únete a un grupo para ver más",
 
   "settingsTitle": "Ajustes",
   "notifications": "Notificaciones",
@@ -242,5 +245,38 @@
   "somethingWentWrong": "Algo salió mal",
   "retry": "Reintentar",
   "noMatchesYet": "Sin partidos aún",
-  "createOrJoin": "¡Crea un partido o únete a uno desde el inicio!"
+  "createOrJoin": "¡Crea un partido o únete a uno desde el inicio!",
+
+  "genderRestriction": "Quién puede unirse",
+  "genderRestrictionHint": "Dejar vacío para todos",
+  "openToAllGenders": "Abierto a todos",
+
+  "forgotPassword": "¿Olvidaste tu contraseña?",
+  "resetPasswordSent": "Si existe una cuenta para ese correo, se ha enviado un enlace de restablecimiento.",
+  "send": "Enviar",
+
+  "deleteAccountTitle": "Eliminar cuenta",
+  "deleteAccountWarning": "Esto eliminará permanentemente tu cuenta, partidos y todos los datos asociados. Esta acción no se puede deshacer.",
+  "typeDeleteToConfirm": "Escribe DELETE para confirmar:",
+
+  "legalSection": "Legal",
+  "lastUpdated": "Última actualización: {date}",
+
+  "iAcceptThe": "Acepto los ",
+  "termsOfService": "términos de servicio",
+  "andThe": " y la ",
+  "privacyPolicy": "política de privacidad",
+
+  "systemTheme": "Sistema",
+  "lightTheme": "Claro",
+  "darkTheme": "Oscuro",
+  "chooseAppearance": "Elegir apariencia",
+
+  "newPassword": "Nueva contraseña",
+  "confirmPassword": "Confirmar contraseña",
+  "passwordsDontMatch": "Las contraseñas no coinciden",
+  "passwordChanged": "Contraseña cambiada",
+
+  "phoneSaved": "Número de teléfono guardado",
+  "notSet": "No definido"
 }

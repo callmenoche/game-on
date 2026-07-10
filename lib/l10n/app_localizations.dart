@@ -268,6 +268,24 @@ abstract class AppLocalizations {
   /// **'Tap + New Match to create one!'**
   String get tapToCreate;
 
+  /// No description provided for @createMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a Match'**
+  String get createMatch;
+
+  /// No description provided for @widenFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Try widening your date filter'**
+  String get widenFilters;
+
+  /// No description provided for @joinGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'or join a group to see more'**
+  String get joinGroup;
+
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:
@@ -1437,6 +1455,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create a match or join one from the feed!'**
   String get createOrJoin;
+
+  /// No description provided for @genderRestriction.
+  ///
+  /// In en, this message translates to:
+  /// **'Who can join'**
+  String get genderRestriction;
+
+  /// No description provided for @genderRestrictionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty for everyone'**
+  String get genderRestrictionHint;
+
+  /// No description provided for @openToAllGenders.
+  ///
+  /// In en, this message translates to:
+  /// **'Open to all genders'**
+  String get openToAllGenders;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get forgotPassword;
+
+  /// No description provided for @resetPasswordSent.
+  ///
+  /// In en, this message translates to:
+  /// **'If an account exists for that email, a password reset link has been sent.'**
+  String get resetPasswordSent;
+
+  /// No description provided for @send.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get send;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete your account, matches, and all associated data. This action cannot be undone.'**
+  String get deleteAccountWarning;
+
+  /// No description provided for @typeDeleteToConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Type DELETE to confirm:'**
+  String get typeDeleteToConfirm;
+
+  /// No description provided for @legalSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal'**
+  String get legalSection;
+
+  /// No description provided for @lastUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated: {date}'**
+  String lastUpdated(String date);
+
+  /// No description provided for @iAcceptThe.
+  ///
+  /// In en, this message translates to:
+  /// **'I accept the '**
+  String get iAcceptThe;
+
+  /// No description provided for @termsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get termsOfService;
+
+  /// No description provided for @andThe.
+  ///
+  /// In en, this message translates to:
+  /// **' and the '**
+  String get andThe;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @systemTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get systemTheme;
+
+  /// No description provided for @lightTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get lightTheme;
+
+  /// No description provided for @darkTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get darkTheme;
+
+  /// No description provided for @chooseAppearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Appearance'**
+  String get chooseAppearance;
+
+  /// No description provided for @newPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get newPassword;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get confirmPassword;
+
+  /// No description provided for @passwordsDontMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords don\'t match'**
+  String get passwordsDontMatch;
+
+  /// No description provided for @passwordChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Password changed'**
+  String get passwordChanged;
+
+  /// No description provided for @phoneSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number saved'**
+  String get phoneSaved;
+
+  /// No description provided for @notSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get notSet;
 }
 
 class _AppLocalizationsDelegate

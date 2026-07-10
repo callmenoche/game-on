@@ -101,6 +101,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tapToCreate => '¡Toca + Nuevo partido para crear uno!';
 
   @override
+  String get createMatch => 'Crear un partido';
+
+  @override
+  String get widenFilters => 'Intenta ampliar tu filtro de fecha';
+
+  @override
+  String get joinGroup => 'o únete a un grupo para ver más';
+
+  @override
   String get settingsTitle => 'Ajustes';
 
   @override
@@ -708,4 +717,83 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get createOrJoin => '¡Crea un partido o únete a uno desde el inicio!';
+
+  @override
+  String get genderRestriction => 'Quién puede unirse';
+
+  @override
+  String get genderRestrictionHint => 'Dejar vacío para todos';
+
+  @override
+  String get openToAllGenders => 'Abierto a todos';
+
+  @override
+  String get forgotPassword => '¿Olvidaste tu contraseña?';
+
+  @override
+  String get resetPasswordSent =>
+      'Si existe una cuenta para ese correo, se ha enviado un enlace de restablecimiento.';
+
+  @override
+  String get send => 'Enviar';
+
+  @override
+  String get deleteAccountTitle => 'Eliminar cuenta';
+
+  @override
+  String get deleteAccountWarning =>
+      'Esto eliminará permanentemente tu cuenta, partidos y todos los datos asociados. Esta acción no se puede deshacer.';
+
+  @override
+  String get typeDeleteToConfirm => 'Escribe DELETE para confirmar:';
+
+  @override
+  String get legalSection => 'Legal';
+
+  @override
+  String lastUpdated(String date) {
+    return 'Última actualización: $date';
+  }
+
+  @override
+  String get iAcceptThe => 'Acepto los ';
+
+  @override
+  String get termsOfService => 'términos de servicio';
+
+  @override
+  String get andThe => ' y la ';
+
+  @override
+  String get privacyPolicy => 'política de privacidad';
+
+  @override
+  String get systemTheme => 'Sistema';
+
+  @override
+  String get lightTheme => 'Claro';
+
+  @override
+  String get darkTheme => 'Oscuro';
+
+  @override
+  String get chooseAppearance => 'Elegir apariencia';
+
+  @override
+  String get newPassword => 'Nueva contraseña';
+
+  @override
+  String get confirmPassword => 'Confirmar contraseña';
+
+  @override
+  String get passwordsDontMatch => 'Las contraseñas no coinciden';
+
+  @override
+  String get passwordChanged => 'Contraseña cambiada';
+
+  @override
+  String get phoneSaved => 'Número de teléfono guardado';
+
+  @override
+  String get notSet => 'No definido';
 }

@@ -101,6 +101,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tapToCreate => 'Appuie sur + Nouveau match pour en créer un !';
 
   @override
+  String get createMatch => 'Créer un match';
+
+  @override
+  String get widenFilters => 'Essaie d\'élargir ton filtre de date';
+
+  @override
+  String get joinGroup => 'ou rejoins un groupe pour en voir plus';
+
+  @override
   String get settingsTitle => 'Paramètres';
 
   @override
@@ -710,4 +719,83 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get createOrJoin => 'Crée un match ou rejoins-en un depuis le fil !';
+
+  @override
+  String get genderRestriction => 'Qui peut rejoindre';
+
+  @override
+  String get genderRestrictionHint => 'Laisser vide pour tous';
+
+  @override
+  String get openToAllGenders => 'Ouvert à tous';
+
+  @override
+  String get forgotPassword => 'Mot de passe oublié ?';
+
+  @override
+  String get resetPasswordSent =>
+      'Si un compte existe pour cet e-mail, un lien de réinitialisation a été envoyé.';
+
+  @override
+  String get send => 'Envoyer';
+
+  @override
+  String get deleteAccountTitle => 'Supprimer le compte';
+
+  @override
+  String get deleteAccountWarning =>
+      'Cela supprimera définitivement votre compte, vos matchs et toutes les données associées. Cette action est irréversible.';
+
+  @override
+  String get typeDeleteToConfirm => 'Tapez DELETE pour confirmer :';
+
+  @override
+  String get legalSection => 'Juridique';
+
+  @override
+  String lastUpdated(String date) {
+    return 'Dernière mise à jour : $date';
+  }
+
+  @override
+  String get iAcceptThe => 'J\'accepte les ';
+
+  @override
+  String get termsOfService => 'conditions d\'utilisation';
+
+  @override
+  String get andThe => ' et la ';
+
+  @override
+  String get privacyPolicy => 'politique de confidentialité';
+
+  @override
+  String get systemTheme => 'Système';
+
+  @override
+  String get lightTheme => 'Clair';
+
+  @override
+  String get darkTheme => 'Sombre';
+
+  @override
+  String get chooseAppearance => 'Choisir l\'apparence';
+
+  @override
+  String get newPassword => 'Nouveau mot de passe';
+
+  @override
+  String get confirmPassword => 'Confirmer le mot de passe';
+
+  @override
+  String get passwordsDontMatch => 'Les mots de passe ne correspondent pas';
+
+  @override
+  String get passwordChanged => 'Mot de passe modifié';
+
+  @override
+  String get phoneSaved => 'Numéro de téléphone enregistré';
+
+  @override
+  String get notSet => 'Non défini';
 }

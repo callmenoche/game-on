@@ -1,8 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
+import '../providers/auth_provider.dart';
 import '../providers/language_provider.dart';
+import '../providers/profile_provider.dart';
+import '../providers/theme_provider.dart';
+import '../services/places_service.dart';
 import '../widgets/game_on_logo.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -21,62 +29,684 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
-          _SectionHeader(label: l.notifications, icon: PhosphorIconsLight.bell),
-          _PlaceholderTile(
-            icon: PhosphorIconsLight.bellRinging,
-            title: l.pushNotifications,
-            subtitle: l.pushNotificationsSubtitle,
-          ),
-          _PlaceholderTile(
-            icon: PhosphorIconsLight.envelope,
-            title: l.emailNotifications,
-            subtitle: l.emailNotificationsSubtitle,
-          ),
-          const _Divider(),
-
           _SectionHeader(label: l.account, icon: PhosphorIconsLight.user),
-          _PlaceholderTile(
-            icon: PhosphorIconsLight.lock,
-            title: l.changePassword,
-            subtitle: l.changePasswordSubtitle,
-          ),
-          _PlaceholderTile(
-            icon: PhosphorIconsLight.phone,
-            title: l.phoneNumber,
-            subtitle: l.phoneNumberSubtitle,
-          ),
-          _PlaceholderTile(
-            icon: PhosphorIconsLight.trash,
-            title: l.deleteAccount,
-            subtitle: l.deleteAccountSubtitle,
-            destructive: true,
-          ),
+          _ChangePasswordTile(),
+          _PhoneTile(),
+          _DeleteAccountTile(),
           const _Divider(),
 
           _SectionHeader(label: l.globalSection, icon: PhosphorIconsLight.globe),
           _LanguageTile(),
-          _PlaceholderTile(
-            icon: PhosphorIconsLight.mapPin,
-            title: l.defaultLocation,
-            subtitle: l.defaultLocationSubtitle,
-          ),
-          _PlaceholderTile(
-            icon: PhosphorIconsLight.moon,
-            title: l.appearance,
-            subtitle: l.appearanceSubtitle,
-          ),
-          const SizedBox(height: 32),
-          Center(
-            child: Text(
-              'GameOn v1.0.0',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+          _DefaultLocationTile(),
+          _AppearanceTile(),
+          const _Divider(),
+
+          _SectionHeader(label: l.legalSection, icon: PhosphorIconsLight.scales),
+          ListTile(
+            leading: PhosphorIcon(PhosphorIconsLight.fileText,
+                size: 20,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
+            title: Text(
+              l.termsOfService,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+                fontSize: 14,
               ),
             ),
+            trailing: Icon(Icons.chevron_right_rounded,
+                size: 18,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+            onTap: () => context.push('/terms'),
           ),
+          ListTile(
+            leading: PhosphorIcon(PhosphorIconsLight.shieldCheck,
+                size: 20,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
+            title: Text(
+              l.privacyPolicy,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+                fontSize: 14,
+              ),
+            ),
+            trailing: Icon(Icons.chevron_right_rounded,
+                size: 18,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+            onTap: () => context.push('/privacy'),
+          ),
+          const SizedBox(height: 32),
+          const _VersionLabel(),
           const SizedBox(height: 16),
         ],
       ),
+    );
+  }
+}
+
+// ─── Change Password tile ───────────────────────────────────────────────────
+
+class _ChangePasswordTile extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
+    final color = theme.colorScheme.onSurface;
+
+    return ListTile(
+      leading: PhosphorIcon(PhosphorIconsLight.lock,
+          size: 20, color: color.withValues(alpha: 0.7)),
+      title: Text(
+        l.changePassword,
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: color,
+          fontSize: 14,
+        ),
+      ),
+      subtitle: Text(
+        l.changePasswordSubtitle,
+        style: TextStyle(
+          fontSize: 12,
+          color: color.withValues(alpha: 0.45),
+        ),
+      ),
+      trailing: Icon(Icons.chevron_right_rounded,
+          size: 18, color: color.withValues(alpha: 0.3)),
+      onTap: () => _showChangePasswordDialog(context),
+    );
+  }
+
+  void _showChangePasswordDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => const _ChangePasswordDialog(),
+    );
+  }
+}
+
+class _ChangePasswordDialog extends StatefulWidget {
+  const _ChangePasswordDialog();
+
+  @override
+  State<_ChangePasswordDialog> createState() => _ChangePasswordDialogState();
+}
+
+class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
+  final _passwordController = TextEditingController();
+  final _confirmController = TextEditingController();
+  bool _isSubmitting = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    _confirmController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    return AlertDialog(
+      backgroundColor: theme.cardTheme.color,
+      title: Text(l.changePassword),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _passwordController,
+            obscureText: true,
+            decoration: InputDecoration(
+              labelText: l.newPassword,
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _confirmController,
+            obscureText: true,
+            decoration: InputDecoration(
+              labelText: l.confirmPassword,
+              errorText: _error,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l.cancel),
+        ),
+        FilledButton(
+          onPressed: _isSubmitting
+              ? null
+              : () async {
+                  final password = _passwordController.text;
+                  final confirm = _confirmController.text;
+                  if (password.length < 6) {
+                    setState(() => _error = l.passwordTooShort);
+                    return;
+                  }
+                  if (password != confirm) {
+                    setState(() => _error = l.passwordsDontMatch);
+                    return;
+                  }
+                  setState(() {
+                    _error = null;
+                    _isSubmitting = true;
+                  });
+                  final auth = context.read<AuthProvider>();
+                  final success =
+                      await auth.changePassword(newPassword: password);
+                  if (!context.mounted) return;
+                  if (success) {
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l.passwordChanged)),
+                    );
+                  } else {
+                    setState(() {
+                      _error = auth.error ?? l.somethingWentWrong;
+                      _isSubmitting = false;
+                    });
+                  }
+                },
+          child: _isSubmitting
+              ? const SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(l.save),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Phone tile ─────────────────────────────────────────────────────────────
+
+class _PhoneTile extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
+    final color = theme.colorScheme.onSurface;
+    final phone = context.watch<AuthProvider>().phone;
+
+    return ListTile(
+      leading: PhosphorIcon(PhosphorIconsLight.phone,
+          size: 20, color: color.withValues(alpha: 0.7)),
+      title: Text(
+        l.phoneNumber,
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: color,
+          fontSize: 14,
+        ),
+      ),
+      subtitle: Text(
+        (phone != null && phone.isNotEmpty) ? phone : l.notSet,
+        style: TextStyle(
+          fontSize: 12,
+          color: color.withValues(alpha: 0.45),
+        ),
+      ),
+      trailing: Icon(Icons.chevron_right_rounded,
+          size: 18, color: color.withValues(alpha: 0.3)),
+      onTap: () => _showPhoneDialog(context, phone),
+    );
+  }
+
+  void _showPhoneDialog(BuildContext context, String? currentPhone) {
+    showDialog(
+      context: context,
+      builder: (ctx) => _PhoneDialog(currentPhone: currentPhone),
+    );
+  }
+}
+
+class _PhoneDialog extends StatefulWidget {
+  final String? currentPhone;
+  const _PhoneDialog({this.currentPhone});
+
+  @override
+  State<_PhoneDialog> createState() => _PhoneDialogState();
+}
+
+class _PhoneDialogState extends State<_PhoneDialog> {
+  late final TextEditingController _controller;
+  bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.currentPhone ?? '');
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    return AlertDialog(
+      backgroundColor: theme.cardTheme.color,
+      title: Text(l.phoneNumber),
+      content: TextField(
+        controller: _controller,
+        keyboardType: TextInputType.phone,
+        decoration: const InputDecoration(
+          hintText: '+33 6 12 34 56 78',
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l.cancel),
+        ),
+        FilledButton(
+          onPressed: _isSubmitting
+              ? null
+              : () async {
+                  final phone = _controller.text.trim();
+                  if (phone.isEmpty) return;
+                  setState(() => _isSubmitting = true);
+                  final auth = context.read<AuthProvider>();
+                  final success = await auth.updatePhone(phone: phone);
+                  if (!context.mounted) return;
+                  if (success) {
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l.phoneSaved)),
+                    );
+                  } else {
+                    setState(() => _isSubmitting = false);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(auth.error ?? l.somethingWentWrong)),
+                    );
+                  }
+                },
+          child: _isSubmitting
+              ? const SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(l.save),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Appearance tile ────────────────────────────────────────────────────────
+
+class _AppearanceTile extends StatelessWidget {
+  String _modeName(AppLocalizations l, ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.system:
+        return l.systemTheme;
+      case ThemeMode.light:
+        return l.lightTheme;
+      case ThemeMode.dark:
+        return l.darkTheme;
+    }
+  }
+
+  IconData _modeIcon(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.system:
+        return PhosphorIconsLight.deviceMobile;
+      case ThemeMode.light:
+        return PhosphorIconsLight.sun;
+      case ThemeMode.dark:
+        return PhosphorIconsLight.moon;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
+    final color = theme.colorScheme.onSurface;
+    final current = context.watch<ThemeProvider>().themeMode;
+
+    return ListTile(
+      leading: PhosphorIcon(PhosphorIconsLight.moon,
+          size: 20, color: color.withValues(alpha: 0.7)),
+      title: Text(
+        l.appearance,
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+      ),
+      subtitle: Text(
+        _modeName(l, current),
+        style: TextStyle(
+          fontSize: 12,
+          color: color.withValues(alpha: 0.45),
+        ),
+      ),
+      trailing: Icon(Icons.chevron_right_rounded,
+          size: 18, color: color.withValues(alpha: 0.3)),
+      onTap: () => _showSheet(context, l, current),
+    );
+  }
+
+  void _showSheet(
+      BuildContext context, AppLocalizations l, ThemeMode current) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).cardTheme.color,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        final theme = Theme.of(ctx);
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Text(
+                  l.chooseAppearance,
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 16),
+                ...ThemeMode.values.map((mode) {
+                  final selected = mode == current;
+                  return ListTile(
+                    leading: PhosphorIcon(_modeIcon(mode), size: 22),
+                    title: Text(
+                      _modeName(l, mode),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: selected ? GameOnBrand.saffron : null,
+                      ),
+                    ),
+                    trailing: selected
+                        ? const Icon(Icons.check_rounded,
+                            color: GameOnBrand.saffron)
+                        : null,
+                    onTap: () {
+                      context.read<ThemeProvider>().setThemeMode(mode);
+                      Navigator.of(ctx).pop();
+                    },
+                  );
+                }),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ─── Default Location tile ──────────────────────────────────────────────────
+
+class _DefaultLocationTile extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
+    final color = theme.colorScheme.onSurface;
+    final profile = context.watch<ProfileProvider>().profile;
+    final locationName = profile?.defaultLocationName;
+
+    return ListTile(
+      leading: PhosphorIcon(PhosphorIconsLight.mapPin,
+          size: 20, color: color.withValues(alpha: 0.7)),
+      title: Text(
+        l.defaultLocation,
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: color,
+          fontSize: 14,
+        ),
+      ),
+      subtitle: Text(
+        (locationName != null && locationName.isNotEmpty)
+            ? locationName
+            : l.notSet,
+        style: TextStyle(
+          fontSize: 12,
+          color: color.withValues(alpha: 0.45),
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: Icon(Icons.chevron_right_rounded,
+          size: 18, color: color.withValues(alpha: 0.3)),
+      onTap: () => _showLocationDialog(context),
+    );
+  }
+
+  void _showLocationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => const _DefaultLocationDialog(),
+    );
+  }
+}
+
+class _DefaultLocationDialog extends StatefulWidget {
+  const _DefaultLocationDialog();
+
+  @override
+  State<_DefaultLocationDialog> createState() => _DefaultLocationDialogState();
+}
+
+class _DefaultLocationDialogState extends State<_DefaultLocationDialog> {
+  final _controller = TextEditingController();
+  Timer? _debounce;
+  List<PlaceSuggestion> _suggestions = [];
+  bool _searching = false;
+  String _sessionToken = DateTime.now().microsecondsSinceEpoch.toString();
+  String? _selectedName;
+  double? _selectedLat;
+  double? _selectedLng;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final profile = context.read<ProfileProvider>().profile;
+    if (profile?.defaultLocationName != null) {
+      _controller.text = profile!.defaultLocationName!;
+      _selectedName = profile.defaultLocationName;
+      _selectedLat = profile.defaultGeoLat;
+      _selectedLng = profile.defaultGeoLng;
+    }
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onTextChanged(String value) {
+    // Clear selection when user types
+    _selectedName = null;
+    _selectedLat = null;
+    _selectedLng = null;
+
+    if (!PlacesService.hasKey) return;
+    _debounce?.cancel();
+    if (value.trim().isEmpty) {
+      setState(() => _suggestions = []);
+      return;
+    }
+    _debounce = Timer(const Duration(milliseconds: 400), () async {
+      setState(() => _searching = true);
+      final results =
+          await PlacesService.autocomplete(value, _sessionToken);
+      if (mounted) {
+        setState(() {
+          _suggestions = results;
+          _searching = false;
+        });
+      }
+    });
+  }
+
+  Future<void> _onSuggestionTap(PlaceSuggestion suggestion) async {
+    final token = _sessionToken;
+    _sessionToken = DateTime.now().microsecondsSinceEpoch.toString();
+    setState(() {
+      _suggestions = [];
+      _searching = true;
+    });
+    final details = await PlacesService.getDetails(suggestion.placeId, token);
+    if (!mounted) return;
+    setState(() => _searching = false);
+    if (details != null) {
+      final name = suggestion.secondaryText.isNotEmpty
+          ? '${suggestion.mainText}, ${suggestion.secondaryText}'
+          : suggestion.mainText;
+      _controller.text = name;
+      _selectedName = name;
+      _selectedLat = details.lat;
+      _selectedLng = details.lng;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    return AlertDialog(
+      backgroundColor: theme.cardTheme.color,
+      title: Text(l.defaultLocation),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _controller,
+              onChanged: _onTextChanged,
+              decoration: InputDecoration(
+                hintText: l.defaultLocationSubtitle,
+                prefixIcon: Icon(Icons.location_on_outlined,
+                    size: 20,
+                    color: GameOnBrand.saffron.withValues(alpha: 0.8)),
+                suffixIcon: _searching
+                    ? const Padding(
+                        padding: EdgeInsets.all(14),
+                        child: SizedBox(
+                          height: 16,
+                          width: 16,
+                          child:
+                              CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : null,
+              ),
+            ),
+            if (_suggestions.isNotEmpty)
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 200),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _suggestions.length,
+                  itemBuilder: (ctx, i) {
+                    final s = _suggestions[i];
+                    return InkWell(
+                      onTap: () => _onSuggestionTap(s),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 10),
+                        child: Row(
+                          children: [
+                            Icon(Icons.place_outlined,
+                                size: 16,
+                                color: theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.5)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                children: [
+                                  Text(s.mainText,
+                                      style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600)),
+                                  if (s.secondaryText.isNotEmpty)
+                                    Text(s.secondaryText,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: theme
+                                              .colorScheme.onSurface
+                                              .withValues(alpha: 0.5),
+                                        )),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l.cancel),
+        ),
+        FilledButton(
+          onPressed: (_selectedName != null &&
+                  _selectedLat != null &&
+                  _selectedLng != null &&
+                  !_isSaving)
+              ? () async {
+                  setState(() => _isSaving = true);
+                  final provider = context.read<ProfileProvider>();
+                  await provider.saveDefaultLocation(
+                    name: _selectedName!,
+                    lat: _selectedLat!,
+                    lng: _selectedLng!,
+                  );
+                  if (!context.mounted) return;
+                  Navigator.of(context).pop();
+                }
+              : null,
+          child: _isSaving
+              ? const SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(l.save),
+        ),
+      ],
     );
   }
 }
@@ -105,11 +735,11 @@ class _LanguageTile extends StatelessWidget {
   String _flagEmoji(String code) {
     switch (code) {
       case 'fr':
-        return '🇫🇷';
+        return '\u{1F1EB}\u{1F1F7}';
       case 'es':
-        return '🇪🇸';
+        return '\u{1F1EA}\u{1F1F8}';
       default:
-        return '🇬🇧';
+        return '\u{1F1EC}\u{1F1E7}';
     }
   }
 
@@ -144,7 +774,7 @@ class _LanguageTile extends StatelessWidget {
   void _showSheet(BuildContext context, AppLocalizations l, Locale current) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: GameOnBrand.slateCard,
+      backgroundColor: Theme.of(context).cardTheme.color,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -232,49 +862,164 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _PlaceholderTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool destructive;
-
-  const _PlaceholderTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    this.destructive = false,
-  });
+class _VersionLabel extends StatelessWidget {
+  const _VersionLabel();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = destructive
-        ? Colors.redAccent
-        : theme.colorScheme.onSurface;
+    return FutureBuilder<PackageInfo>(
+      future: PackageInfo.fromPlatform(),
+      builder: (context, snapshot) {
+        final version = snapshot.hasData
+            ? 'GameOn v${snapshot.data!.version} (${snapshot.data!.buildNumber})'
+            : 'GameOn';
+        return Center(
+          child: Text(
+            version,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
 
+class _DeleteAccountTile extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     return ListTile(
-      leading: PhosphorIcon(icon, size: 20, color: color.withValues(alpha: 0.7)),
+      leading: PhosphorIcon(PhosphorIconsLight.trash,
+          size: 20, color: Colors.redAccent.withValues(alpha: 0.7)),
       title: Text(
-        title,
-        style: TextStyle(
+        l.deleteAccount,
+        style: const TextStyle(
           fontWeight: FontWeight.w600,
-          color: color,
+          color: Colors.redAccent,
           fontSize: 14,
         ),
       ),
       subtitle: Text(
-        subtitle,
+        l.deleteAccountSubtitle,
         style: TextStyle(
           fontSize: 12,
           color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
         ),
       ),
-      trailing: destructive
-          ? null
-          : Icon(Icons.chevron_right_rounded,
-              size: 18,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
-      onTap: () {}, // placeholder
+      onTap: () => _showDeleteAccountDialog(context),
+    );
+  }
+
+  void _showDeleteAccountDialog(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: Theme.of(context).cardTheme.color,
+          title: Text(l.deleteAccountTitle),
+          content: const _DeleteAccountDialogContent(),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(l.cancel),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _DeleteAccountDialogContent extends StatefulWidget {
+  const _DeleteAccountDialogContent();
+
+  @override
+  State<_DeleteAccountDialogContent> createState() =>
+      _DeleteAccountDialogContentState();
+}
+
+class _DeleteAccountDialogContentState
+    extends State<_DeleteAccountDialogContent> {
+  final _controller = TextEditingController();
+  bool _canDelete = false;
+  bool _isDeleting = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.deleteAccountWarning,
+          style: TextStyle(
+            fontSize: 13,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          l.typeDeleteToConfirm,
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _controller,
+          onChanged: (v) {
+            final match = v.trim().toUpperCase() == 'DELETE';
+            if (match != _canDelete) {
+              setState(() => _canDelete = match);
+            }
+          },
+          decoration: const InputDecoration(hintText: 'DELETE'),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            onPressed: _canDelete && !_isDeleting
+                ? () async {
+                    setState(() => _isDeleting = true);
+                    final auth = context.read<AuthProvider>();
+                    final success = await auth.deleteAccount();
+                    if (!context.mounted) return;
+                    Navigator.of(context).pop(); // close dialog
+                    if (success) {
+                      GoRouter.of(context).go('/login');
+                    }
+                  }
+                : null,
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: Colors.red.withValues(alpha: 0.3),
+            ),
+            child: _isDeleting
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white),
+                  )
+                : Text(l.deleteAccountTitle),
+          ),
+        ),
+      ],
     );
   }
 }
