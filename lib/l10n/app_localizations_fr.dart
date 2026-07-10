@@ -1136,4 +1136,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get reportDetailsHint => 'Ajoute des détails (optionnel)';
+
+  @override
+  String get sponsored => 'Sponsorisé';
 }

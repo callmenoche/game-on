@@ -452,5 +452,6 @@
   "reasonHarassment": "Harassment",
   "reasonInappropriate": "Inappropriate content",
   "reasonFake": "Fake profile",
-  "reportDetailsHint": "Add details (optional)"
+  "reportDetailsHint": "Add details (optional)",
+  "sponsored": "Sponsored"
 }

@@ -59,6 +59,7 @@ dependencies:
 
   # Crash reporting & performance
   sentry_flutter: ^9.24.0
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

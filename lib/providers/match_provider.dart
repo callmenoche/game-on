@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/match.dart';
+import '../models/sponsored_post.dart';
 import '../services/match_service.dart';
+import '../services/sponsored_post_service.dart';
 import '../services/supabase_client.dart';
 import '../utils/error_helpers.dart';
 
@@ -14,8 +16,10 @@ enum FeedMode { public, groups }
 
 class MatchProvider extends ChangeNotifier {
   final _service = MatchService();
+  final _sponsoredService = SponsoredPostService();
 
   List<Match> _allMatches = [];
+  List<SponsoredPost> _allSponsoredPosts = [];
   bool _isLoading = false;
   bool _isLoadingMore = false;
   bool _hasMore = true;
@@ -149,8 +153,38 @@ class MatchProvider extends ChangeNotifier {
   }
 
   Future<void> _init() async {
-    await Future.wait([fetchMatches(), _loadJoinedIds()]);
+    await Future.wait(
+        [fetchMatches(), _loadJoinedIds(), _loadSponsoredPosts()]);
     _subscribeRealtime();
+  }
+
+  Future<void> _loadSponsoredPosts() async {
+    try {
+      _allSponsoredPosts = await _sponsoredService.fetchActive();
+      notifyListeners();
+    } catch (_) {
+      // Non-fatal: the feed simply shows no sponsored cards.
+    }
+  }
+
+  /// Sponsored posts relevant to the current filters/location.
+  List<SponsoredPost> get sponsoredPosts {
+    final refLat = _userLat ?? _homeLat;
+    final refLng = _userLng ?? _homeLng;
+    return _allSponsoredPosts.where((p) {
+      // Sport targeting: hide only when an active sport filter contradicts it
+      if (p.sportType != null &&
+          _selectedSport != null &&
+          p.sportType != _selectedSport!.name) {
+        return false;
+      }
+      // Geo targeting: applies only when we know where the user is
+      if (p.geoLat != null && p.radiusKm != null && refLat != null) {
+        return _haversineKm(refLat, refLng!, p.geoLat!, p.geoLng!) <=
+            p.radiusKm!;
+      }
+      return true;
+    }).toList();
   }
 
   // ── Data fetching ─────────────────────────────────────────────────────────

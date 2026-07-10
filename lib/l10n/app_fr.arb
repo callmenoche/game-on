@@ -404,5 +404,6 @@
   "reasonHarassment": "Harcèlement",
   "reasonInappropriate": "Contenu inapproprié",
   "reasonFake": "Faux profil",
-  "reportDetailsHint": "Ajoute des détails (optionnel)"
+  "reportDetailsHint": "Ajoute des détails (optionnel)",
+  "sponsored": "Sponsorisé"
 }

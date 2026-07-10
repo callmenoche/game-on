@@ -5,10 +5,12 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/match.dart';
+import '../models/sponsored_post.dart';
 import '../providers/match_provider.dart';
 import '../utils/error_helpers.dart';
 import '../widgets/game_on_logo.dart';
 import '../widgets/match_card.dart';
+import '../widgets/sponsored_card.dart';
 
 class FeedScreen extends StatefulWidget {
   const FeedScreen({super.key});
@@ -613,7 +615,18 @@ class _MatchList extends StatelessWidget {
       );
     }
 
-    final itemCount = provider.matches.length + (provider.hasMore ? 1 : 0);
+    // Interleave sponsored posts: first one after 2 match cards, then
+    // every 9 cards; each post appears at most once.
+    final sponsored = provider.sponsoredPosts;
+    final display = <Object>[];
+    var adIdx = 0;
+    for (var i = 0; i < provider.matches.length; i++) {
+      if (adIdx < sponsored.length && i >= 2 && (i - 2) % 9 == 0) {
+        display.add(sponsored[adIdx++]);
+      }
+      display.add(provider.matches[i]);
+    }
+    final itemCount = display.length + (provider.hasMore ? 1 : 0);
 
     return RefreshIndicator(
       onRefresh: context.read<MatchProvider>().fetchMatches,
@@ -631,7 +644,7 @@ class _MatchList extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
           itemCount: itemCount,
           itemBuilder: (context, i) {
-            if (i >= provider.matches.length) {
+            if (i >= display.length) {
               return const Padding(
                 padding: EdgeInsets.symmetric(vertical: 24),
                 child: Center(
@@ -639,7 +652,14 @@ class _MatchList extends StatelessWidget {
                 ),
               );
             }
-            final match = provider.matches[i];
+            final item = display[i];
+            if (item is SponsoredPost) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: SponsoredCard(post: item),
+              );
+            }
+            final match = item as Match;
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: MatchCard(

@@ -2223,6 +2223,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add details (optional)'**
   String get reportDetailsHint;
+
+  /// No description provided for @sponsored.
+  ///
+  /// In en, this message translates to:
+  /// **'Sponsored'**
+  String get sponsored;
 }
 
 class _AppLocalizationsDelegate
