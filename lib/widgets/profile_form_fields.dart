@@ -27,7 +27,9 @@ class DateField extends StatelessWidget {
       final today = DateTime.now();
       int years = today.year - value!.year;
       if (today.month < value!.month ||
-          (today.month == value!.month && today.day < value!.day)) years--;
+          (today.month == value!.month && today.day < value!.day)) {
+        years--;
+      }
       ageDisplay = years;
     }
 
@@ -207,7 +209,7 @@ class PrivacyToggle extends StatelessWidget {
         Switch(
           value: value,
           onChanged: onChanged,
-          activeColor: GameOnBrand.saffron,
+          activeTrackColor: GameOnBrand.saffron,
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
       ],

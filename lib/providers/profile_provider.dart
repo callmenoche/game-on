@@ -68,7 +68,7 @@ class ProfileProvider extends ChangeNotifier {
       _profile = await _service.fetchProfile(userId);
       _error = null;
     } catch (_) {
-      _error = 'Failed to load profile.';
+      _error = 'could_not_load_profile';
     }
     _isLoading = false;
     notifyListeners();
@@ -91,7 +91,7 @@ class ProfileProvider extends ChangeNotifier {
     try {
       await _service.updateAvailability(_profile!.id, updated);
     } catch (_) {
-      _error = 'Failed to save availability.';
+      _error = 'could_not_save_availability';
       notifyListeners();
     }
   }
@@ -130,7 +130,7 @@ class ProfileProvider extends ChangeNotifier {
       _profile = await _service.updateProfile(updated);
     } catch (_) {
       _profile = current; // revert optimistic update
-      _error = 'Failed to save profile.';
+      _error = 'could_not_save_profile';
     }
     notifyListeners();
   }
@@ -146,7 +146,7 @@ class ProfileProvider extends ChangeNotifier {
       _profile = await _service.updateProfile(updated);
       _error = null;
     } catch (_) {
-      _error = 'Failed to upload avatar.';
+      _error = 'could_not_upload_photo';
     }
     _isUploadingAvatar = false;
     notifyListeners();
@@ -174,7 +174,7 @@ class ProfileProvider extends ChangeNotifier {
         acceptedTermsAt: acceptedTermsAt,
       );
     } catch (_) {
-      _error = 'Failed to complete setup.';
+      _error = 'could_not_complete_setup';
     }
     _isLoading = false;
     notifyListeners();
@@ -197,7 +197,7 @@ class ProfileProvider extends ChangeNotifier {
       _profile = await _service.updateProfile(_profile!);
     } catch (_) {
       _profile = current;
-      _error = 'Failed to save default location.';
+      _error = 'could_not_save_location';
     }
     notifyListeners();
   }

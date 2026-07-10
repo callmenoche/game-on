@@ -258,11 +258,6 @@ class _MatchEventRow extends StatelessWidget {
               ),
             ],
           ),
-          if (match.isConfirmed) ...[
-            const SizedBox(width: 6),
-            Icon(Icons.check_circle_rounded,
-                size: 14, color: Colors.green.shade400),
-          ],
         ],
       ),
     );

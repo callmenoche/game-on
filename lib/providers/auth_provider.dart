@@ -32,9 +32,9 @@ class AuthProvider extends ChangeNotifier {
       await SupabaseService.signInWithEmail(email: email, password: password);
       _error = null;
     } on AuthException catch (e) {
-      _error = e.message;
+      _error = _classifyAuthError(e);
     } catch (_) {
-      _error = 'Something went wrong. Please try again.';
+      _error = 'errorGeneric';
     } finally {
       _setLoading(false);
     }
@@ -49,9 +49,9 @@ class AuthProvider extends ChangeNotifier {
       await SupabaseService.signUpWithEmail(email: email, password: password);
       _error = null;
     } on AuthException catch (e) {
-      _error = e.message;
+      _error = _classifyAuthError(e);
     } catch (_) {
-      _error = 'Something went wrong. Please try again.';
+      _error = 'errorGeneric';
     } finally {
       _setLoading(false);
     }
@@ -69,9 +69,9 @@ class AuthProvider extends ChangeNotifier {
       await SupabaseService.resetPasswordForEmail(email);
       _error = null;
     } on AuthException catch (e) {
-      _error = e.message;
+      _error = _classifyAuthError(e);
     } catch (_) {
-      _error = 'Something went wrong. Please try again.';
+      _error = 'errorGeneric';
     } finally {
       _setLoading(false);
     }
@@ -90,7 +90,7 @@ class AuthProvider extends ChangeNotifier {
       _setLoading(false);
       return true;
     } catch (_) {
-      _error = 'Failed to delete account. Please try again.';
+      _error = 'could_not_delete_account';
       _setLoading(false);
       return false;
     }
@@ -103,11 +103,11 @@ class AuthProvider extends ChangeNotifier {
       await SupabaseService.updatePassword(newPassword);
       return true;
     } on AuthException catch (e) {
-      _error = e.message;
+      _error = _classifyAuthError(e);
       notifyListeners();
       return false;
     } catch (_) {
-      _error = 'Something went wrong. Please try again.';
+      _error = 'errorGeneric';
       notifyListeners();
       return false;
     }
@@ -118,14 +118,25 @@ class AuthProvider extends ChangeNotifier {
       await SupabaseService.updatePhone(phone);
       return true;
     } on AuthException catch (e) {
-      _error = e.message;
+      _error = _classifyAuthError(e);
       notifyListeners();
       return false;
     } catch (_) {
-      _error = 'Something went wrong. Please try again.';
+      _error = 'errorGeneric';
       notifyListeners();
       return false;
     }
+  }
+
+  static String _classifyAuthError(AuthException e) {
+    final msg = e.message.toLowerCase();
+    if (msg.contains('invalid login') || msg.contains('invalid credentials') || msg.contains('wrong password')) {
+      return 'invalid_credentials';
+    }
+    if (msg.contains('already registered') || msg.contains('already exists') || msg.contains('duplicate')) {
+      return 'email_taken';
+    }
+    return 'errorGeneric';
   }
 
   void clearError() {

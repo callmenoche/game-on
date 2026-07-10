@@ -50,7 +50,7 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
       });
     } catch (_) {
       setState(() {
-        _error = 'Could not load profile';
+        _error = AppLocalizations.of(context)!.errorCouldNotLoadProfile;
         _loading = false;
       });
     }

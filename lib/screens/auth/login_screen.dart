@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/auth_provider.dart';
+import '../../utils/error_helpers.dart';
 import '../../widgets/game_on_logo.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -175,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen>
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  auth.error!,
+                  friendlyError(auth.error, AppLocalizations.of(context)!),
                   style: const TextStyle(color: Colors.redAccent, fontSize: 13),
                 ),
               ),
@@ -284,8 +285,83 @@ class _SignInForm extends StatelessWidget {
             validator: (v) =>
                 (v == null || v.length < 6) ? l.passwordTooShort : null,
           ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () => _showForgotPasswordDialog(context),
+              style: TextButton.styleFrom(
+                foregroundColor: GameOnBrand.saffron,
+                padding: const EdgeInsets.only(top: 4),
+              ),
+              child: Text(l.forgotPassword,
+                  style: const TextStyle(fontSize: 13)),
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  static void _showForgotPasswordDialog(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final emailCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: GameOnBrand.slateCard,
+          title: Text(l.forgotPassword),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                l.resetPasswordSent,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Theme.of(ctx)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.6),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: emailCtrl,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  hintText: l.email,
+                  prefixIcon: const Icon(Icons.email_outlined, size: 20),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(l.cancel),
+            ),
+            FilledButton(
+              onPressed: () async {
+                final email = emailCtrl.text.trim();
+                if (email.isEmpty || !email.contains('@')) return;
+                Navigator.of(ctx).pop();
+                await context.read<AuthProvider>().resetPassword(email: email);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(l.resetPasswordSent)),
+                  );
+                }
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: GameOnBrand.saffron,
+                foregroundColor: GameOnBrand.slateDark,
+              ),
+              child: Text(l.send),
+            ),
+          ],
+        );
+      },
     );
   }
 }

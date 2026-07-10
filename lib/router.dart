@@ -21,7 +21,8 @@ import 'screens/splash_screen.dart';
 import 'screens/groups_screen.dart';
 import 'screens/create_group_screen.dart';
 import 'screens/group_detail_screen.dart';
-import 'screens/player_search_screen.dart';
+import 'screens/legal_screen.dart';
+import 'legal/legal_content.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -37,7 +38,7 @@ GoRouter buildRouter(AuthProvider authProvider, ProfileProvider profileProvider)
       final isAuth = authProvider.isAuthenticated;
       final loc = state.matchedLocation;
 
-      if (!isAuth && loc != '/login') return '/login';
+      if (!isAuth && loc != '/login' && loc != '/terms' && loc != '/privacy') return '/login';
       if (isAuth && loc == '/login') return '/';
 
       final profileLoaded = profileProvider.profile != null;
@@ -61,6 +62,14 @@ GoRouter buildRouter(AuthProvider authProvider, ProfileProvider profileProvider)
       GoRoute(
         path: '/onboarding',
         builder: (_, __) => const OnboardingScreen(),
+      ),
+      GoRoute(
+        path: '/terms',
+        builder: (_, __) => const LegalScreen(type: LegalPageType.terms),
+      ),
+      GoRoute(
+        path: '/privacy',
+        builder: (_, __) => const LegalScreen(type: LegalPageType.privacy),
       ),
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
@@ -114,10 +123,6 @@ GoRouter buildRouter(AuthProvider authProvider, ProfileProvider profileProvider)
             path: '/settings',
             builder: (_, __) => const SettingsScreen(),
           ),
-          GoRoute(
-            path: '/players/search',
-            builder: (_, __) => const PlayerSearchScreen(),
-          ),
         ],
       ),
     ],
@@ -146,7 +151,7 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final labels = [l.feed, l.calendar, l.groups, l.profile];
+    final labels = [l.feed, l.calendar, l.community, l.profile];
     final location = GoRouterState.of(context).matchedLocation;
     final currentIndex = _paths.indexWhere((p) => p == location).clamp(0, 3);
 

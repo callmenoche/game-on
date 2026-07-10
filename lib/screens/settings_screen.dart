@@ -10,7 +10,9 @@ import '../providers/auth_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/profile_provider.dart';
 import '../providers/theme_provider.dart';
+import '../services/bug_report_service.dart';
 import '../services/places_service.dart';
+import '../utils/app_snackbar.dart';
 import '../widgets/game_on_logo.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -39,6 +41,11 @@ class SettingsScreen extends StatelessWidget {
           _LanguageTile(),
           _DefaultLocationTile(),
           _AppearanceTile(),
+          const _Divider(),
+
+          _SectionHeader(
+              label: l.supportSection, icon: PhosphorIconsLight.lifebuoy),
+          const _ReportBugTile(),
           const _Divider(),
 
           _SectionHeader(label: l.legalSection, icon: PhosphorIconsLight.scales),
@@ -85,7 +92,7 @@ class SettingsScreen extends StatelessWidget {
   }
 }
 
-// ─── Change Password tile ───────────────────────────────────────────────────
+// ─── Change Password tile (not functional yet — greyed out) ─────────────────
 
 class _ChangePasswordTile extends StatelessWidget {
   @override
@@ -95,139 +102,29 @@ class _ChangePasswordTile extends StatelessWidget {
     final color = theme.colorScheme.onSurface;
 
     return ListTile(
+      enabled: false,
       leading: PhosphorIcon(PhosphorIconsLight.lock,
-          size: 20, color: color.withValues(alpha: 0.7)),
+          size: 20, color: color.withValues(alpha: 0.25)),
       title: Text(
         l.changePassword,
         style: TextStyle(
           fontWeight: FontWeight.w600,
-          color: color,
+          color: color.withValues(alpha: 0.35),
           fontSize: 14,
         ),
       ),
       subtitle: Text(
-        l.changePasswordSubtitle,
+        l.comingSoon,
         style: TextStyle(
           fontSize: 12,
-          color: color.withValues(alpha: 0.45),
+          color: color.withValues(alpha: 0.25),
         ),
       ),
-      trailing: Icon(Icons.chevron_right_rounded,
-          size: 18, color: color.withValues(alpha: 0.3)),
-      onTap: () => _showChangePasswordDialog(context),
-    );
-  }
-
-  void _showChangePasswordDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => const _ChangePasswordDialog(),
     );
   }
 }
 
-class _ChangePasswordDialog extends StatefulWidget {
-  const _ChangePasswordDialog();
-
-  @override
-  State<_ChangePasswordDialog> createState() => _ChangePasswordDialogState();
-}
-
-class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
-  final _passwordController = TextEditingController();
-  final _confirmController = TextEditingController();
-  bool _isSubmitting = false;
-  String? _error;
-
-  @override
-  void dispose() {
-    _passwordController.dispose();
-    _confirmController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-
-    return AlertDialog(
-      backgroundColor: theme.cardTheme.color,
-      title: Text(l.changePassword),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _passwordController,
-            obscureText: true,
-            decoration: InputDecoration(
-              labelText: l.newPassword,
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _confirmController,
-            obscureText: true,
-            decoration: InputDecoration(
-              labelText: l.confirmPassword,
-              errorText: _error,
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l.cancel),
-        ),
-        FilledButton(
-          onPressed: _isSubmitting
-              ? null
-              : () async {
-                  final password = _passwordController.text;
-                  final confirm = _confirmController.text;
-                  if (password.length < 6) {
-                    setState(() => _error = l.passwordTooShort);
-                    return;
-                  }
-                  if (password != confirm) {
-                    setState(() => _error = l.passwordsDontMatch);
-                    return;
-                  }
-                  setState(() {
-                    _error = null;
-                    _isSubmitting = true;
-                  });
-                  final auth = context.read<AuthProvider>();
-                  final success =
-                      await auth.changePassword(newPassword: password);
-                  if (!context.mounted) return;
-                  if (success) {
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l.passwordChanged)),
-                    );
-                  } else {
-                    setState(() {
-                      _error = auth.error ?? l.somethingWentWrong;
-                      _isSubmitting = false;
-                    });
-                  }
-                },
-          child: _isSubmitting
-              ? const SizedBox(
-                  height: 18,
-                  width: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(l.save),
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Phone tile ─────────────────────────────────────────────────────────────
+// ─── Phone tile (not functional yet — greyed out) ───────────────────────────
 
 class _PhoneTile extends StatelessWidget {
   @override
@@ -235,116 +132,26 @@ class _PhoneTile extends StatelessWidget {
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context)!;
     final color = theme.colorScheme.onSurface;
-    final phone = context.watch<AuthProvider>().phone;
 
     return ListTile(
+      enabled: false,
       leading: PhosphorIcon(PhosphorIconsLight.phone,
-          size: 20, color: color.withValues(alpha: 0.7)),
+          size: 20, color: color.withValues(alpha: 0.25)),
       title: Text(
         l.phoneNumber,
         style: TextStyle(
           fontWeight: FontWeight.w600,
-          color: color,
+          color: color.withValues(alpha: 0.35),
           fontSize: 14,
         ),
       ),
       subtitle: Text(
-        (phone != null && phone.isNotEmpty) ? phone : l.notSet,
+        l.comingSoon,
         style: TextStyle(
           fontSize: 12,
-          color: color.withValues(alpha: 0.45),
+          color: color.withValues(alpha: 0.25),
         ),
       ),
-      trailing: Icon(Icons.chevron_right_rounded,
-          size: 18, color: color.withValues(alpha: 0.3)),
-      onTap: () => _showPhoneDialog(context, phone),
-    );
-  }
-
-  void _showPhoneDialog(BuildContext context, String? currentPhone) {
-    showDialog(
-      context: context,
-      builder: (ctx) => _PhoneDialog(currentPhone: currentPhone),
-    );
-  }
-}
-
-class _PhoneDialog extends StatefulWidget {
-  final String? currentPhone;
-  const _PhoneDialog({this.currentPhone});
-
-  @override
-  State<_PhoneDialog> createState() => _PhoneDialogState();
-}
-
-class _PhoneDialogState extends State<_PhoneDialog> {
-  late final TextEditingController _controller;
-  bool _isSubmitting = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.currentPhone ?? '');
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-
-    return AlertDialog(
-      backgroundColor: theme.cardTheme.color,
-      title: Text(l.phoneNumber),
-      content: TextField(
-        controller: _controller,
-        keyboardType: TextInputType.phone,
-        decoration: const InputDecoration(
-          hintText: '+33 6 12 34 56 78',
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l.cancel),
-        ),
-        FilledButton(
-          onPressed: _isSubmitting
-              ? null
-              : () async {
-                  final phone = _controller.text.trim();
-                  if (phone.isEmpty) return;
-                  setState(() => _isSubmitting = true);
-                  final auth = context.read<AuthProvider>();
-                  final success = await auth.updatePhone(phone: phone);
-                  if (!context.mounted) return;
-                  if (success) {
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l.phoneSaved)),
-                    );
-                  } else {
-                    setState(() => _isSubmitting = false);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text(auth.error ?? l.somethingWentWrong)),
-                    );
-                  }
-                },
-          child: _isSubmitting
-              ? const SizedBox(
-                  height: 18,
-                  width: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(l.save),
-        ),
-      ],
     );
   }
 }
@@ -830,6 +637,181 @@ class _LanguageTile extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+// ─── Report a bug ───────────────────────────────────────────────────────────
+
+class _ReportBugTile extends StatelessWidget {
+  const _ReportBugTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
+    final color = theme.colorScheme.onSurface;
+
+    return ListTile(
+      leading: PhosphorIcon(PhosphorIconsLight.bug,
+          size: 20, color: color.withValues(alpha: 0.7)),
+      title: Text(
+        l.reportBug,
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: color,
+          fontSize: 14,
+        ),
+      ),
+      subtitle: Text(
+        l.reportBugSubtitle,
+        style: TextStyle(
+          fontSize: 12,
+          color: color.withValues(alpha: 0.45),
+        ),
+      ),
+      trailing: Icon(Icons.chevron_right_rounded,
+          size: 18, color: color.withValues(alpha: 0.3)),
+      onTap: () => showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: theme.cardTheme.color,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (_) => const _BugReportSheet(),
+      ),
+    );
+  }
+}
+
+class _BugReportSheet extends StatefulWidget {
+  const _BugReportSheet();
+
+  @override
+  State<_BugReportSheet> createState() => _BugReportSheetState();
+}
+
+class _BugReportSheetState extends State<_BugReportSheet> {
+  final _controller = TextEditingController();
+  String _category = 'bug';
+  bool _isSubmitting = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    final l = AppLocalizations.of(context)!;
+    final description = _controller.text.trim();
+    if (description.length < 10) {
+      setState(() => _error = l.bugReportTooShort);
+      return;
+    }
+    setState(() {
+      _error = null;
+      _isSubmitting = true;
+    });
+    try {
+      await BugReportService()
+          .submit(category: _category, description: description);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      showSuccessSnackBar(context, l.bugReportSent);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _error = l.errorGeneric;
+        _isSubmitting = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
+    final categories = {
+      'bug': l.bugTypeBug,
+      'suggestion': l.bugTypeSuggestion,
+      'other': l.bugTypeOther,
+    };
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 12,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          Text(
+            l.reportBug,
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            children: categories.entries.map((e) {
+              final selected = e.key == _category;
+              return ChoiceChip(
+                label: Text(e.value),
+                selected: selected,
+                onSelected: (_) => setState(() => _category = e.key),
+                selectedColor: GameOnBrand.saffron.withValues(alpha: 0.25),
+                labelStyle: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: selected
+                      ? GameOnBrand.saffron
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _controller,
+            maxLines: 5,
+            maxLength: 2000,
+            decoration: InputDecoration(
+              hintText: l.bugDescriptionHint,
+              errorText: _error,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: _isSubmitting ? null : _send,
+              child: _isSubmitting
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(l.send),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

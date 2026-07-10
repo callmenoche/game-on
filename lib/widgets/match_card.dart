@@ -236,6 +236,10 @@ class _Header extends StatelessWidget {
             _StatusBadge(match: match),
             const SizedBox(height: 4),
             _SkillBadge(level: match.skillLevel),
+            if (match.isGenderRestricted) ...[
+              const SizedBox(height: 4),
+              _GenderBadge(match: match),
+            ],
           ],
         ),
       ],
@@ -359,25 +363,6 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (match.isConfirmed) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: Colors.green.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          AppLocalizations.of(context)!.confirmed,
-          style: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w900,
-            color: Colors.green,
-            letterSpacing: 0.8,
-          ),
-        ),
-      );
-    }
-
     final isFull = match.status == MatchStatus.full;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -427,6 +412,42 @@ class _SkillBadge extends StatelessWidget {
               fontSize: 10,
               fontWeight: FontWeight.w800,
               color: level.color,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Gender badge ─────────────────────────────────────────────────────────
+
+class _GenderBadge extends StatelessWidget {
+  final Match match;
+  const _GenderBadge({required this.match});
+
+  @override
+  Widget build(BuildContext context) {
+    const badgeColor = Color(0xFFAB47BC);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: badgeColor.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const PhosphorIcon(PhosphorIconsLight.genderIntersex,
+              size: 10, color: badgeColor),
+          const SizedBox(width: 3),
+          Text(
+            match.genderRestrictionLabel(context),
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: badgeColor,
               letterSpacing: 0.3,
             ),
           ),

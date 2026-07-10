@@ -1605,6 +1605,528 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not set'**
   String get notSet;
+
+  /// No description provided for @errorAlreadyJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re already in this match'**
+  String get errorAlreadyJoined;
+
+  /// No description provided for @errorMatchFull.
+  ///
+  /// In en, this message translates to:
+  /// **'This match is full'**
+  String get errorMatchFull;
+
+  /// No description provided for @errorCouldNotJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not join match'**
+  String get errorCouldNotJoin;
+
+  /// No description provided for @errorCouldNotLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not leave match'**
+  String get errorCouldNotLeave;
+
+  /// No description provided for @errorCouldNotCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create match'**
+  String get errorCouldNotCreate;
+
+  /// No description provided for @errorCouldNotConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not confirm match'**
+  String get errorCouldNotConfirm;
+
+  /// No description provided for @errorInvalidClaimCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid code or spot already taken'**
+  String get errorInvalidClaimCode;
+
+  /// No description provided for @errorCouldNotAddGuests.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not add guests'**
+  String get errorCouldNotAddGuests;
+
+  /// No description provided for @errorCouldNotLoadMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load matches'**
+  String get errorCouldNotLoadMatches;
+
+  /// No description provided for @errorCouldNotLoadProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load profile'**
+  String get errorCouldNotLoadProfile;
+
+  /// No description provided for @errorCouldNotSaveProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save profile'**
+  String get errorCouldNotSaveProfile;
+
+  /// No description provided for @errorCouldNotUploadPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not upload photo'**
+  String get errorCouldNotUploadPhoto;
+
+  /// No description provided for @errorCouldNotCompleteSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not complete setup'**
+  String get errorCouldNotCompleteSetup;
+
+  /// No description provided for @errorCouldNotSaveLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save location'**
+  String get errorCouldNotSaveLocation;
+
+  /// No description provided for @errorCouldNotLoadGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load groups'**
+  String get errorCouldNotLoadGroups;
+
+  /// No description provided for @errorCouldNotCreateGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create group'**
+  String get errorCouldNotCreateGroup;
+
+  /// No description provided for @errorCouldNotJoinGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not join group'**
+  String get errorCouldNotJoinGroup;
+
+  /// No description provided for @errorCouldNotLeaveGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not leave group'**
+  String get errorCouldNotLeaveGroup;
+
+  /// No description provided for @errorInvalidInviteCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid invite code'**
+  String get errorInvalidInviteCode;
+
+  /// No description provided for @errorCouldNotDeleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete account'**
+  String get errorCouldNotDeleteAccount;
+
+  /// No description provided for @errorInvalidCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email or password'**
+  String get errorInvalidCredentials;
+
+  /// No description provided for @errorEmailTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'An account already exists with this email'**
+  String get errorEmailTaken;
+
+  /// No description provided for @errorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get errorGeneric;
+
+  /// No description provided for @comingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get comingSoon;
+
+  /// No description provided for @genderRestrictionMustIncludeSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t exclude your own gender from a match you create'**
+  String get genderRestrictionMustIncludeSelf;
+
+  /// No description provided for @genderRestrictionSetGenderFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your gender in your profile to restrict a match'**
+  String get genderRestrictionSetGenderFirst;
+
+  /// No description provided for @supportSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get supportSection;
+
+  /// No description provided for @reportBug.
+  ///
+  /// In en, this message translates to:
+  /// **'Report a bug'**
+  String get reportBug;
+
+  /// No description provided for @reportBugSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Something broken? Tell us'**
+  String get reportBugSubtitle;
+
+  /// No description provided for @bugTypeBug.
+  ///
+  /// In en, this message translates to:
+  /// **'Bug'**
+  String get bugTypeBug;
+
+  /// No description provided for @bugTypeSuggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestion'**
+  String get bugTypeSuggestion;
+
+  /// No description provided for @bugTypeOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get bugTypeOther;
+
+  /// No description provided for @bugDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe what happened…'**
+  String get bugDescriptionHint;
+
+  /// No description provided for @bugReportSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks! Your report was sent.'**
+  String get bugReportSent;
+
+  /// No description provided for @bugReportTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Please give a bit more detail (min 10 characters)'**
+  String get bugReportTooShort;
+
+  /// No description provided for @guestNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest {number}'**
+  String guestNumber(int number);
+
+  /// No description provided for @noPlayersYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No players yet'**
+  String get noPlayersYet;
+
+  /// No description provided for @unclaimedSpot.
+  ///
+  /// In en, this message translates to:
+  /// **'Unclaimed spot'**
+  String get unclaimedSpot;
+
+  /// No description provided for @addGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Add guest'**
+  String get addGuest;
+
+  /// No description provided for @guestClaimCodeInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll generate a claim code for each guest slot.'**
+  String get guestClaimCodeInfo;
+
+  /// No description provided for @removeGuestQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove guest?'**
+  String get removeGuestQuestion;
+
+  /// No description provided for @removeGuestBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This guest slot will be freed up.'**
+  String get removeGuestBody;
+
+  /// No description provided for @matchCancelledBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Match cancelled'**
+  String get matchCancelledBanner;
+
+  /// No description provided for @cancelledBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'CANCELLED'**
+  String get cancelledBadge;
+
+  /// No description provided for @matchIsFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Match is full'**
+  String get matchIsFull;
+
+  /// No description provided for @selectTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Select time'**
+  String get selectTime;
+
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @shareInviteText.
+  ///
+  /// In en, this message translates to:
+  /// **'🎮 You\'ve been invited to a GameOn match!\n\nHave the app? Open your spot:\n{deepLink}\n\nManual code: {code}'**
+  String shareInviteText(String deepLink, String code);
+
+  /// No description provided for @shareInviteSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Join my GameOn match'**
+  String get shareInviteSubject;
+
+  /// No description provided for @inviteCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite copied to clipboard'**
+  String get inviteCopied;
+
+  /// No description provided for @joinBringFriendsInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring friends along — we\'ll generate a code for each guest slot.'**
+  String get joinBringFriendsInfo;
+
+  /// No description provided for @addGuestsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Add 1 guest} other{Add {count} guests}}'**
+  String addGuestsCount(int count);
+
+  /// No description provided for @unlimitedSpots.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited spots'**
+  String get unlimitedSpots;
+
+  /// No description provided for @unlimitedSpotsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone can join — no cap'**
+  String get unlimitedSpotsHint;
+
+  /// No description provided for @unlimitedOpenToAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited — open to all'**
+  String get unlimitedOpenToAll;
+
+  /// No description provided for @loading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get loading;
+
+  /// No description provided for @spotClaimed.
+  ///
+  /// In en, this message translates to:
+  /// **'Spot claimed!'**
+  String get spotClaimed;
+
+  /// No description provided for @filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filters;
+
+  /// No description provided for @resetFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get resetFilters;
+
+  /// No description provided for @filterOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get filterOff;
+
+  /// No description provided for @showResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Show results'**
+  String get showResults;
+
+  /// No description provided for @community.
+  ///
+  /// In en, this message translates to:
+  /// **'Community'**
+  String get community;
+
+  /// No description provided for @searchCommunityHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search players or groups…'**
+  String get searchCommunityHint;
+
+  /// No description provided for @noResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results'**
+  String get noResults;
+
+  /// No description provided for @member.
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get member;
+
+  /// No description provided for @groupVisibility.
+  ///
+  /// In en, this message translates to:
+  /// **'Visibility'**
+  String get groupVisibility;
+
+  /// No description provided for @visibilityPublic.
+  ///
+  /// In en, this message translates to:
+  /// **'Public'**
+  String get visibilityPublic;
+
+  /// No description provided for @visibilityPrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get visibilityPrivate;
+
+  /// No description provided for @visibilityInviteOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'On request'**
+  String get visibilityInviteOnly;
+
+  /// No description provided for @visibilityPublicDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone can find and join it'**
+  String get visibilityPublicDesc;
+
+  /// No description provided for @visibilityPrivateDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden — join with the invite code only'**
+  String get visibilityPrivateDesc;
+
+  /// No description provided for @visibilityInviteOnlyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible, but joining requires approval'**
+  String get visibilityInviteOnlyDesc;
+
+  /// No description provided for @requestToJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Request'**
+  String get requestToJoin;
+
+  /// No description provided for @requested.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested'**
+  String get requested;
+
+  /// No description provided for @joinRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Join requests'**
+  String get joinRequests;
+
+  /// No description provided for @accept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get accept;
+
+  /// No description provided for @decline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get decline;
+
+  /// No description provided for @exampleGroupName.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Acme Corp Sports Club'**
+  String get exampleGroupName;
+
+  /// No description provided for @groupAboutHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What is this group about?'**
+  String get groupAboutHint;
+
+  /// No description provided for @exampleMatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Sunday 5-a-side'**
+  String get exampleMatchTitle;
+
+  /// No description provided for @exampleLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Stade Marcel Michelin, Court 3'**
+  String get exampleLocation;
+
+  /// No description provided for @exampleUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Zidane10'**
+  String get exampleUsername;
+
+  /// No description provided for @exampleBio.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Weekend warrior, love 5-a-side...'**
+  String get exampleBio;
+
+  /// No description provided for @usernameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Username required'**
+  String get usernameRequired;
+
+  /// No description provided for @usernameTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 3 characters'**
+  String get usernameTooShort;
+
+  /// No description provided for @usernameTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Max 20 characters'**
+  String get usernameTooLong;
+
+  /// No description provided for @usernameCharset.
+  ///
+  /// In en, this message translates to:
+  /// **'Letters, numbers, and _ only'**
+  String get usernameCharset;
 }
 
 class _AppLocalizationsDelegate

@@ -792,4 +792,283 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notSet => 'Not set';
+
+  @override
+  String get errorAlreadyJoined => 'You\'re already in this match';
+
+  @override
+  String get errorMatchFull => 'This match is full';
+
+  @override
+  String get errorCouldNotJoin => 'Could not join match';
+
+  @override
+  String get errorCouldNotLeave => 'Could not leave match';
+
+  @override
+  String get errorCouldNotCreate => 'Could not create match';
+
+  @override
+  String get errorCouldNotConfirm => 'Could not confirm match';
+
+  @override
+  String get errorInvalidClaimCode => 'Invalid code or spot already taken';
+
+  @override
+  String get errorCouldNotAddGuests => 'Could not add guests';
+
+  @override
+  String get errorCouldNotLoadMatches => 'Could not load matches';
+
+  @override
+  String get errorCouldNotLoadProfile => 'Could not load profile';
+
+  @override
+  String get errorCouldNotSaveProfile => 'Could not save profile';
+
+  @override
+  String get errorCouldNotUploadPhoto => 'Could not upload photo';
+
+  @override
+  String get errorCouldNotCompleteSetup => 'Could not complete setup';
+
+  @override
+  String get errorCouldNotSaveLocation => 'Could not save location';
+
+  @override
+  String get errorCouldNotLoadGroups => 'Could not load groups';
+
+  @override
+  String get errorCouldNotCreateGroup => 'Could not create group';
+
+  @override
+  String get errorCouldNotJoinGroup => 'Could not join group';
+
+  @override
+  String get errorCouldNotLeaveGroup => 'Could not leave group';
+
+  @override
+  String get errorInvalidInviteCode => 'Invalid invite code';
+
+  @override
+  String get errorCouldNotDeleteAccount => 'Could not delete account';
+
+  @override
+  String get errorInvalidCredentials => 'Invalid email or password';
+
+  @override
+  String get errorEmailTaken => 'An account already exists with this email';
+
+  @override
+  String get errorGeneric => 'Something went wrong. Please try again.';
+
+  @override
+  String get comingSoon => 'Coming soon';
+
+  @override
+  String get genderRestrictionMustIncludeSelf =>
+      'You can\'t exclude your own gender from a match you create';
+
+  @override
+  String get genderRestrictionSetGenderFirst =>
+      'Set your gender in your profile to restrict a match';
+
+  @override
+  String get supportSection => 'Support';
+
+  @override
+  String get reportBug => 'Report a bug';
+
+  @override
+  String get reportBugSubtitle => 'Something broken? Tell us';
+
+  @override
+  String get bugTypeBug => 'Bug';
+
+  @override
+  String get bugTypeSuggestion => 'Suggestion';
+
+  @override
+  String get bugTypeOther => 'Other';
+
+  @override
+  String get bugDescriptionHint => 'Describe what happened…';
+
+  @override
+  String get bugReportSent => 'Thanks! Your report was sent.';
+
+  @override
+  String get bugReportTooShort =>
+      'Please give a bit more detail (min 10 characters)';
+
+  @override
+  String guestNumber(int number) {
+    return 'Guest $number';
+  }
+
+  @override
+  String get noPlayersYet => 'No players yet';
+
+  @override
+  String get unclaimedSpot => 'Unclaimed spot';
+
+  @override
+  String get addGuest => 'Add guest';
+
+  @override
+  String get guestClaimCodeInfo =>
+      'We\'ll generate a claim code for each guest slot.';
+
+  @override
+  String get removeGuestQuestion => 'Remove guest?';
+
+  @override
+  String get removeGuestBody => 'This guest slot will be freed up.';
+
+  @override
+  String get matchCancelledBanner => 'Match cancelled';
+
+  @override
+  String get cancelledBadge => 'CANCELLED';
+
+  @override
+  String get matchIsFull => 'Match is full';
+
+  @override
+  String get selectTime => 'Select time';
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String shareInviteText(String deepLink, String code) {
+    return '🎮 You\'ve been invited to a GameOn match!\n\nHave the app? Open your spot:\n$deepLink\n\nManual code: $code';
+  }
+
+  @override
+  String get shareInviteSubject => 'Join my GameOn match';
+
+  @override
+  String get inviteCopied => 'Invite copied to clipboard';
+
+  @override
+  String get joinBringFriendsInfo =>
+      'Bring friends along — we\'ll generate a code for each guest slot.';
+
+  @override
+  String addGuestsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Add $count guests',
+      one: 'Add 1 guest',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get unlimitedSpots => 'Unlimited spots';
+
+  @override
+  String get unlimitedSpotsHint => 'Anyone can join — no cap';
+
+  @override
+  String get unlimitedOpenToAll => 'Unlimited — open to all';
+
+  @override
+  String get loading => 'Loading...';
+
+  @override
+  String get spotClaimed => 'Spot claimed!';
+
+  @override
+  String get filters => 'Filters';
+
+  @override
+  String get resetFilters => 'Reset';
+
+  @override
+  String get filterOff => 'Off';
+
+  @override
+  String get showResults => 'Show results';
+
+  @override
+  String get community => 'Community';
+
+  @override
+  String get searchCommunityHint => 'Search players or groups…';
+
+  @override
+  String get noResults => 'No results';
+
+  @override
+  String get member => 'Member';
+
+  @override
+  String get groupVisibility => 'Visibility';
+
+  @override
+  String get visibilityPublic => 'Public';
+
+  @override
+  String get visibilityPrivate => 'Private';
+
+  @override
+  String get visibilityInviteOnly => 'On request';
+
+  @override
+  String get visibilityPublicDesc => 'Anyone can find and join it';
+
+  @override
+  String get visibilityPrivateDesc => 'Hidden — join with the invite code only';
+
+  @override
+  String get visibilityInviteOnlyDesc =>
+      'Visible, but joining requires approval';
+
+  @override
+  String get requestToJoin => 'Request';
+
+  @override
+  String get requested => 'Requested';
+
+  @override
+  String get joinRequests => 'Join requests';
+
+  @override
+  String get accept => 'Accept';
+
+  @override
+  String get decline => 'Decline';
+
+  @override
+  String get exampleGroupName => 'e.g. Acme Corp Sports Club';
+
+  @override
+  String get groupAboutHint => 'What is this group about?';
+
+  @override
+  String get exampleMatchTitle => 'e.g. Sunday 5-a-side';
+
+  @override
+  String get exampleLocation => 'e.g. Stade Marcel Michelin, Court 3';
+
+  @override
+  String get exampleUsername => 'e.g. Zidane10';
+
+  @override
+  String get exampleBio => 'e.g. Weekend warrior, love 5-a-side...';
+
+  @override
+  String get usernameRequired => 'Username required';
+
+  @override
+  String get usernameTooShort => 'At least 3 characters';
+
+  @override
+  String get usernameTooLong => 'Max 20 characters';
+
+  @override
+  String get usernameCharset => 'Letters, numbers, and _ only';
 }

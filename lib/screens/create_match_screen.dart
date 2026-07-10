@@ -12,6 +12,8 @@ import '../providers/group_provider.dart';
 import '../providers/match_provider.dart';
 import '../providers/profile_provider.dart';
 import '../services/places_service.dart';
+import '../utils/app_snackbar.dart';
+import '../utils/error_helpers.dart';
 import '../widgets/game_on_logo.dart';
 
 class CreateMatchScreen extends StatefulWidget {
@@ -125,8 +127,8 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
             TextFormField(
               controller: _titleController,
               maxLength: 60,
-              decoration: const InputDecoration(
-                hintText: 'e.g. Sunday 5-a-side',
+              decoration: InputDecoration(
+                hintText: l.exampleMatchTitle,
                 counterText: '',
               ),
               validator: (v) =>
@@ -212,7 +214,12 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
             const SizedBox(height: 12),
             _GenderRestrictionPicker(
               selected: _allowedGenders,
+              myGender: context.watch<ProfileProvider>().profile?.gender,
               onChanged: (v) => setState(() => _allowedGenders = v),
+              onBlockedSelfExclusion: () =>
+                  _showGenderWarning(l.genderRestrictionMustIncludeSelf),
+              onGenderNotSet: () =>
+                  _showGenderWarning(l.genderRestrictionSetGenderFirst),
             ),
             const SizedBox(height: 24),
             _SectionLabel(l.dateAndTime),
@@ -331,6 +338,15 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
     if (picked != null) setState(() => _time = picked);
   }
 
+  void _showGenderWarning(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.redAccent,
+      ));
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     final l = AppLocalizations.of(context)!;
@@ -340,6 +356,18 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
         backgroundColor: Colors.redAccent,
       ));
       return;
+    }
+    // A restricted match must always be joinable by its creator.
+    if (_allowedGenders.isNotEmpty) {
+      final myGender = context.read<ProfileProvider>().profile?.gender;
+      if (myGender == null) {
+        _showGenderWarning(l.genderRestrictionSetGenderFirst);
+        return;
+      }
+      if (!_allowedGenders.contains(myGender)) {
+        _showGenderWarning(l.genderRestrictionMustIncludeSelf);
+        return;
+      }
     }
     setState(() => _isSubmitting = true);
 
@@ -370,18 +398,13 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
 
     if (success) {
       final l = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l.matchCreated),
-          backgroundColor: GameOnBrand.saffron,
-        ),
-      );
+      showSuccessSnackBar(context, l.matchCreated);
       context.pop();
     } else {
-      final err = context.read<MatchProvider>().error ?? 'Unknown error';
+      final l = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(err),
+          content: Text(friendlyError(context.read<MatchProvider>().error, l)),
           backgroundColor: Colors.redAccent,
           duration: const Duration(seconds: 8),
         ),
@@ -604,7 +627,7 @@ class _LocationFieldState extends State<_LocationField> {
           style: const TextStyle(fontSize: 15),
           onChanged: _onTextChanged,
           decoration: InputDecoration(
-            hintText: 'e.g. Parc des Princes, Court 3',
+            hintText: AppLocalizations.of(context)!.exampleLocation,
             prefixIcon: Icon(
               Icons.location_on_outlined,
               size: 20,
@@ -612,8 +635,9 @@ class _LocationFieldState extends State<_LocationField> {
             ),
             suffixIcon: _buildSuffixIcon(),
           ),
-          validator: (v) =>
-              (v == null || v.trim().isEmpty) ? 'Enter a location' : null,
+          validator: (v) => (v == null || v.trim().isEmpty)
+              ? AppLocalizations.of(context)!.locationRequired
+              : null,
         ),
         if (_suggestions.isNotEmpty)
           Material(
@@ -877,7 +901,7 @@ class _UnlimitedToggle extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Unlimited spots',
+                    AppLocalizations.of(context)!.unlimitedSpots,
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
@@ -887,7 +911,7 @@ class _UnlimitedToggle extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Anyone can join — no cap',
+                    AppLocalizations.of(context)!.unlimitedSpotsHint,
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.white.withValues(alpha: 0.35),
@@ -1098,11 +1122,17 @@ class _StepButton extends StatelessWidget {
 
 class _GenderRestrictionPicker extends StatelessWidget {
   final Set<String> selected;
+  final String? myGender; // creator's profile gender; null = not set
   final ValueChanged<Set<String>> onChanged;
+  final VoidCallback onBlockedSelfExclusion;
+  final VoidCallback onGenderNotSet;
 
   const _GenderRestrictionPicker({
     required this.selected,
+    required this.myGender,
     required this.onChanged,
+    required this.onBlockedSelfExclusion,
+    required this.onGenderNotSet,
   });
 
   static const _options = ['M', 'F', 'X'];
@@ -1120,11 +1150,22 @@ class _GenderRestrictionPicker extends StatelessWidget {
           label: Text(labels[g]!),
           selected: isSelected,
           onSelected: (_) {
+            // Restricting requires a declared gender, and the creator must
+            // always remain able to join their own match.
+            if (myGender == null) {
+              onGenderNotSet();
+              return;
+            }
             final next = Set<String>.from(selected);
             if (isSelected) {
+              if (g == myGender) {
+                onBlockedSelfExclusion();
+                return;
+              }
               next.remove(g);
             } else {
               next.add(g);
+              next.add(myGender!);
             }
             // All 3 selected → clear to unrestricted
             if (next.length == _options.length) {
@@ -1357,7 +1398,7 @@ class _MatchPreview extends StatelessWidget {
                             color: GameOnBrand.saffron.withValues(alpha: 0.8)),
                         const SizedBox(width: 6),
                         Text(
-                          'Unlimited — open to all',
+                          AppLocalizations.of(context)!.unlimitedOpenToAll,
                           style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -1413,8 +1454,8 @@ class _MatchPreview extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10)),
                     ),
-                    child: const Text('Join',
-                        style: TextStyle(
+                    child: Text(AppLocalizations.of(context)!.join,
+                        style: const TextStyle(
                             fontWeight: FontWeight.w800,
                             color: GameOnBrand.saffron)),
                   ),
@@ -1543,9 +1584,9 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
             ),
           ),
           const SizedBox(height: 20),
-          const Text('Select time',
-              style:
-                  TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+          Text(AppLocalizations.of(context)!.selectTime,
+              style: const TextStyle(
+                  fontWeight: FontWeight.w800, fontSize: 16)),
           const SizedBox(height: 20),
           SizedBox(
             height: 180,
@@ -1640,8 +1681,9 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
               ),
-              child: const Text('Confirm',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+              child: Text(AppLocalizations.of(context)!.confirm,
+                  style: const TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w800)),
             ),
           ),
         ],

@@ -23,35 +23,75 @@ class GroupProvider extends ChangeNotifier {
     });
   }
 
+  final Set<String> _pendingRequestGroupIds = {};
+
   List<Group> get groups => _groups;
   bool get isLoading => _isLoading;
   String? get error => _error;
   List<String> get groupIds => _groups.map((g) => g.id).toList();
+  bool isMember(String groupId) => _groups.any((g) => g.id == groupId);
+  bool hasPendingRequest(String groupId) =>
+      _pendingRequestGroupIds.contains(groupId);
 
   Future<void> fetchGroups() async {
     _isLoading = true;
     notifyListeners();
     try {
       _groups = await _service.fetchMyGroups();
+      _pendingRequestGroupIds
+        ..clear()
+        ..addAll(await _service.fetchMyPendingRequestGroupIds());
       _error = null;
     } catch (_) {
-      _error = 'Failed to load groups.';
+      _error = 'could_not_load_groups';
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<Group?> createGroup(String name, String? description) async {
+  Future<Group?> createGroup(String name, String? description,
+      {GroupVisibility visibility = GroupVisibility.private}) async {
     try {
-      final group = await _service.createGroup(name: name, description: description);
+      final group = await _service.createGroup(
+          name: name, description: description, visibility: visibility);
       _groups.insert(0, group);
       notifyListeners();
       return group;
     } catch (_) {
-      _error = 'Could not create group.';
+      _error = 'could_not_create_group';
       notifyListeners();
       return null;
+    }
+  }
+
+  /// Instant join of a public group (from search results).
+  Future<bool> joinPublicGroup(Group group) async {
+    try {
+      await _service.joinPublicGroup(group.id);
+      if (!_groups.any((g) => g.id == group.id)) {
+        _groups.insert(0, group);
+      }
+      notifyListeners();
+      return true;
+    } catch (_) {
+      _error = 'could_not_join_group';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Membership request for an invite-only group.
+  Future<bool> requestToJoin(Group group) async {
+    try {
+      await _service.requestToJoin(group.id);
+      _pendingRequestGroupIds.add(group.id);
+      notifyListeners();
+      return true;
+    } catch (_) {
+      _error = 'could_not_join_group';
+      notifyListeners();
+      return false;
     }
   }
 
@@ -59,7 +99,7 @@ class GroupProvider extends ChangeNotifier {
     try {
       final group = await _service.joinByCode(code);
       if (group == null) {
-        _error = 'Invalid invite code.';
+        _error = 'invalid_invite_code';
         notifyListeners();
         return null;
       }
@@ -69,7 +109,7 @@ class GroupProvider extends ChangeNotifier {
       }
       return group;
     } catch (_) {
-      _error = 'Could not join group.';
+      _error = 'could_not_join_group';
       notifyListeners();
       return null;
     }
@@ -81,7 +121,7 @@ class GroupProvider extends ChangeNotifier {
       _groups.removeWhere((g) => g.id == groupId);
       notifyListeners();
     } catch (_) {
-      _error = 'Could not leave group.';
+      _error = 'could_not_leave_group';
       notifyListeners();
     }
   }

@@ -798,4 +798,285 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get notSet => 'Non défini';
+
+  @override
+  String get errorAlreadyJoined => 'Tu fais déjà partie de ce match';
+
+  @override
+  String get errorMatchFull => 'Ce match est complet';
+
+  @override
+  String get errorCouldNotJoin => 'Impossible de rejoindre le match';
+
+  @override
+  String get errorCouldNotLeave => 'Impossible de quitter le match';
+
+  @override
+  String get errorCouldNotCreate => 'Impossible de créer le match';
+
+  @override
+  String get errorCouldNotConfirm => 'Impossible de confirmer le match';
+
+  @override
+  String get errorInvalidClaimCode => 'Code invalide ou place déjà prise';
+
+  @override
+  String get errorCouldNotAddGuests => 'Impossible d\'ajouter des invités';
+
+  @override
+  String get errorCouldNotLoadMatches => 'Impossible de charger les matchs';
+
+  @override
+  String get errorCouldNotLoadProfile => 'Impossible de charger le profil';
+
+  @override
+  String get errorCouldNotSaveProfile => 'Impossible de sauvegarder le profil';
+
+  @override
+  String get errorCouldNotUploadPhoto => 'Impossible d\'envoyer la photo';
+
+  @override
+  String get errorCouldNotCompleteSetup =>
+      'Impossible de terminer la configuration';
+
+  @override
+  String get errorCouldNotSaveLocation => 'Impossible de sauvegarder le lieu';
+
+  @override
+  String get errorCouldNotLoadGroups => 'Impossible de charger les groupes';
+
+  @override
+  String get errorCouldNotCreateGroup => 'Impossible de créer le groupe';
+
+  @override
+  String get errorCouldNotJoinGroup => 'Impossible de rejoindre le groupe';
+
+  @override
+  String get errorCouldNotLeaveGroup => 'Impossible de quitter le groupe';
+
+  @override
+  String get errorInvalidInviteCode => 'Code d\'invitation invalide';
+
+  @override
+  String get errorCouldNotDeleteAccount => 'Impossible de supprimer le compte';
+
+  @override
+  String get errorInvalidCredentials => 'Email ou mot de passe incorrect';
+
+  @override
+  String get errorEmailTaken => 'Un compte existe déjà avec cet email';
+
+  @override
+  String get errorGeneric => 'Un problème est survenu. Réessaie.';
+
+  @override
+  String get comingSoon => 'Bientôt disponible';
+
+  @override
+  String get genderRestrictionMustIncludeSelf =>
+      'Tu ne peux pas exclure ton propre genre d\'un match que tu crées';
+
+  @override
+  String get genderRestrictionSetGenderFirst =>
+      'Renseigne ton genre sur ton profil pour restreindre un match';
+
+  @override
+  String get supportSection => 'Support';
+
+  @override
+  String get reportBug => 'Signaler un bug';
+
+  @override
+  String get reportBugSubtitle => 'Un problème ? Dis-nous tout';
+
+  @override
+  String get bugTypeBug => 'Bug';
+
+  @override
+  String get bugTypeSuggestion => 'Suggestion';
+
+  @override
+  String get bugTypeOther => 'Autre';
+
+  @override
+  String get bugDescriptionHint => 'Décris ce qui s\'est passé…';
+
+  @override
+  String get bugReportSent => 'Merci ! Ton signalement a été envoyé.';
+
+  @override
+  String get bugReportTooShort =>
+      'Donne un peu plus de détails (10 caractères min)';
+
+  @override
+  String guestNumber(int number) {
+    return 'Invité $number';
+  }
+
+  @override
+  String get noPlayersYet => 'Aucun joueur pour l\'instant';
+
+  @override
+  String get unclaimedSpot => 'Place non réclamée';
+
+  @override
+  String get addGuest => 'Ajouter un invité';
+
+  @override
+  String get guestClaimCodeInfo =>
+      'Un code d\'invitation sera généré pour chaque place d\'invité.';
+
+  @override
+  String get removeGuestQuestion => 'Retirer l\'invité ?';
+
+  @override
+  String get removeGuestBody => 'Cette place d\'invité sera libérée.';
+
+  @override
+  String get matchCancelledBanner => 'Match annulé';
+
+  @override
+  String get cancelledBadge => 'ANNULÉ';
+
+  @override
+  String get matchIsFull => 'Match complet';
+
+  @override
+  String get selectTime => 'Choisir l\'heure';
+
+  @override
+  String get confirm => 'Valider';
+
+  @override
+  String shareInviteText(String deepLink, String code) {
+    return '🎮 Tu es invité à un match GameOn !\n\nTu as l\'app ? Récupère ta place :\n$deepLink\n\nCode manuel : $code';
+  }
+
+  @override
+  String get shareInviteSubject => 'Rejoins mon match GameOn';
+
+  @override
+  String get inviteCopied => 'Invitation copiée dans le presse-papiers';
+
+  @override
+  String get joinBringFriendsInfo =>
+      'Amène des amis — un code sera généré pour chaque place d\'invité.';
+
+  @override
+  String addGuestsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Ajouter $count invités',
+      one: 'Ajouter 1 invité',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get unlimitedSpots => 'Places illimitées';
+
+  @override
+  String get unlimitedSpotsHint => 'Tout le monde peut rejoindre — sans limite';
+
+  @override
+  String get unlimitedOpenToAll => 'Illimité — ouvert à tous';
+
+  @override
+  String get loading => 'Chargement…';
+
+  @override
+  String get spotClaimed => 'Place réclamée !';
+
+  @override
+  String get filters => 'Filtres';
+
+  @override
+  String get resetFilters => 'Réinitialiser';
+
+  @override
+  String get filterOff => 'Désactivé';
+
+  @override
+  String get showResults => 'Voir les résultats';
+
+  @override
+  String get community => 'Communauté';
+
+  @override
+  String get searchCommunityHint => 'Chercher un joueur ou un groupe…';
+
+  @override
+  String get noResults => 'Aucun résultat';
+
+  @override
+  String get member => 'Membre';
+
+  @override
+  String get groupVisibility => 'Visibilité';
+
+  @override
+  String get visibilityPublic => 'Public';
+
+  @override
+  String get visibilityPrivate => 'Privé';
+
+  @override
+  String get visibilityInviteOnly => 'Sur demande';
+
+  @override
+  String get visibilityPublicDesc => 'Visible par tous, chacun peut rejoindre';
+
+  @override
+  String get visibilityPrivateDesc =>
+      'Invisible — accessible uniquement avec le code';
+
+  @override
+  String get visibilityInviteOnlyDesc =>
+      'Visible, mais l\'adhésion doit être approuvée';
+
+  @override
+  String get requestToJoin => 'Demander';
+
+  @override
+  String get requested => 'Demandé';
+
+  @override
+  String get joinRequests => 'Demandes d\'adhésion';
+
+  @override
+  String get accept => 'Accepter';
+
+  @override
+  String get decline => 'Refuser';
+
+  @override
+  String get exampleGroupName => 'ex. Club de sport Acme';
+
+  @override
+  String get groupAboutHint => 'De quoi parle ce groupe ?';
+
+  @override
+  String get exampleMatchTitle => 'ex. Foot à 5 du dimanche';
+
+  @override
+  String get exampleLocation => 'ex. Stade Marcel Michelin, Court 3';
+
+  @override
+  String get exampleUsername => 'ex. Zidane10';
+
+  @override
+  String get exampleBio => 'ex. Sportif du dimanche, fan de foot à 5…';
+
+  @override
+  String get usernameRequired => 'Pseudo requis';
+
+  @override
+  String get usernameTooShort => '3 caractères minimum';
+
+  @override
+  String get usernameTooLong => '20 caractères maximum';
+
+  @override
+  String get usernameCharset => 'Lettres, chiffres et _ uniquement';
 }

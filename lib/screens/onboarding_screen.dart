@@ -7,6 +7,7 @@ import '../l10n/app_localizations.dart';
 import '../models/match.dart';
 import '../providers/profile_provider.dart';
 import '../services/profile_service.dart';
+import '../utils/error_helpers.dart';
 import '../widgets/game_on_logo.dart';
 import '../widgets/profile_form_fields.dart';
 
@@ -35,6 +36,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String?   _gender;
   bool      _showAge     = true;
   bool      _showGender  = true;
+  bool      _termsAccepted = false;
 
   @override
   void initState() {
@@ -72,6 +74,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               : _bioController.text.trim(),
           birthDate: _birthDate,
           gender: _gender,
+          acceptedTermsAt: DateTime.now(),
         );
 
     if (!mounted) return;
@@ -80,7 +83,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final error = context.read<ProfileProvider>().error;
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error), backgroundColor: Colors.redAccent),
+        SnackBar(content: Text(friendlyError(error, AppLocalizations.of(context)!)), backgroundColor: Colors.redAccent),
       );
       context.read<ProfileProvider>().clearError();
     } else {
@@ -126,10 +129,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 gender: _gender,
                 showAge: _showAge,
                 showGender: _showGender,
+                termsAccepted: _termsAccepted,
                 onBirthDateChanged: (d) => setState(() => _birthDate = d),
                 onGenderChanged: (g) => setState(() => _gender = g),
                 onShowAgeChanged: (v) => setState(() => _showAge = v),
                 onShowGenderChanged: (v) => setState(() => _showGender = v),
+                onTermsChanged: (v) => setState(() => _termsAccepted = v),
                 onBack: () => _goToPage(1),
                 onFinish: _finish,
                 isSubmitting: _isSubmitting,
@@ -247,9 +252,9 @@ class _Step1 extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
               ),
-              child: const Text('Next →',
-                  style:
-                      TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+              child: Text(AppLocalizations.of(context)!.next,
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w800)),
             ),
           ),
         ],
@@ -381,7 +386,7 @@ class _Step2State extends State<_Step2> {
               controller: widget.usernameController,
               autofocus: true,
               decoration: InputDecoration(
-                hintText: 'e.g. striker99',
+                hintText: l.exampleUsername,
                 prefixIcon: const Icon(Icons.alternate_email_rounded,
                     size: 18, color: GameOnBrand.saffron),
                 suffixIcon: usernameSuffix != null
@@ -392,11 +397,11 @@ class _Step2State extends State<_Step2> {
                     : null,
               ),
               validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Username required';
-                if (v.trim().length < 3) return 'At least 3 characters';
-                if (v.trim().length > 20) return 'Max 20 characters';
+                if (v == null || v.trim().isEmpty) return l.usernameRequired;
+                if (v.trim().length < 3) return l.usernameTooShort;
+                if (v.trim().length > 20) return l.usernameTooLong;
                 if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(v.trim())) {
-                  return 'Letters, numbers, and _ only';
+                  return l.usernameCharset;
                 }
                 if (_usernameAvailable == false) return l.usernameTaken;
                 return null;
@@ -426,8 +431,8 @@ class _Step2State extends State<_Step2> {
               controller: widget.bioController,
               maxLines: 3,
               maxLength: 120,
-              decoration: const InputDecoration(
-                hintText: 'e.g. Weekend warrior, love 5-a-side...',
+              decoration: InputDecoration(
+                hintText: l.exampleBio,
               ),
             ),
             const SizedBox(height: 8),
@@ -467,10 +472,12 @@ class _Step3 extends StatelessWidget {
   final String? gender;
   final bool showAge;
   final bool showGender;
+  final bool termsAccepted;
   final ValueChanged<DateTime?> onBirthDateChanged;
   final ValueChanged<String?> onGenderChanged;
   final ValueChanged<bool> onShowAgeChanged;
   final ValueChanged<bool> onShowGenderChanged;
+  final ValueChanged<bool> onTermsChanged;
   final VoidCallback onBack;
   final VoidCallback onFinish;
   final bool isSubmitting;
@@ -481,10 +488,12 @@ class _Step3 extends StatelessWidget {
     required this.gender,
     required this.showAge,
     required this.showGender,
+    required this.termsAccepted,
     required this.onBirthDateChanged,
     required this.onGenderChanged,
     required this.onShowAgeChanged,
     required this.onShowGenderChanged,
+    required this.onTermsChanged,
     required this.onBack,
     required this.onFinish,
     required this.isSubmitting,
@@ -584,13 +593,18 @@ class _Step3 extends StatelessWidget {
               onChanged: onShowGenderChanged,
             ),
           ],
+          const SizedBox(height: 24),
+          _TermsCheckbox(
+            accepted: termsAccepted,
+            onChanged: onTermsChanged,
+          ),
           const SizedBox(height: 16),
           const _ProgressDots(total: 3, current: 2),
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed: isSubmitting ? null : onFinish,
+              onPressed: isSubmitting || !termsAccepted ? null : onFinish,
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(54),
                 backgroundColor: GameOnBrand.saffron,
@@ -608,6 +622,89 @@ class _Step3 extends StatelessWidget {
                   : Text(l.letsGo,
                       style: const TextStyle(
                           fontSize: 16, fontWeight: FontWeight.w800)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Terms checkbox ─────────────────────────────────────────────────────────
+
+class _TermsCheckbox extends StatelessWidget {
+  final bool accepted;
+  final ValueChanged<bool> onChanged;
+
+  const _TermsCheckbox({required this.accepted, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: () => onChanged(!accepted),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 24,
+            height: 24,
+            child: Checkbox(
+              value: accepted,
+              onChanged: (v) => onChanged(v ?? false),
+              activeColor: GameOnBrand.saffron,
+              checkColor: GameOnBrand.slateDark,
+              side: BorderSide(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                style: TextStyle(
+                  fontSize: 13,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
+                children: [
+                  TextSpan(text: l.iAcceptThe),
+                  WidgetSpan(
+                    alignment: PlaceholderAlignment.baseline,
+                    baseline: TextBaseline.alphabetic,
+                    child: GestureDetector(
+                      onTap: () => context.push('/terms'),
+                      child: Text(
+                        l.termsOfService,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          decoration: TextDecoration.underline,
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ),
+                  ),
+                  TextSpan(text: l.andThe),
+                  WidgetSpan(
+                    alignment: PlaceholderAlignment.baseline,
+                    baseline: TextBaseline.alphabetic,
+                    child: GestureDetector(
+                      onTap: () => context.push('/privacy'),
+                      child: Text(
+                        l.privacyPolicy,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          decoration: TextDecoration.underline,
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

@@ -11,6 +11,8 @@ import '../models/match_participant.dart';
 import '../providers/match_provider.dart';
 import '../services/match_service.dart';
 import '../services/supabase_client.dart';
+import '../utils/app_snackbar.dart';
+import '../utils/error_helpers.dart';
 import '../widgets/game_on_logo.dart';
 
 class MatchDetailScreen extends StatefulWidget {
@@ -40,6 +42,8 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
   }
 
   Future<void> _showClaimDialog(BuildContext context, {String? prefill}) async {
+    final provider = context.read<MatchProvider>();
+    final messenger = ScaffoldMessenger.of(context);
     final code = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
@@ -51,17 +55,19 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
     );
 
     if (code != null && code.isNotEmpty && mounted) {
-      // ignore: use_build_context_synchronously
-      final ok = await context
-          .read<MatchProvider>()
-          .claimGuestSpot(widget.matchId, code);
+      final ok = await provider.claimGuestSpot(widget.matchId, code);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ok ? 'Spot claimed!' : 'Invalid or already used.'),
-            backgroundColor: ok ? GameOnBrand.saffron : Colors.redAccent,
-          ),
-        );
+        final l = AppLocalizations.of(this.context)!;
+        if (ok) {
+          showSuccessSnackBar(this.context, l.spotClaimed);
+        } else {
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(l.errorInvalidClaimCode),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
       }
     }
   }
@@ -93,7 +99,7 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
                 maxLength: 60,
                 decoration: InputDecoration(
                   labelText: l.title,
-                  hintText: 'e.g. Sunday 5-a-side',
+                  hintText: l.exampleMatchTitle,
                   counterText: '',
                 ),
               ),
@@ -235,11 +241,6 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
                     const SizedBox(width: 8),
                     Text(match.sportType.l10nLabel(context),
                         style: const TextStyle(fontWeight: FontWeight.w800)),
-                    if (match.isConfirmed) ...[
-                      const SizedBox(width: 8),
-                      const Icon(Icons.check_circle_rounded,
-                          size: 16, color: Colors.green),
-                    ],
                   ],
                 ),
                 actions: [
@@ -350,11 +351,14 @@ class _HeroCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
             children: [
               _StatusChip(match),
-              const SizedBox(width: 8),
               _SkillChip(match.skillLevel),
+              if (match.isGenderRestricted)
+                _GenderChip(match),
             ],
           ),
           if (match.title != null && match.title!.isNotEmpty) ...[
@@ -546,29 +550,31 @@ class _ParticipantsListState extends State<_ParticipantsList> {
         .toList();
     if (ids.isEmpty) return;
     final map = await widget.service.fetchProfiles(ids);
-    if (mounted) setState(() {
-      _usernames = {for (final e in map.entries) e.key: e.value.username};
-      _avatarUrls = {for (final e in map.entries) e.key: e.value.avatarUrl};
-    });
+    if (mounted) {
+      setState(() {
+        _usernames = {for (final e in map.entries) e.key: e.value.username};
+        _avatarUrls = {for (final e in map.entries) e.key: e.value.avatarUrl};
+      });
+    }
   }
 
   Future<void> _showShareSheet(MatchParticipant guest) async {
+    final l = AppLocalizations.of(context)!;
     final code = guest.guestClaimToken ?? '';
     final deepLink =
         'io.supabase.gameon://claim?code=$code&match=${widget.matchId}';
-    final text = '🎮 You\'ve been invited to a GameOn match!\n\n'
-        'Have the app? Open your spot:\n$deepLink\n\n'
-        'Manual code: $code';
+    final text = l.shareInviteText(deepLink, code);
     try {
-      await Share.share(text, subject: 'Join my GameOn match');
+      await Share.share(text, subject: l.shareInviteSubject);
     } catch (_) {
       await Clipboard.setData(ClipboardData(text: text));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              'Invite copied to clipboard',
-              style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
+              l.inviteCopied,
+              style: const TextStyle(
+                  color: Colors.black, fontWeight: FontWeight.w600),
             ),
             backgroundColor: GameOnBrand.saffron,
           ),
@@ -578,6 +584,8 @@ class _ParticipantsListState extends State<_ParticipantsList> {
   }
 
   Future<void> _showClaimDialog(BuildContext context) async {
+    final provider = context.read<MatchProvider>();
+    final messenger = ScaffoldMessenger.of(context);
     final code = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
@@ -589,17 +597,19 @@ class _ParticipantsListState extends State<_ParticipantsList> {
     );
 
     if (code != null && code.isNotEmpty && mounted) {
-      // ignore: use_build_context_synchronously
-      final ok = await context
-          .read<MatchProvider>()
-          .claimGuestSpot(widget.matchId, code);
+      final ok = await provider.claimGuestSpot(widget.matchId, code);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ok ? 'Spot claimed!' : 'Invalid or already used.'),
-            backgroundColor: ok ? GameOnBrand.saffron : Colors.redAccent,
-          ),
-        );
+        final l = AppLocalizations.of(this.context)!;
+        if (ok) {
+          showSuccessSnackBar(this.context, l.spotClaimed);
+        } else {
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(l.errorInvalidClaimCode),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
       }
     }
   }
@@ -609,12 +619,12 @@ class _ParticipantsListState extends State<_ParticipantsList> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Remove guest?'),
-        content: const Text('This guest slot will be freed up.'),
+        title: Text(l.removeGuestQuestion),
+        content: Text(l.removeGuestBody),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Keep')),
+              child: Text(l.keepIt)),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
@@ -636,7 +646,7 @@ class _ParticipantsListState extends State<_ParticipantsList> {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            'No players yet',
+            l.noPlayersYet,
             style: TextStyle(
               color: Theme.of(context)
                   .colorScheme
@@ -649,6 +659,8 @@ class _ParticipantsListState extends State<_ParticipantsList> {
     }
 
     final isHost = widget.currentUserId == widget.creatorId;
+    final alreadyJoined = widget.currentUserId.isNotEmpty &&
+        widget.participants.any((x) => x.userId == widget.currentUserId);
     int guestIndex = 0;
 
     return Column(
@@ -659,7 +671,7 @@ class _ParticipantsListState extends State<_ParticipantsList> {
         if (isGuestRow) guestIndex++;
 
         final name = isGuestRow
-            ? 'Guest $guestIndex'
+            ? l.guestNumber(guestIndex)
             : (_usernames[p.userId] ?? '…');
         final initial =
             isGuestRow ? 'G' : (name.isNotEmpty ? name[0].toUpperCase() : '?');
@@ -719,7 +731,7 @@ class _ParticipantsListState extends State<_ParticipantsList> {
                       ),
                       if (isGuestRow)
                         Text(
-                          'Unclaimed spot',
+                          l.unclaimedSpot,
                           style: TextStyle(
                               fontSize: 11,
                               color: Colors.white.withValues(alpha: 0.25)),
@@ -756,9 +768,13 @@ class _ParticipantsListState extends State<_ParticipantsList> {
                   ),
                 ] else if (isGuestRow && widget.currentUserId.isNotEmpty)
                   TextButton(
-                    onPressed: () => _showClaimDialog(context),
+                    onPressed: alreadyJoined
+                        ? null
+                        : () => _showClaimDialog(context),
                     style: TextButton.styleFrom(
                       foregroundColor: GameOnBrand.saffron,
+                      disabledForegroundColor:
+                          Colors.white.withValues(alpha: 0.25),
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                     ),
                     child: Text(l.claim,
@@ -844,85 +860,39 @@ class _ActionBar extends StatelessWidget {
           color: Colors.redAccent.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(14),
         ),
-        child: const Text('Match cancelled',
-            style: TextStyle(
+        child: Text(l.matchCancelledBanner,
+            style: const TextStyle(
                 fontWeight: FontWeight.w700, color: Colors.redAccent)),
       );
     } else if (isCreator) {
-      final Widget creatorPrimary;
-      if (!match.isConfirmed) {
-        creatorPrimary = FilledButton(
-          onPressed: () =>
-              context.read<MatchProvider>().confirmMatch(match.id),
-          style: FilledButton.styleFrom(
-            minimumSize: const Size.fromHeight(54),
-            backgroundColor: Colors.green.withValues(alpha: 0.15),
-            foregroundColor: Colors.green.shade300,
-            overlayColor: Colors.green.withValues(alpha: 0.1),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-                side: BorderSide(
-                    color: Colors.green.withValues(alpha: 0.3))),
-          ),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.check_circle_outline_rounded, size: 18),
-              SizedBox(width: 8),
-              Text('Confirm match is happening',
-                  style: TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w800)),
-            ],
-          ),
-        );
-      } else {
-        creatorPrimary = Container(
-          height: 54,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.green.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.check_circle_rounded,
-                  color: Colors.green.shade400, size: 18),
-              const SizedBox(width: 8),
-              Text('Confirmed — see you there!',
-                  style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: Colors.green.shade300)),
-            ],
-          ),
-        );
-      }
       child = showAddGuest
-          ? Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                creatorPrimary,
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.person_add_rounded, size: 16),
-                    label: const Text('Add Guest'),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(46),
-                      foregroundColor: GameOnBrand.saffron,
-                      side: BorderSide(
-                          color: GameOnBrand.saffron.withValues(alpha: 0.6)),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
-                    ),
-                    onPressed: () => _openAddGuestSheet(context),
-                  ),
+          ? SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.person_add_rounded, size: 16),
+                label: Text(l.addGuest),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(54),
+                  foregroundColor: GameOnBrand.saffron,
+                  side: BorderSide(
+                      color: GameOnBrand.saffron.withValues(alpha: 0.6)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
                 ),
-              ],
+                onPressed: () => _openAddGuestSheet(context),
+              ),
             )
-          : creatorPrimary;
+          : Container(
+              height: 54,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Colors.redAccent.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Text(l.matchIsFull,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, color: Colors.redAccent)),
+            );
     } else if (isJoined) {
       child = Row(
         children: [
@@ -930,7 +900,7 @@ class _ActionBar extends StatelessWidget {
             Expanded(
               child: OutlinedButton.icon(
                 icon: const Icon(Icons.person_add_rounded, size: 16),
-                label: const Text('Add Guest'),
+                label: Text(l.addGuest),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size.fromHeight(54),
                   foregroundColor: GameOnBrand.saffron,
@@ -974,7 +944,7 @@ class _ActionBar extends StatelessWidget {
               borderRadius: BorderRadius.circular(14)),
         ),
         child: Text(
-          match.isFull ? 'Match is full' : l.joinMatch,
+          match.isFull ? l.matchIsFull : l.joinMatch,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
         ),
       );
@@ -1026,7 +996,7 @@ class _JoinOptionsSheetState extends State<_JoinOptionsSheet> {
     } else {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(provider.error ?? 'Could not join match.'),
+        content: Text(friendlyError(provider.error, AppLocalizations.of(context)!)),
         backgroundColor: Colors.redAccent,
         duration: const Duration(seconds: 6),
       ));
@@ -1046,7 +1016,7 @@ class _JoinOptionsSheetState extends State<_JoinOptionsSheet> {
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
           const SizedBox(height: 6),
           Text(
-            "Bring friends along — we'll generate a code for each guest slot.",
+            l.joinBringFriendsInfo,
             style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.55), fontSize: 13),
           ),
@@ -1182,7 +1152,7 @@ class _AddGuestSheetState extends State<_AddGuestSheet> {
     Navigator.pop(context);
     if (!ok) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to add guest — try again.')),
+        SnackBar(content: Text(friendlyError(context.read<MatchProvider>().error, AppLocalizations.of(context)!))),
       );
     }
   }
@@ -1207,11 +1177,12 @@ class _AddGuestSheetState extends State<_AddGuestSheet> {
               ),
             ),
           ),
-          const Text('Add a guest',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+          Text(AppLocalizations.of(context)!.addGuest,
+              style:
+                  const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
           const SizedBox(height: 6),
           Text(
-            "We'll generate a claim code for each guest slot.",
+            AppLocalizations.of(context)!.guestClaimCodeInfo,
             style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.55), fontSize: 13),
           ),
@@ -1296,7 +1267,7 @@ class _AddGuestSheetState extends State<_AddGuestSheet> {
                           strokeWidth: 2.5, color: GameOnBrand.slateDark),
                     )
                   : Text(
-                      'Add $_count guest${_count > 1 ? "s" : ""}',
+                      AppLocalizations.of(context)!.addGuestsCount(_count),
                       style: const TextStyle(
                           fontSize: 15, fontWeight: FontWeight.w800),
                     ),
@@ -1391,26 +1362,10 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    if (match.isConfirmed) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: Colors.green.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(l.confirmed,
-            style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w900,
-                color: Colors.green,
-                letterSpacing: 0.8)),
-      );
-    }
-
     final (Color color, String label) = switch (match.status) {
       MatchStatus.open      => (GameOnBrand.saffron, l.open),
       MatchStatus.full      => (Colors.redAccent, l.fullBadge),
-      MatchStatus.cancelled => (Colors.grey, 'CANCELLED'),
+      MatchStatus.cancelled => (Colors.grey, l.cancelledBadge),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -1450,6 +1405,37 @@ class _SkillChip extends StatelessWidget {
                   fontSize: 10,
                   fontWeight: FontWeight.w900,
                   color: level.color,
+                  letterSpacing: 0.5)),
+        ],
+      ),
+    );
+  }
+}
+
+class _GenderChip extends StatelessWidget {
+  final Match match;
+  const _GenderChip(this.match);
+
+  @override
+  Widget build(BuildContext context) {
+    const chipColor = Color(0xFFAB47BC); // purple accent
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: chipColor.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const PhosphorIcon(PhosphorIconsLight.genderIntersex,
+              size: 11, color: chipColor),
+          const SizedBox(width: 4),
+          Text(match.genderRestrictionLabel(context),
+              style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: chipColor,
                   letterSpacing: 0.5)),
         ],
       ),

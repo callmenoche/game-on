@@ -41,7 +41,12 @@ class ProfileService {
           bytes,
           fileOptions: const FileOptions(upsert: true),
         );
-    return SupabaseService.client.storage.from('avatars').getPublicUrl(path);
+    final url =
+        SupabaseService.client.storage.from('avatars').getPublicUrl(path);
+    // The storage path is stable across uploads, so the public URL never
+    // changes; a version query param forces image caches (CachedNetworkImage,
+    // CDN) to fetch the new file.
+    return '$url?v=${DateTime.now().millisecondsSinceEpoch}';
   }
 
   Future<Profile> completeOnboarding({
@@ -51,6 +56,7 @@ class ProfileService {
     String? bio,
     DateTime? birthDate,
     String? gender,
+    required DateTime acceptedTermsAt,
   }) async {
     final data = await _profiles
         .update({
@@ -58,6 +64,7 @@ class ProfileService {
           'favorite_sports': favoriteSports,
           'bio': bio,
           'onboarded': true,
+          'accepted_terms_at': acceptedTermsAt.toIso8601String(),
           if (birthDate != null)
             'birth_date': birthDate.toIso8601String().split('T').first,
           if (gender != null) 'gender': gender,

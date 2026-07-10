@@ -53,3 +53,11 @@ ios/.symlinks/
 .env.*
 *.secret
 supabase/.temp/
+
+# Android release signing
+android/key.properties
+*.jks
+*.keystore
+
+# iOS build artifacts
+ios/build/

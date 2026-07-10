@@ -27,8 +27,20 @@ Future<void> main() async {
   final app = MultiProvider(
     providers: [
       ChangeNotifierProvider(create: (_) => AuthProvider()),
-      ChangeNotifierProvider(create: (_) => MatchProvider()),
       ChangeNotifierProvider(create: (_) => ProfileProvider()),
+      // Feed sorting needs the profile's favorite sports + default location.
+      ChangeNotifierProxyProvider<ProfileProvider, MatchProvider>(
+        create: (_) => MatchProvider(),
+        update: (_, profileProvider, matchProvider) {
+          final p = profileProvider.profile;
+          matchProvider!.updateUserContext(
+            favoriteSports: p?.favoriteSports ?? const [],
+            homeLat: p?.defaultGeoLat,
+            homeLng: p?.defaultGeoLng,
+          );
+          return matchProvider;
+        },
+      ),
       ChangeNotifierProvider(create: (_) => GroupProvider()),
       ChangeNotifierProvider(create: (_) => LanguageProvider()),
       ChangeNotifierProvider(create: (_) => ThemeProvider()),

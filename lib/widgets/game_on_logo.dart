@@ -1,19 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
-/// GameOn logo — loaded from the PNG asset.
+/// GameOn logo — resolution-independent SVG asset.
+///
+/// Defaults to white (for dark backgrounds).
+/// Pass [color] to tint the logo (e.g. black for light backgrounds).
 class GameOnLogo extends StatelessWidget {
   final double size;
+  final Color? color;
 
-  const GameOnLogo({super.key, this.size = 200});
+  const GameOnLogo({super.key, this.size = 200, this.color});
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
-      'assets/icons/logo.png',
+    return SvgPicture.asset(
+      'assets/icons/gameon-logo-white.svg',
       width: size,
       height: size,
       fit: BoxFit.contain,
-      filterQuality: FilterQuality.high,
+      colorFilter: color != null
+          ? ColorFilter.mode(color!, BlendMode.srcIn)
+          : null,
     );
   }
 }

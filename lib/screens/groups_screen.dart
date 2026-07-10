@@ -1,12 +1,20 @@
+import 'dart:async';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/group.dart';
+import '../models/profile.dart';
 import '../providers/group_provider.dart';
+import '../services/group_service.dart';
+import '../services/profile_service.dart';
+import '../utils/app_snackbar.dart';
 import '../widgets/game_on_logo.dart';
 
+/// Community tab: unified player + group search, my groups, join flows.
 class GroupsScreen extends StatefulWidget {
   const GroupsScreen({super.key});
 
@@ -15,6 +23,16 @@ class GroupsScreen extends StatefulWidget {
 }
 
 class _GroupsScreenState extends State<GroupsScreen> {
+  final _searchCtrl = TextEditingController();
+  final _profileService = ProfileService();
+  final _groupService = GroupService();
+  Timer? _debounce;
+
+  String _query = '';
+  bool _searching = false;
+  List<Profile> _playerResults = [];
+  List<Group> _groupResults = [];
+
   @override
   void initState() {
     super.initState();
@@ -24,13 +42,55 @@ class _GroupsScreenState extends State<GroupsScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<GroupProvider>();
+  void dispose() {
+    _searchCtrl.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
 
+  void _onSearchChanged(String q) {
+    _debounce?.cancel();
+    final query = q.trim();
+    if (query.isEmpty) {
+      setState(() {
+        _query = '';
+        _playerResults = [];
+        _groupResults = [];
+        _searching = false;
+      });
+      return;
+    }
+    setState(() => _query = query);
+    _debounce = Timer(const Duration(milliseconds: 350), () async {
+      if (!mounted) return;
+      setState(() => _searching = true);
+      try {
+        final results = await Future.wait([
+          _profileService.searchPlayers(query),
+          _groupService.searchGroups(query),
+        ]);
+        if (mounted && _query == query) {
+          setState(() {
+            _playerResults = results[0] as List<Profile>;
+            _groupResults = results[1] as List<Group>;
+            _searching = false;
+          });
+        }
+      } catch (_) {
+        if (mounted) setState(() => _searching = false);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
+    final isSearchMode = _query.isNotEmpty;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(l.groupsTitle, style: const TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(l.community,
+            style: const TextStyle(fontWeight: FontWeight.w800)),
         actions: [
           IconButton(
             icon: const Icon(Icons.link_rounded),
@@ -39,31 +99,106 @@ class _GroupsScreenState extends State<GroupsScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/groups/create'),
-        backgroundColor: GameOnBrand.saffron,
-        foregroundColor: GameOnBrand.slateDark,
-        icon: const Icon(Icons.add_rounded),
-        label: Text(l.createGroup,
-            style: const TextStyle(fontWeight: FontWeight.w700)),
+      floatingActionButton: isSearchMode
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () => context.push('/groups/create'),
+              backgroundColor: GameOnBrand.saffron,
+              foregroundColor: GameOnBrand.slateDark,
+              icon: const Icon(Icons.add_rounded),
+              label: Text(l.createGroup,
+                  style: const TextStyle(fontWeight: FontWeight.w700)),
+            ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+            child: TextField(
+              controller: _searchCtrl,
+              onChanged: _onSearchChanged,
+              decoration: InputDecoration(
+                hintText: l.searchCommunityHint,
+                prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                suffixIcon: isSearchMode
+                    ? IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 18),
+                        onPressed: () {
+                          _searchCtrl.clear();
+                          _onSearchChanged('');
+                        },
+                      )
+                    : null,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              ),
+            ),
+          ),
+          Expanded(
+            child: isSearchMode ? _buildSearchResults(l) : _buildMyGroups(l),
+          ),
+        ],
       ),
-      body: provider.isLoading && provider.groups.isEmpty
-          ? const Center(
-              child: CircularProgressIndicator(color: GameOnBrand.saffron))
-          : provider.groups.isEmpty
-              ? _EmptyState(onJoin: () => _showJoinDialog(context))
-              : RefreshIndicator(
-                  onRefresh: provider.fetchGroups,
-                  color: GameOnBrand.saffron,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
-                    itemCount: provider.groups.length,
-                    itemBuilder: (ctx, i) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _GroupCard(group: provider.groups[i]),
-                    ),
-                  ),
-                ),
+    );
+  }
+
+  // ── Search results ─────────────────────────────────────────────────────
+
+  Widget _buildSearchResults(AppLocalizations l) {
+    if (_searching && _playerResults.isEmpty && _groupResults.isEmpty) {
+      return const Center(
+          child: CircularProgressIndicator(color: GameOnBrand.saffron));
+    }
+    if (_playerResults.isEmpty && _groupResults.isEmpty) {
+      return Center(
+        child: Text(
+          l.noResults,
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+        ),
+      );
+    }
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+      children: [
+        if (_playerResults.isNotEmpty) ...[
+          _SectionHeader(l.players),
+          ..._playerResults.map((p) => _PlayerTile(profile: p)),
+          const SizedBox(height: 12),
+        ],
+        if (_groupResults.isNotEmpty) ...[
+          _SectionHeader(l.groupsTitle),
+          ..._groupResults.map((g) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _GroupSearchCard(group: g),
+              )),
+        ],
+      ],
+    );
+  }
+
+  // ── My groups ──────────────────────────────────────────────────────────
+
+  Widget _buildMyGroups(AppLocalizations l) {
+    final provider = context.watch<GroupProvider>();
+    if (provider.isLoading && provider.groups.isEmpty) {
+      return const Center(
+          child: CircularProgressIndicator(color: GameOnBrand.saffron));
+    }
+    if (provider.groups.isEmpty) {
+      return _EmptyState(onJoin: () => _showJoinDialog(context));
+    }
+    return RefreshIndicator(
+      onRefresh: provider.fetchGroups,
+      color: GameOnBrand.saffron,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+        children: [
+          _SectionHeader(l.myGroups),
+          ...provider.groups.map((g) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _GroupCard(group: g),
+              )),
+        ],
+      ),
     );
   }
 
@@ -98,16 +233,13 @@ class _GroupsScreenState extends State<GroupsScreen> {
             onPressed: () async {
               final code = ctrl.text.trim();
               if (code.length != 8) return;
-              Navigator.pop(ctx);
-              final group =
-                  await context.read<GroupProvider>().joinByCode(code);
-              if (!mounted) return;
+              final provider = context.read<GroupProvider>();
               final messenger = ScaffoldMessenger.of(context);
+              Navigator.pop(ctx);
+              final group = await provider.joinByCode(code);
+              if (!mounted) return;
               if (group != null) {
-                messenger.showSnackBar(SnackBar(
-                  content: Text(l.joinedGroup(group.name)),
-                  backgroundColor: GameOnBrand.saffron,
-                ));
+                showSuccessSnackBar(this.context, l.joinedGroup(group.name));
               } else {
                 messenger.showSnackBar(SnackBar(
                   content: Text(l.invalidGroupCode),
@@ -122,6 +254,248 @@ class _GroupsScreenState extends State<GroupsScreen> {
     );
   }
 }
+
+// ─── Section header ──────────────────────────────────────────────────────
+
+class _SectionHeader extends StatelessWidget {
+  final String text;
+  const _SectionHeader(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 8, 0, 10),
+      child: Text(
+        text.toUpperCase(),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.2,
+          color:
+              Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Player result tile ──────────────────────────────────────────────────
+
+class _PlayerTile extends StatelessWidget {
+  final Profile profile;
+  const _PlayerTile({required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    final initial =
+        profile.username.isNotEmpty ? profile.username[0].toUpperCase() : '?';
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: CircleAvatar(
+        radius: 22,
+        backgroundColor: GameOnBrand.saffron.withValues(alpha: 0.15),
+        backgroundImage: profile.avatarUrl != null
+            ? CachedNetworkImageProvider(profile.avatarUrl!)
+            : null,
+        child: profile.avatarUrl == null
+            ? Text(
+                initial,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  color: GameOnBrand.saffron,
+                ),
+              )
+            : null,
+      ),
+      title: Text(profile.username,
+          style: const TextStyle(fontWeight: FontWeight.w700)),
+      subtitle: profile.bio != null && profile.bio!.isNotEmpty
+          ? Text(
+              profile.bio!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+            )
+          : null,
+      onTap: () => context.push('/player/${profile.id}'),
+    );
+  }
+}
+
+// ─── Group visibility badge ──────────────────────────────────────────────
+
+class _VisibilityBadge extends StatelessWidget {
+  final GroupVisibility visibility;
+  const _VisibilityBadge({required this.visibility});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final (IconData icon, String label) = switch (visibility) {
+      GroupVisibility.public => (Icons.public_rounded, l.visibilityPublic),
+      GroupVisibility.private => (Icons.lock_rounded, l.visibilityPrivate),
+      GroupVisibility.inviteOnly =>
+        (Icons.how_to_reg_rounded, l.visibilityInviteOnly),
+    };
+    final color = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 12, color: color),
+        const SizedBox(width: 3),
+        Text(label,
+            style: TextStyle(
+                fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+      ],
+    );
+  }
+}
+
+// ─── Group search result card (with join action) ─────────────────────────
+
+class _GroupSearchCard extends StatelessWidget {
+  final Group group;
+  const _GroupSearchCard({required this.group});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
+    final provider = context.watch<GroupProvider>();
+    final isMember = provider.isMember(group.id);
+    final isRequested = provider.hasPendingRequest(group.id);
+
+    return GestureDetector(
+      onTap: isMember ? () => context.push('/groups/${group.id}') : null,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: GameOnBrand.saffron.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.group_rounded,
+                  color: GameOnBrand.saffron, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(group.name,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w800, fontSize: 14)),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      _VisibilityBadge(visibility: group.visibility),
+                      const SizedBox(width: 10),
+                      Icon(Icons.people_outline_rounded,
+                          size: 12,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.4)),
+                      const SizedBox(width: 3),
+                      Text(
+                        '${group.memberCount}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            _actionButton(context, l, provider, isMember, isRequested),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _actionButton(BuildContext context, AppLocalizations l,
+      GroupProvider provider, bool isMember, bool isRequested) {
+    if (isMember) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: Colors.green.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(l.member,
+            style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: Colors.green)),
+      );
+    }
+    switch (group.visibility) {
+      case GroupVisibility.public:
+        return FilledButton(
+          onPressed: () async {
+            final ok = await provider.joinPublicGroup(group);
+            if (context.mounted && ok) {
+              showSuccessSnackBar(context, l.joinedGroup(group.name));
+            }
+          },
+          style: FilledButton.styleFrom(
+            backgroundColor: GameOnBrand.saffron,
+            foregroundColor: GameOnBrand.slateDark,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            minimumSize: const Size(0, 34),
+          ),
+          child: Text(l.join,
+              style: const TextStyle(
+                  fontSize: 12, fontWeight: FontWeight.w800)),
+        );
+      case GroupVisibility.inviteOnly:
+        return isRequested
+            ? Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: GameOnBrand.saffron.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(l.requested,
+                    style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: GameOnBrand.saffron)),
+              )
+            : OutlinedButton(
+                onPressed: () => provider.requestToJoin(group),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: GameOnBrand.saffron,
+                  side: BorderSide(
+                      color: GameOnBrand.saffron.withValues(alpha: 0.6)),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  minimumSize: const Size(0, 34),
+                ),
+                child: Text(l.requestToJoin,
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w800)),
+              );
+      case GroupVisibility.private:
+        // Private groups never appear in search, but guard anyway.
+        return const SizedBox.shrink();
+    }
+  }
+}
+
+// ─── My-group card ────────────────────────────────────────────────────────
 
 class _GroupCard extends StatelessWidget {
   final Group group;
@@ -175,7 +549,28 @@ class _GroupCard extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: 6),
-                  _InviteCodeBadge(code: group.inviteCode),
+                  Row(
+                    children: [
+                      _VisibilityBadge(visibility: group.visibility),
+                      const SizedBox(width: 12),
+                      _InviteCodeBadge(code: group.inviteCode),
+                      const SizedBox(width: 12),
+                      Icon(Icons.people_outline_rounded,
+                          size: 13,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.4)),
+                      const SizedBox(width: 3),
+                      Text(
+                        '${group.memberCount}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),

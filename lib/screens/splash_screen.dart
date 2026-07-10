@@ -1,11 +1,17 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../l10n/app_localizations.dart';
 import '../widgets/game_on_logo.dart';
 
 // ════════════════════════════════════════════════════════════
-// SPLASH SCREEN
+// SPLASH SCREEN — "Unison Click" animation
+//
+// Two halves slide in from opposite corners, land together,
+// the whole logo punches up with a saffron glow, and a ring
+// pulses outward.  Total ≈ 1.4 s then navigates to '/'.
 // ════════════════════════════════════════════════════════════
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -14,30 +20,105 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
+  // Master controller — 1.4 s
   late final AnimationController _ctrl = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 1400));
 
-  // Logo: fade in early
-  late final Animation<double> _logoFade = CurvedAnimation(
-      parent: _ctrl,
-      curve: const Interval(0.0, 0.35, curve: Curves.easeOut));
+  // ── Half-one: slides from bottom-left ────────────────────
+  late final Animation<Offset> _half1Offset =
+      Tween<Offset>(begin: const Offset(-90, 44), end: Offset.zero).animate(
+          CurvedAnimation(
+              parent: _ctrl,
+              curve: const Interval(0.0, 0.52,
+                  curve: Curves.easeOutBack)));
 
-  // Logo: subtle scale 0.92→1.0 — minimal bitmap interpolation
-  late final Animation<double> _logoScale =
-      Tween<double>(begin: 0.92, end: 1.0).animate(CurvedAnimation(
+  late final Animation<double> _half1Opacity = TweenSequence<double>([
+    TweenSequenceItem(tween: Tween(begin: 0.0, end: 0.0), weight: 1),
+    TweenSequenceItem(
+        tween: Tween(begin: 0.0, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 15),
+    TweenSequenceItem(tween: ConstantTween(1.0), weight: 84),
+  ]).animate(_ctrl);
+
+  late final Animation<double> _half1Rot =
+      Tween<double>(begin: -14 * math.pi / 180, end: 0).animate(
+          CurvedAnimation(
+              parent: _ctrl,
+              curve: const Interval(0.0, 0.52,
+                  curve: Curves.easeOutBack)));
+
+  // ── Half-two: slides from top-right ──────────────────────
+  late final Animation<Offset> _half2Offset =
+      Tween<Offset>(begin: const Offset(90, -44), end: Offset.zero).animate(
+          CurvedAnimation(
+              parent: _ctrl,
+              curve: const Interval(0.0, 0.52,
+                  curve: Curves.easeOutBack)));
+
+  late final Animation<double> _half2Opacity = TweenSequence<double>([
+    TweenSequenceItem(tween: Tween(begin: 0.0, end: 0.0), weight: 1),
+    TweenSequenceItem(
+        tween: Tween(begin: 0.0, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 15),
+    TweenSequenceItem(tween: ConstantTween(1.0), weight: 84),
+  ]).animate(_ctrl);
+
+  late final Animation<double> _half2Rot =
+      Tween<double>(begin: -14 * math.pi / 180, end: 0).animate(
+          CurvedAnimation(
+              parent: _ctrl,
+              curve: const Interval(0.0, 0.52,
+                  curve: Curves.easeOutBack)));
+
+  // ── Unison punch: scale + glow after halves land ─────────
+  late final Animation<double> _unisonScale = TweenSequence<double>([
+    TweenSequenceItem(tween: ConstantTween(1.0), weight: 66),
+    TweenSequenceItem(
+        tween: Tween(begin: 1.0, end: 1.06)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 12),
+    TweenSequenceItem(
+        tween: Tween(begin: 1.06, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 22),
+  ]).animate(_ctrl);
+
+  late final Animation<double> _glowIntensity = TweenSequence<double>([
+    TweenSequenceItem(tween: ConstantTween(0.0), weight: 66),
+    TweenSequenceItem(
+        tween: Tween(begin: 0.0, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 12),
+    TweenSequenceItem(
+        tween: Tween(begin: 1.0, end: 0.35)
+            .chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 22),
+  ]).animate(_ctrl);
+
+  // ── Pulse ring ───────────────────────────────────────────
+  late final Animation<double> _pulseRadius = Tween<double>(begin: 0.29, end: 0.66)
+      .animate(CurvedAnimation(
           parent: _ctrl,
-          curve: const Interval(0.0, 0.55, curve: Curves.easeOutCubic)));
+          curve: const Interval(0.47, 0.85, curve: Curves.easeOut)));
 
-  // Glow blooms after logo lands
-  late final Animation<double> _glowA = CurvedAnimation(
-      parent: _ctrl,
-      curve: const Interval(0.30, 0.75, curve: Curves.easeOut));
+  late final Animation<double> _pulseOpacity = Tween<double>(begin: 0.8, end: 0.0)
+      .animate(CurvedAnimation(
+          parent: _ctrl,
+          curve: const Interval(0.47, 0.85, curve: Curves.easeOut)));
 
-  // Text slides up and fades in last
+  late final Animation<double> _pulseStroke =
+      Tween<double>(begin: 26, end: 2).animate(CurvedAnimation(
+          parent: _ctrl,
+          curve: const Interval(0.47, 0.85, curve: Curves.easeOut)));
+
+  // ── Wordmark ─────────────────────────────────────────────
   late final Animation<double> _txtFade = CurvedAnimation(
       parent: _ctrl,
       curve: const Interval(0.50, 0.85, curve: Curves.easeOut));
+
   late final Animation<Offset> _txtSlide =
       Tween<Offset>(begin: const Offset(0, 0.35), end: Offset.zero).animate(
           CurvedAnimation(
@@ -53,7 +134,7 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _runSequence() async {
     await Future.delayed(const Duration(milliseconds: 150));
     await _ctrl.forward();
-    await Future.delayed(const Duration(milliseconds: 1000));
+    await Future.delayed(const Duration(milliseconds: 900));
     if (!mounted) return;
     context.go('/');
   }
@@ -65,24 +146,24 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        backgroundColor: GameOnBrand.slateDark,
-        body: Stack(
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: GameOnBrand.slateDark,
+      body: AnimatedBuilder(
+        animation: _ctrl,
+        builder: (_, __) => Stack(
           children: [
-            // Subtle radial background bloom centred on logo
-            AnimatedBuilder(
-              animation: _glowA,
-              builder: (_, __) => Container(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: const Alignment(0, -0.12),
-                    radius: 0.85,
-                    colors: [
-                      GameOnBrand.saffron
-                          .withValues(alpha: 0.08 * _glowA.value),
-                      Colors.transparent,
-                    ],
-                  ),
+            // Background radial glow
+            Container(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(0, -0.12),
+                  radius: 0.85,
+                  colors: [
+                    GameOnBrand.saffron
+                        .withValues(alpha: 0.10 * _glowIntensity.value),
+                    Colors.transparent,
+                  ],
                 ),
               ),
             ),
@@ -91,17 +172,82 @@ class _SplashScreenState extends State<SplashScreen>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Logo — FadeTransition + ScaleTransition avoid offscreen
-                  // rasterisation that causes bitmap blur.
-                  FadeTransition(
-                    opacity: _logoFade,
-                    child: ScaleTransition(
-                      scale: _logoScale,
-                      child: _GlowingLogo(glowAnimation: _glowA),
+                  // Animated logo
+                  Transform.scale(
+                    scale: _unisonScale.value,
+                    child: SizedBox(
+                      width: 200,
+                      height: 200,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Pulse ring
+                          CustomPaint(
+                            size: const Size(200, 200),
+                            painter: _PulseRingPainter(
+                              radius: _pulseRadius.value,
+                              opacity: _pulseOpacity.value,
+                              strokeWidth: _pulseStroke.value,
+                            ),
+                          ),
+                          // Glow behind logo
+                          Container(
+                            width: 160,
+                            height: 160,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: GameOnBrand.saffron.withValues(
+                                      alpha: 0.55 * _glowIntensity.value),
+                                  blurRadius: 72,
+                                  spreadRadius: 12,
+                                ),
+                                BoxShadow(
+                                  color: GameOnBrand.saffron.withValues(
+                                      alpha: 0.22 * _glowIntensity.value),
+                                  blurRadius: 110,
+                                  spreadRadius: 28,
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Half one (original path)
+                          Transform(
+                            transform: Matrix4.identity()
+                              ..translateByDouble(
+                                  _half1Offset.value.dx, _half1Offset.value.dy, 0, 1)
+                              ..rotateZ(_half1Rot.value),
+                            alignment: Alignment.center,
+                            child: Opacity(
+                              opacity: _half1Opacity.value,
+                              child: CustomPaint(
+                                size: const Size(160, 160),
+                                painter: _LogoHalfPainter(rotated: false),
+                              ),
+                            ),
+                          ),
+                          // Half two (180° rotated path)
+                          Transform(
+                            transform: Matrix4.identity()
+                              ..translateByDouble(
+                                  _half2Offset.value.dx, _half2Offset.value.dy, 0, 1)
+                              ..rotateZ(_half2Rot.value),
+                            alignment: Alignment.center,
+                            child: Opacity(
+                              opacity: _half2Opacity.value,
+                              child: CustomPaint(
+                                size: const Size(160, 160),
+                                painter: _LogoHalfPainter(rotated: true),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 28),
-                  // Wordmark — slide + fade
+                  // Wordmark
                   SlideTransition(
                     position: _txtSlide,
                     child: FadeTransition(
@@ -122,44 +268,122 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           ],
         ),
-      );
-}
-
-class _GlowingLogo extends StatelessWidget {
-  final Animation<double> glowAnimation;
-
-  const _GlowingLogo({required this.glowAnimation});
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: glowAnimation,
-      builder: (_, child) {
-        final g = glowAnimation.value;
-        return Container(
-          width: 160,
-          height: 160,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: GameOnBrand.saffron.withValues(alpha: 0.50 * g),
-                blurRadius: 72,
-                spreadRadius: 12,
-              ),
-              BoxShadow(
-                color: GameOnBrand.saffron.withValues(alpha: 0.20 * g),
-                blurRadius: 110,
-                spreadRadius: 28,
-              ),
-            ],
-          ),
-          child: child,
-        );
-      },
-      child: const GameOnLogo(size: 160),
+      ),
     );
   }
+}
+
+// ────────────────────────────────────────────────────────────
+// Pulse ring painter
+// ────────────────────────────────────────────────────────────
+
+class _PulseRingPainter extends CustomPainter {
+  final double radius; // fraction of half-width
+  final double opacity;
+  final double strokeWidth;
+
+  const _PulseRingPainter({
+    required this.radius,
+    required this.opacity,
+    required this.strokeWidth,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (opacity <= 0) return;
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final r = radius * size.width;
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..color = GameOnBrand.saffron.withValues(alpha: opacity);
+    canvas.drawCircle(Offset(cx, cy), r, paint);
+  }
+
+  @override
+  bool shouldRepaint(_PulseRingPainter o) =>
+      o.radius != radius || o.opacity != opacity || o.strokeWidth != strokeWidth;
+}
+
+// ────────────────────────────────────────────────────────────
+// Logo half painter — draws one half of the GameOn logo
+// using the exact SVG path data.
+//
+// The SVG viewBox is 0 0 512 512.  We scale to fit `size`.
+// When `rotated` is true the path is rotated 180° around
+// the SVG centre (256, 256) — matching `<use …
+// transform="rotate(180 256 256)"/>`.
+// ────────────────────────────────────────────────────────────
+
+class _LogoHalfPainter extends CustomPainter {
+  final bool rotated;
+
+  _LogoHalfPainter({required this.rotated});
+
+  // Parsed once — the path from the SVG.
+  static final Path _halfPath = _buildHalfPath();
+
+  static Path _buildHalfPath() {
+    // Outer contour
+    final p = Path()
+      ..moveTo(312.5, 286.1)
+      // A 11.5 11.5 0 0 0 313.3 281.9
+      ..arcToPoint(const Offset(313.3, 281.9),
+          radius: const Radius.circular(11.5), largeArc: false, clockwise: false)
+      // A 144.7 144.7 0 0 0 314.8 270.4
+      ..arcToPoint(const Offset(314.8, 270.4),
+          radius: const Radius.circular(144.7), largeArc: false, clockwise: false)
+      ..lineTo(225.7, 270.4)
+      ..lineTo(225.7, 278.3)
+      // A 24.5 24.5 0 0 1 201.2 302.8
+      ..arcToPoint(const Offset(201.2, 302.8),
+          radius: const Radius.circular(24.5), largeArc: false, clockwise: true)
+      // A 24.5 24.5 0 0 1 176.6 278.3
+      ..arcToPoint(const Offset(176.6, 278.3),
+          radius: const Radius.circular(24.5), largeArc: false, clockwise: true)
+      ..lineTo(163.1, 278.3)
+      ..lineTo(163.1, 112.8)
+      // A 144.7 144.7 0 0 0 61.1 351.8
+      ..arcToPoint(const Offset(61.1, 351.8),
+          radius: const Radius.circular(144.7), largeArc: false, clockwise: false)
+      // A 144.7 144.7 0 0 0 312.5 286.1
+      ..arcToPoint(const Offset(312.5, 286.1),
+          radius: const Radius.circular(144.7), largeArc: false, clockwise: false)
+      ..close();
+
+    // Inner cutout (the hole)
+    p.moveTo(252.2, 293.5);
+    p.lineTo(276.2, 293.5);
+    // A 106.7 106.7 0 0 1 65.8 296.8
+    p.arcToPoint(const Offset(65.8, 296.8),
+        radius: const Radius.circular(106.7), largeArc: false, clockwise: true);
+    p.lineTo(151.2, 296.8);
+    // A 53.2 53.2 0 0 0 252.2 293.5
+    p.arcToPoint(const Offset(252.2, 293.5),
+        radius: const Radius.circular(53.2), largeArc: false, clockwise: false);
+    p.close();
+
+    p.fillType = PathFillType.evenOdd;
+    return p;
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scale = size.width / 512;
+    canvas.save();
+    canvas.scale(scale, scale);
+    if (rotated) {
+      canvas.translate(256, 256);
+      canvas.rotate(math.pi);
+      canvas.translate(-256, -256);
+    }
+    canvas.drawPath(_halfPath, Paint()..color = Colors.white);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_LogoHalfPainter o) => o.rotated != rotated;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -225,9 +449,9 @@ class _LoadingScreenState extends State<LoadingScreen>
                   const SizedBox(height: 30),
                   Opacity(
                     opacity: txtOp,
-                    child: const Text(
-                      'Loading...',
-                      style: TextStyle(
+                    child: Text(
+                      AppLocalizations.of(context)?.loading ?? 'Loading...',
+                      style: const TextStyle(
                         color: Color(0xFFE2E8F0),
                         fontSize: 17,
                         fontWeight: FontWeight.w400,

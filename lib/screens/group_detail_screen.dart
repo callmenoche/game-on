@@ -7,6 +7,7 @@ import '../models/group.dart';
 import '../providers/auth_provider.dart';
 import '../providers/group_provider.dart';
 import '../services/group_service.dart';
+import '../services/supabase_client.dart';
 import '../widgets/game_on_logo.dart';
 
 class GroupDetailScreen extends StatefulWidget {
@@ -20,6 +21,7 @@ class GroupDetailScreen extends StatefulWidget {
 class _GroupDetailScreenState extends State<GroupDetailScreen> {
   final _groupService = GroupService();
   Map<String, dynamic> _members = {};
+  List<Map<String, String>> _pendingRequests = [];
   bool _loadingMembers = false;
 
   Group? _findGroup(GroupProvider p) {
@@ -33,14 +35,38 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     _loadMembers();
   }
 
+  bool get _amIAdmin {
+    final me = SupabaseService.currentUser?.id;
+    final info = _members[me];
+    return info is Map && info['role'] == 'admin';
+  }
+
   Future<void> _loadMembers() async {
     setState(() => _loadingMembers = true);
     try {
       final data = await _groupService.fetchMembersWithRoles(widget.groupId);
+      if (!mounted) return;
       setState(() => _members = data);
+      await _loadPendingRequests();
     } finally {
-      setState(() => _loadingMembers = false);
+      if (mounted) setState(() => _loadingMembers = false);
     }
+  }
+
+  Future<void> _loadPendingRequests() async {
+    if (!_amIAdmin) return;
+    try {
+      final requests =
+          await _groupService.fetchPendingRequests(widget.groupId);
+      if (mounted) setState(() => _pendingRequests = requests);
+    } catch (_) {
+      // Non-admins get an empty list via RLS anyway.
+    }
+  }
+
+  Future<void> _respond(String requestId, bool accept) async {
+    await _groupService.respondToRequest(requestId, accept: accept);
+    await _loadMembers();
   }
 
   Future<void> _leave() async {
@@ -186,6 +212,80 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                     fontSize: 14,
                     color:
                         theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                  )),
+            ],
+
+            // ── Pending join requests (admins of invite-only groups) ──────
+            if (_amIAdmin && _pendingRequests.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Text(AppLocalizations.of(context)!.joinRequests,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w800, fontSize: 15)),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: GameOnBrand.saffron.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${_pendingRequests.length}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: GameOnBrand.saffron,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ..._pendingRequests.map((r) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundColor:
+                              GameOnBrand.saffron.withValues(alpha: 0.2),
+                          child: Text(
+                            r['username']!.isNotEmpty
+                                ? r['username']![0].toUpperCase()
+                                : '?',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              color: GameOnBrand.saffron,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () =>
+                                context.push('/player/${r['userId']}'),
+                            child: Text(r['username']!,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600)),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.check_circle_rounded,
+                              color: Colors.green, size: 26),
+                          tooltip: AppLocalizations.of(context)!.accept,
+                          onPressed: () => _respond(r['id']!, true),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.cancel_rounded,
+                              color: Colors.redAccent.withValues(alpha: 0.7),
+                              size: 26),
+                          tooltip: AppLocalizations.of(context)!.decline,
+                          onPressed: () => _respond(r['id']!, false),
+                        ),
+                      ],
+                    ),
                   )),
             ],
 

@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/match.dart';
 import '../services/match_service.dart';
 import '../services/supabase_client.dart';
+import '../utils/error_helpers.dart';
 
 enum DateFilter { upcoming, today, next7, next30, custom }
 enum FeedMode { public, groups }
@@ -28,6 +29,12 @@ class MatchProvider extends ChangeNotifier {
   FeedMode _feedMode = FeedMode.public;
   double _distanceKm = 10.0;
   DateTimeRange? _customDateRange;
+  // User context injected from ProfileProvider (see main.dart ProxyProvider):
+  // favorite sports float to the top of the feed; the default location is
+  // the distance-sort reference when GPS hasn't been requested.
+  Set<String> _favoriteSports = {};
+  double? _homeLat;
+  double? _homeLng;
   final Set<String> _joinedIds = {};
   RealtimeChannel? _channel;
   StreamSubscription? _authSub;
@@ -64,7 +71,30 @@ class MatchProvider extends ChangeNotifier {
                   _distanceKm)
           .toList();
     }
-    return result;
+    return _sortForFeed(result);
+  }
+
+  /// Feed ordering: favorite sports first, then soonest, then closest.
+  List<Match> _sortForFeed(List<Match> list) {
+    final refLat = _userLat ?? _homeLat;
+    final refLng = _userLng ?? _homeLng;
+    final sorted = List<Match>.of(list);
+    sorted.sort((a, b) {
+      final aFav = _favoriteSports.contains(a.sportType.name);
+      final bFav = _favoriteSports.contains(b.sportType.name);
+      if (aFav != bFav) return aFav ? -1 : 1;
+      final byTime = a.dateTime.compareTo(b.dateTime);
+      if (byTime != 0) return byTime;
+      if (refLat == null) return 0;
+      final aDist = a.geoLat == null
+          ? double.infinity
+          : _haversineKm(refLat, refLng!, a.geoLat!, a.geoLng!);
+      final bDist = b.geoLat == null
+          ? double.infinity
+          : _haversineKm(refLat, refLng!, b.geoLat!, b.geoLng!);
+      return aDist.compareTo(bDist);
+    });
+    return sorted;
   }
 
   bool get isLoading => _isLoading;
@@ -126,7 +156,7 @@ class MatchProvider extends ChangeNotifier {
       _hasMore = _allMatches.length >= MatchService.pageSize;
       _error = null;
     } catch (_) {
-      _error = 'Failed to load matches.';
+      _error = 'could_not_load_matches';
     } finally {
       _setLoading(false);
     }
@@ -195,7 +225,7 @@ class MatchProvider extends ChangeNotifier {
     } catch (e) {
       _joinedIds.remove(matchId);
       _updateMatchLocally(matchId, delta: 1);
-      _error = e.toString();
+      _error = classifyMatchError(e);
       notifyListeners();
       return false;
     }
@@ -212,7 +242,7 @@ class MatchProvider extends ChangeNotifier {
     } catch (e) {
       _joinedIds.remove(matchId);
       _updateMatchLocally(matchId, delta: total);
-      _error = e.toString();
+      _error = classifyMatchError(e);
       notifyListeners();
       return false;
     }
@@ -224,9 +254,9 @@ class MatchProvider extends ChangeNotifier {
     try {
       await _service.addGuestSpots(matchId, count);
       return true;
-    } catch (e) {
+    } catch (_) {
       _updateMatchLocally(matchId, delta: count);
-      _error = e.toString();
+      _error = 'could_not_add_guests';
       notifyListeners();
       return false;
     }
@@ -239,7 +269,7 @@ class MatchProvider extends ChangeNotifier {
       await fetchMatches();
       return true;
     } catch (_) {
-      _error = 'Invalid code or spot already taken.';
+      _error = 'invalid_claim';
       notifyListeners();
       return false;
     }
@@ -255,7 +285,7 @@ class MatchProvider extends ChangeNotifier {
     } catch (_) {
       _joinedIds.add(matchId);
       _updateMatchLocally(matchId, delta: -1);
-      _error = 'Could not leave match.';
+      _error = 'could_not_leave';
       notifyListeners();
       return false;
     }
@@ -289,6 +319,7 @@ class MatchProvider extends ChangeNotifier {
     String? groupId,
     String? title,
     String? description,
+    List<String>? allowedGenders,
   }) async {
     final userId = SupabaseService.currentUser?.id;
     if (userId == null) return false;
@@ -309,6 +340,7 @@ class MatchProvider extends ChangeNotifier {
       groupId: groupId,
       title: title,
       description: description,
+      allowedGenders: allowedGenders,
     );
 
     try {
@@ -321,8 +353,8 @@ class MatchProvider extends ChangeNotifier {
       _joinedIds.add(created.id);
       await fetchMatches();
       return true;
-    } catch (e) {
-      _error = e.toString();
+    } catch (_) {
+      _error = 'could_not_create';
       notifyListeners();
       return false;
     }
@@ -345,10 +377,30 @@ class MatchProvider extends ChangeNotifier {
         _allMatches[idx] = _allMatches[idx].copyWith();
         notifyListeners();
       }
-      _error = 'Could not confirm match.';
+      _error = 'could_not_confirm';
       notifyListeners();
       return false;
     }
+  }
+
+  /// Called whenever the profile changes (favorites / default location).
+  void updateUserContext({
+    required List<String> favoriteSports,
+    double? homeLat,
+    double? homeLng,
+  }) {
+    final favs = favoriteSports.toSet();
+    if (favs.length == _favoriteSports.length &&
+        favs.containsAll(_favoriteSports) &&
+        homeLat == _homeLat &&
+        homeLng == _homeLng) {
+      return; // nothing changed — avoid notify loops
+    }
+    _favoriteSports = favs;
+    _homeLat = homeLat;
+    _homeLng = homeLng;
+    // Deferred: this is called from ProxyProvider.update during build.
+    scheduleMicrotask(notifyListeners);
   }
 
   void setSportFilter(SportType? sport) {
@@ -382,14 +434,30 @@ class MatchProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> toggleDistanceFilter() async {
-    if (_distanceFilterEnabled) {
-      _distanceFilterEnabled = false;
-      notifyListeners();
-      return;
+  /// Enables the distance filter at [km], fetching the GPS position if needed.
+  Future<void> enableDistanceFilter(double km) async {
+    _distanceKm = km;
+    if (!_distanceFilterEnabled) {
+      await _fetchUserLocation();
+      _distanceFilterEnabled = _userLat != null;
     }
-    await _fetchUserLocation();
-    _distanceFilterEnabled = _userLat != null;
+    notifyListeners();
+  }
+
+  void disableDistanceFilter() {
+    _distanceFilterEnabled = false;
+    notifyListeners();
+  }
+
+  /// Number of non-default sheet-managed filters (shown as a badge).
+  int get activeFilterCount =>
+      (_dateFilter != DateFilter.upcoming ? 1 : 0) +
+      (_distanceFilterEnabled ? 1 : 0);
+
+  void resetFilters() {
+    _dateFilter = DateFilter.upcoming;
+    _customDateRange = null;
+    _distanceFilterEnabled = false;
     notifyListeners();
   }
 

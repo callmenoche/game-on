@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
+import '../models/group.dart';
 import '../providers/group_provider.dart';
 import '../widgets/game_on_logo.dart';
 
@@ -16,6 +17,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
+  GroupVisibility _visibility = GroupVisibility.private;
   bool _isSubmitting = false;
 
   @override
@@ -33,6 +35,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     final group = await context.read<GroupProvider>().createGroup(
           _nameCtrl.text.trim(),
           desc.isEmpty ? null : desc,
+          visibility: _visibility,
         );
 
     if (!mounted) return;
@@ -107,9 +110,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
             TextFormField(
               controller: _nameCtrl,
               textCapitalization: TextCapitalization.words,
-              decoration: const InputDecoration(
-                hintText: 'e.g. Acme Corp Sports Club',
-                prefixIcon: Icon(Icons.group_rounded, size: 20),
+              decoration: InputDecoration(
+                hintText: l.exampleGroupName,
+                prefixIcon: const Icon(Icons.group_rounded, size: 20),
               ),
               validator: (v) =>
                   (v == null || v.trim().isEmpty) ? l.groupName : null,
@@ -121,13 +124,20 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
               controller: _descCtrl,
               maxLines: 3,
               maxLength: 200,
-              decoration: const InputDecoration(
-                hintText: 'What is this group about?',
-                prefixIcon: Padding(
+              decoration: InputDecoration(
+                hintText: l.groupAboutHint,
+                prefixIcon: const Padding(
                   padding: EdgeInsets.only(bottom: 40),
                   child: Icon(Icons.description_rounded, size: 20),
                 ),
               ),
+            ),
+            const SizedBox(height: 20),
+            _label(l.groupVisibility),
+            const SizedBox(height: 10),
+            _VisibilityPicker(
+              selected: _visibility,
+              onChanged: (v) => setState(() => _visibility = v),
             ),
             const SizedBox(height: 32),
             FilledButton(
@@ -165,4 +175,93 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
           color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45),
         ),
       );
+}
+
+// ─── Visibility picker ───────────────────────────────────────────────────
+
+class _VisibilityPicker extends StatelessWidget {
+  final GroupVisibility selected;
+  final ValueChanged<GroupVisibility> onChanged;
+
+  const _VisibilityPicker({required this.selected, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final options = [
+      (GroupVisibility.public, Icons.public_rounded, l.visibilityPublic,
+          l.visibilityPublicDesc),
+      (GroupVisibility.private, Icons.lock_rounded, l.visibilityPrivate,
+          l.visibilityPrivateDesc),
+      (
+        GroupVisibility.inviteOnly,
+        Icons.how_to_reg_rounded,
+        l.visibilityInviteOnly,
+        l.visibilityInviteOnlyDesc
+      ),
+    ];
+
+    return Column(
+      children: options.map((o) {
+        final (value, icon, title, desc) = o;
+        final isSelected = value == selected;
+        final theme = Theme.of(context);
+        return GestureDetector(
+          onTap: () => onChanged(value),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 120),
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? GameOnBrand.saffron.withValues(alpha: 0.10)
+                  : GameOnBrand.slateCard,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isSelected
+                    ? GameOnBrand.saffron
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.12),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(icon,
+                    size: 22,
+                    color: isSelected
+                        ? GameOnBrand.saffron
+                        : theme.colorScheme.onSurface
+                            .withValues(alpha: 0.5)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                            color: isSelected
+                                ? GameOnBrand.saffron
+                                : theme.colorScheme.onSurface,
+                          )),
+                      const SizedBox(height: 2),
+                      Text(desc,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.5),
+                          )),
+                    ],
+                  ),
+                ),
+                if (isSelected)
+                  const Icon(Icons.check_circle_rounded,
+                      color: GameOnBrand.saffron, size: 20),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
 }

@@ -123,6 +123,7 @@ class Match {
   final String? groupId; // null = public match
   final String? title;
   final String? description;
+  final List<String>? allowedGenders; // null = unrestricted
   final String? creatorUsername;
   final String? creatorAvatarUrl;
 
@@ -144,9 +145,13 @@ class Match {
     this.groupId,
     this.title,
     this.description,
+    this.allowedGenders,
     this.creatorUsername,
     this.creatorAvatarUrl,
   });
+
+  bool get isGenderRestricted =>
+      allowedGenders != null && allowedGenders!.isNotEmpty;
 
   bool get isUnlimited => totalSpots == null;
   bool get isConfirmed => confirmedAt != null;
@@ -191,6 +196,9 @@ class Match {
         groupId: json['group_id'] as String?,
         title: json['title'] as String?,
         description: json['description'] as String?,
+        allowedGenders: (json['allowed_genders'] as List<dynamic>?)
+            ?.map((e) => e as String)
+            .toList(),
         creatorUsername: (json['profiles'] as Map<String, dynamic>?)?['username'] as String?,
         creatorAvatarUrl: (json['profiles'] as Map<String, dynamic>?)?['avatar_url'] as String?,
       );
@@ -211,6 +219,7 @@ class Match {
         if (groupId != null) 'group_id': groupId,
         if (title != null) 'title': title,
         if (description != null) 'description': description,
+        if (allowedGenders != null) 'allowed_genders': allowedGenders,
       };
 
   Match copyWith({
@@ -219,6 +228,7 @@ class Match {
     DateTime? confirmedAt,
     String? title,
     String? description,
+    List<String>? allowedGenders,
     String? creatorUsername,
     String? creatorAvatarUrl,
   }) =>
@@ -240,6 +250,7 @@ class Match {
         groupId: groupId,
         title: title ?? this.title,
         description: description ?? this.description,
+        allowedGenders: allowedGenders ?? this.allowedGenders,
         creatorUsername: creatorUsername ?? this.creatorUsername,
         creatorAvatarUrl: creatorAvatarUrl ?? this.creatorAvatarUrl,
       );
@@ -271,5 +282,19 @@ extension SkillLevelL10n on SkillLevel {
       SkillLevel.expert       => l.skillExpert,
       SkillLevel.allLevels    => l.skillAllLevels,
     };
+  }
+}
+
+extension GenderRestrictionLabel on Match {
+  String genderRestrictionLabel(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    if (!isGenderRestricted) return l.openToAllGenders;
+    final labels = allowedGenders!.map((g) => switch (g) {
+      'M' => l.male,
+      'F' => l.female,
+      'X' => l.nonBinary,
+      _ => g,
+    });
+    return labels.join(', ');
   }
 }

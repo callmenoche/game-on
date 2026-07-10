@@ -58,12 +58,31 @@ dependencies:
   package_info_plus: ^8.0.0
 
   # Crash reporting & performance
-  sentry_flutter: ^8.3.0
+  sentry_flutter: ^9.24.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  flutter_native_splash: ^2.4.0
+  flutter_launcher_icons: ^0.14.1
+
+# Solid colour only — the animated Flutter SplashScreen draws the logo,
+# so the native splash must not flash a static one first.
+flutter_native_splash:
+  color: "#1E293B"
+  android_12:
+    color: "#1E293B"
+
+# Icon sources are generated from the vector logo path —
+# see test/tools/generate_app_icon.dart
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/app_icon.png"
+  remove_alpha_ios: true
+  adaptive_icon_background: "#1E293B"
+  adaptive_icon_foreground: "assets/icons/app_icon_foreground.png"
 
 flutter:
   generate: true

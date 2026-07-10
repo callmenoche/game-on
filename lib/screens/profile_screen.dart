@@ -14,6 +14,7 @@ import '../providers/profile_provider.dart';
 import '../services/match_service.dart';
 import '../services/supabase_client.dart';
 import '../widgets/availability_grid.dart';
+import '../utils/error_helpers.dart';
 import '../widgets/game_on_logo.dart';
 import '../widgets/profile_form_fields.dart';
 import '../widgets/profile_stats.dart';
@@ -203,8 +204,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final err = context.read<ProfileProvider>().error;
     if (err != null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Failed to upload photo. Please try again.'),
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(friendlyError(err, AppLocalizations.of(context)!)),
         backgroundColor: Colors.redAccent,
       ));
       context.read<ProfileProvider>().clearError();
@@ -276,7 +277,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: profile == null && !profileProvider.isLoading
           ? Center(
               child: Text(
-                profileProvider.error ?? 'Could not load profile',
+                friendlyError(profileProvider.error, AppLocalizations.of(context)!),
                 style:
                     TextStyle(color: Colors.white.withValues(alpha: 0.5)),
               ),
