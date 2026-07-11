@@ -34,6 +34,7 @@ class SettingsScreen extends StatelessWidget {
           _SectionHeader(label: l.account, icon: PhosphorIconsLight.user),
           _ChangePasswordTile(),
           _PhoneTile(),
+          const _SignOutTile(),
           _DeleteAccountTile(),
           const _Divider(),
 
@@ -864,6 +865,56 @@ class _VersionLabel extends StatelessWidget {
             ),
           ),
         );
+      },
+    );
+  }
+}
+
+class _SignOutTile extends StatelessWidget {
+  const _SignOutTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
+    final color = theme.colorScheme.onSurface;
+
+    return ListTile(
+      leading: PhosphorIcon(PhosphorIconsLight.signOut,
+          size: 20, color: color.withValues(alpha: 0.7)),
+      title: Text(
+        l.signOutConfirm,
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: color,
+          fontSize: 14,
+        ),
+      ),
+      onTap: () async {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: theme.cardTheme.color,
+            title: Text(l.signOut),
+            content: Text(l.signOutBody),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(l.cancel),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style:
+                    TextButton.styleFrom(foregroundColor: Colors.redAccent),
+                child: Text(l.signOutConfirm),
+              ),
+            ],
+          ),
+        );
+        if (confirmed == true && context.mounted) {
+          await context.read<AuthProvider>().signOut();
+          if (context.mounted) GoRouter.of(context).go('/login');
+        }
       },
     );
   }
