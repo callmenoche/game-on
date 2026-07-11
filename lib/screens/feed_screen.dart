@@ -54,7 +54,7 @@ class _FeedScreenState extends State<FeedScreen> {
         titleSpacing: 0,
         leading: const Padding(
           padding: EdgeInsets.all(10),
-          child: GameOnLogo(size: 32),
+          child: GameOnLogo(size: 32, color: GameOnBrand.saffron),
         ),
         // The brand mark (logo) is enough — the toggle lives here instead of
         // eating a full-height row in the body.
