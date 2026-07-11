@@ -56,6 +56,8 @@ class _FeedScreenState extends State<FeedScreen> {
           padding: EdgeInsets.all(10),
           child: GameOnLogo(size: 32),
         ),
+        // The brand mark (logo) is enough — the toggle lives here instead of
+        // eating a full-height row in the body.
         title: _searchOpen
             ? TextField(
                 controller: _searchCtrl,
@@ -67,18 +69,13 @@ class _FeedScreenState extends State<FeedScreen> {
                   filled: false,
                   contentPadding: EdgeInsets.zero,
                   hintStyle: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)),
+                      color: theme.colorScheme.onSurface
+                          .withValues(alpha: 0.4)),
                 ),
                 onChanged: (q) =>
                     context.read<MatchProvider>().setSearchQuery(q),
               )
-            : Text(
-                AppLocalizations.of(context)!.appTitle,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.5,
-                ),
-              ),
+            : _FeedModeToggle(),
         actions: [
           IconButton(
             icon: Icon(
@@ -106,7 +103,7 @@ class _FeedScreenState extends State<FeedScreen> {
           : null,
       body: Column(
         children: [
-          _FeedModeToggle(),
+          const SizedBox(height: 4),
           _FilterRow(),
           const Divider(height: 1),
           Expanded(child: _MatchList()),
@@ -118,42 +115,42 @@ class _FeedScreenState extends State<FeedScreen> {
 
 // ─── Feed mode toggle ──────────────────────────────────────────────────────
 
+/// Compact Public / My groups toggle — lives in the AppBar title slot.
 class _FeedModeToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<MatchProvider>();
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
-      child: SegmentedButton<FeedMode>(
-        style: SegmentedButton.styleFrom(
-          backgroundColor:
-              Theme.of(context).cardTheme.color?.withValues(alpha: 0.5),
-          selectedBackgroundColor:
-              GameOnBrand.saffron.withValues(alpha: 0.18),
-          selectedForegroundColor: GameOnBrand.saffron,
-          side: BorderSide(
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.15)),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12)),
-        ),
-        segments: [
-          ButtonSegment(
-            value: FeedMode.public,
-            label: Text(AppLocalizations.of(context)!.public),
-            icon: const Icon(Icons.public_rounded, size: 16),
-          ),
-          ButtonSegment(
-            value: FeedMode.groups,
-            label: Text(AppLocalizations.of(context)!.myGroups),
-            icon: const Icon(Icons.lock_rounded, size: 16),
-          ),
-        ],
-        selected: {provider.feedMode},
-        onSelectionChanged: (s) => provider.setFeedMode(s.first),
+    return SegmentedButton<FeedMode>(
+      showSelectedIcon: false,
+      style: SegmentedButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        textStyle:
+            const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+        backgroundColor:
+            Theme.of(context).cardTheme.color?.withValues(alpha: 0.5),
+        selectedBackgroundColor: GameOnBrand.saffron.withValues(alpha: 0.18),
+        selectedForegroundColor: GameOnBrand.saffron,
+        side: BorderSide(
+            color: Theme.of(context)
+                .colorScheme
+                .onSurface
+                .withValues(alpha: 0.15)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
+      segments: [
+        ButtonSegment(
+          value: FeedMode.public,
+          label: Text(AppLocalizations.of(context)!.public),
+        ),
+        ButtonSegment(
+          value: FeedMode.groups,
+          label: Text(AppLocalizations.of(context)!.myGroups),
+        ),
+      ],
+      selected: {provider.feedMode},
+      onSelectionChanged: (s) => provider.setFeedMode(s.first),
     );
   }
 }

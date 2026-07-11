@@ -179,6 +179,7 @@ class AppShell extends StatelessWidget {
         ],
       ),
       bottomNavigationBar: NavigationBar(
+        height: 64,
         selectedIndex: currentIndex,
         onDestinationSelected: (i) => context.go(_paths[i]),
         destinations: List.generate(
