@@ -2229,6 +2229,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sponsored'**
   String get sponsored;
+
+  /// No description provided for @spotsAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available spots'**
+  String get spotsAvailable;
+
+  /// No description provided for @spotsRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Full} =1{1 spot left} other{{count} spots left}}'**
+  String spotsRemaining(int count);
 }
 
 class _AppLocalizationsDelegate

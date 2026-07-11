@@ -1136,4 +1136,19 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get sponsored => 'Patrocinado';
+
+  @override
+  String get spotsAvailable => 'Plazas disponibles';
+
+  @override
+  String spotsRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plazas libres',
+      one: '1 plaza libre',
+      zero: 'Completo',
+    );
+    return '$_temp0';
+  }
 }

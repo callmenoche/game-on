@@ -405,5 +405,10 @@
   "reasonInappropriate": "Contenido inapropiado",
   "reasonFake": "Perfil falso",
   "reportDetailsHint": "Añade detalles (opcional)",
-  "sponsored": "Patrocinado"
+  "sponsored": "Patrocinado",
+  "spotsAvailable": "Plazas disponibles",
+  "spotsRemaining": "{count, plural, =0{Completo} =1{1 plaza libre} other{{count} plazas libres}}",
+  "@spotsRemaining": {
+    "placeholders": { "count": { "type": "int" } }
+  }
 }

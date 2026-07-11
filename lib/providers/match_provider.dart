@@ -14,12 +14,21 @@ import '../utils/error_helpers.dart';
 enum DateFilter { upcoming, today, next7, next30, custom }
 enum FeedMode { public, groups }
 
+/// Lightweight participant info for the feed cards' avatar dots.
+class FeedParticipant {
+  final String? avatarUrl;
+  final bool isGuest; // unclaimed guest spot → generic icon
+
+  const FeedParticipant({this.avatarUrl, required this.isGuest});
+}
+
 class MatchProvider extends ChangeNotifier {
   final _service = MatchService();
   final _sponsoredService = SponsoredPostService();
 
   List<Match> _allMatches = [];
   List<SponsoredPost> _allSponsoredPosts = [];
+  Map<String, List<FeedParticipant>> _cardParticipants = {};
   bool _isLoading = false;
   bool _isLoadingMore = false;
   bool _hasMore = true;
@@ -195,6 +204,8 @@ class MatchProvider extends ChangeNotifier {
       _allMatches = await _service.fetchOpenMatches();
       _hasMore = _allMatches.length >= MatchService.pageSize;
       _error = null;
+      _cardParticipants = {};
+      unawaited(_loadCardParticipants(_allMatches));
     } catch (_) {
       _error = 'could_not_load_matches';
     } finally {
@@ -211,11 +222,61 @@ class MatchProvider extends ChangeNotifier {
       _allMatches.addAll(more);
       _hasMore = more.length >= MatchService.pageSize;
       _error = null;
+      unawaited(_loadCardParticipants(more));
     } catch (_) {
       // Non-fatal — user can scroll to try again
     } finally {
       _isLoadingMore = false;
       notifyListeners();
+    }
+  }
+
+  /// Participants of [matchId] for the feed card avatar dots
+  /// (empty until the batch load completes).
+  List<FeedParticipant> participantsFor(String matchId) =>
+      _cardParticipants[matchId] ?? const [];
+
+  /// Batch-loads participant avatars for a page of matches (2 queries).
+  Future<void> _loadCardParticipants(List<Match> matches) async {
+    if (matches.isEmpty) return;
+    try {
+      final rows = await SupabaseService.table('match_participants')
+          .select('match_id, user_id')
+          .inFilter('match_id', matches.map((m) => m.id).toList());
+
+      final userIds = {
+        for (final r in rows as List)
+          if (r['user_id'] != null) r['user_id'] as String
+      }.toList();
+
+      final avatars = <String, String?>{};
+      if (userIds.isNotEmpty) {
+        final profiles = await SupabaseService.table('profiles')
+            .select('id, avatar_url')
+            .inFilter('id', userIds);
+        for (final p in profiles as List) {
+          avatars[p['id'] as String] = p['avatar_url'] as String?;
+        }
+      }
+
+      final map = <String, List<FeedParticipant>>{};
+      for (final r in rows) {
+        final userId = r['user_id'] as String?;
+        map.putIfAbsent(r['match_id'] as String, () => []).add(
+              FeedParticipant(
+                avatarUrl: userId == null ? null : avatars[userId],
+                isGuest: userId == null,
+              ),
+            );
+      }
+      // Registered players first, unclaimed guest spots last
+      for (final list in map.values) {
+        list.sort((a, b) => (a.isGuest ? 1 : 0) - (b.isGuest ? 1 : 0));
+      }
+      _cardParticipants = {..._cardParticipants, ...map};
+      notifyListeners();
+    } catch (_) {
+      // Non-fatal: cards fall back to plain filled dots.
     }
   }
 

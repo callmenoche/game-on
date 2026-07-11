@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -52,12 +55,13 @@ class _MatchCardState extends State<MatchCard> {
         curve: Curves.easeOut,
         child: Container(
           decoration: BoxDecoration(
+            // Faded sport-coloured wash over the card surface
             gradient: LinearGradient(
               begin: Alignment.topLeft,
-              end: const Alignment(0.6, 1.0),
+              end: Alignment.bottomRight,
               colors: [
-                Color.lerp(baseColor, sportColor, 0.05)!,
-                baseColor,
+                Color.lerp(baseColor, sportColor, isDark ? 0.20 : 0.10)!,
+                Color.lerp(baseColor, sportColor, isDark ? 0.06 : 0.03)!,
               ],
             ),
             borderRadius: BorderRadius.circular(16),
@@ -79,30 +83,48 @@ class _MatchCardState extends State<MatchCard> {
               ),
             ],
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _Header(match: widget.match),
-                if (widget.match.creatorUsername != null) ...[
-                  const SizedBox(height: 8),
-                  _CreatorBadge(
-                    username: widget.match.creatorUsername!,
-                    avatarUrl: widget.match.creatorAvatarUrl,
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              // Big faded sport icon watermark
+              Positioned(
+                right: -18,
+                bottom: -22,
+                child: Transform.rotate(
+                  angle: -math.pi / 14,
+                  child: PhosphorIcon(
+                    widget.match.sportType.icon,
+                    size: 120,
+                    color: sportColor.withValues(alpha: isDark ? 0.09 : 0.07),
                   ),
-                ],
-                const SizedBox(height: 10),
-                _InfoRow(match: widget.match),
-                const SizedBox(height: 14),
-                _Footer(
-                  match: widget.match,
-                  isJoined: widget.isJoined,
-                  onJoin: widget.onJoin,
-                  onLeave: widget.onLeave,
                 ),
-              ],
-            ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _Header(match: widget.match),
+                    if (widget.match.creatorUsername != null) ...[
+                      const SizedBox(height: 8),
+                      _CreatorBadge(
+                        username: widget.match.creatorUsername!,
+                        avatarUrl: widget.match.creatorAvatarUrl,
+                      ),
+                    ],
+                    const SizedBox(height: 10),
+                    _InfoRow(match: widget.match),
+                    const SizedBox(height: 14),
+                    _Footer(
+                      match: widget.match,
+                      isJoined: widget.isJoined,
+                      onJoin: widget.onJoin,
+                      onLeave: widget.onLeave,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -463,24 +485,37 @@ class _SpotsIndicator extends StatelessWidget {
   final Match match;
   const _SpotsIndicator({required this.match});
 
+  static const _maxCircles = 10;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
+    final participants =
+        context.watch<MatchProvider>().participantsFor(match.id);
 
     if (match.isUnlimited) {
-      return Row(
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.all_inclusive_rounded,
-              size: 16,
-              color: GameOnBrand.saffron.withValues(alpha: 0.7)),
-          const SizedBox(width: 6),
-          Text(
-            AppLocalizations.of(context)!.openToAll,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color:
-                  theme.colorScheme.onSurface.withValues(alpha: 0.65),
-              fontWeight: FontWeight.w700,
-            ),
+          if (participants.isNotEmpty) ...[
+            _avatarWrap(context, participants, participants.length),
+            const SizedBox(height: 6),
+          ],
+          Row(
+            children: [
+              Icon(Icons.all_inclusive_rounded,
+                  size: 16,
+                  color: GameOnBrand.saffron.withValues(alpha: 0.7)),
+              const SizedBox(width: 6),
+              Text(
+                l.openToAll,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
           ),
         ],
       );
@@ -488,39 +523,157 @@ class _SpotsIndicator extends StatelessWidget {
 
     final taken = match.spotsTaken;
     final total = match.totalSpots!;
+    final remaining = (total - taken).clamp(0, total);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          AppLocalizations.of(context)!.spotsCount(taken, total),
+          l.spotsAvailable,
           style: theme.textTheme.bodySmall?.copyWith(
-            color:
-                theme.colorScheme.onSurface.withValues(alpha: 0.65),
-            fontWeight: FontWeight.w700,
+            fontSize: 11,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+            fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 5),
+        const SizedBox(height: 6),
+        _avatarWrap(context, participants, total, taken: taken),
+        const SizedBox(height: 6),
         Row(
-          children: List.generate(total, (i) {
-            final filled = i < taken;
-            return Container(
-              margin: const EdgeInsets.only(right: 5),
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: filled
+          children: [
+            Icon(Icons.person_add_alt_1_rounded,
+                size: 14,
+                color: remaining > 0
                     ? GameOnBrand.saffron
-                    : GameOnBrand.saffron.withValues(alpha: 0.18),
-                border: Border.all(
-                  color: GameOnBrand.saffron.withValues(alpha: 0.4),
-                  width: 1,
-                ),
+                    : Colors.redAccent.withValues(alpha: 0.8)),
+            const SizedBox(width: 5),
+            Text(
+              l.spotsRemaining(remaining),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: remaining > 0
+                    ? GameOnBrand.saffron
+                    : Colors.redAccent.withValues(alpha: 0.8),
               ),
-            );
-          }),
+            ),
+          ],
         ),
       ],
+    );
+  }
+
+  /// One circle per spot: participant avatar (golden ring), generic icon for
+  /// unclaimed guest spots, outlined empty circle for free spots.
+  Widget _avatarWrap(BuildContext context, List<FeedParticipant> participants,
+      int total,
+      {int? taken}) {
+    final circles = <Widget>[];
+    final shown = math.min(total, _maxCircles);
+    for (var i = 0; i < shown; i++) {
+      if (i < participants.length) {
+        circles.add(_ParticipantDot(participant: participants[i]));
+      } else if (taken != null && i < taken) {
+        // Participants not loaded yet (or optimistic join): filled fallback
+        circles.add(const _ParticipantDot(participant: null));
+      } else {
+        circles.add(const _EmptyDot());
+      }
+    }
+    if (total > _maxCircles) {
+      circles.add(_OverflowDot(count: total - _maxCircles));
+    }
+    return Wrap(spacing: 5, runSpacing: 5, children: circles);
+  }
+}
+
+class _ParticipantDot extends StatelessWidget {
+  final FeedParticipant? participant; // null = filled fallback
+  const _ParticipantDot({required this.participant});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isGuest = participant?.isGuest ?? false;
+    final avatarUrl = participant?.avatarUrl;
+
+    return Container(
+      width: 24,
+      height: 24,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: isGuest
+              ? theme.colorScheme.onSurface.withValues(alpha: 0.35)
+              : GameOnBrand.saffron,
+          width: 1.5,
+        ),
+        color: isGuest
+            ? theme.colorScheme.onSurface.withValues(alpha: 0.08)
+            : GameOnBrand.saffron.withValues(alpha: 0.18),
+        image: avatarUrl != null
+            ? DecorationImage(
+                image: CachedNetworkImageProvider(avatarUrl),
+                fit: BoxFit.cover,
+              )
+            : null,
+      ),
+      child: avatarUrl == null
+          ? Icon(
+              isGuest ? Icons.person_outline_rounded : Icons.person_rounded,
+              size: 13,
+              color: isGuest
+                  ? theme.colorScheme.onSurface.withValues(alpha: 0.45)
+                  : GameOnBrand.saffron,
+            )
+          : null,
+    );
+  }
+}
+
+class _EmptyDot extends StatelessWidget {
+  const _EmptyDot();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 24,
+      height: 24,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color:
+              Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.25),
+          width: 1.5,
+        ),
+      ),
+    );
+  }
+}
+
+class _OverflowDot extends StatelessWidget {
+  final int count;
+  const _OverflowDot({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      height: 24,
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
+      ),
+      child: Text(
+        '+$count',
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+        ),
+      ),
     );
   }
 }

@@ -1131,4 +1131,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sponsored => 'Sponsored';
+
+  @override
+  String get spotsAvailable => 'Available spots';
+
+  @override
+  String spotsRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count spots left',
+      one: '1 spot left',
+      zero: 'Full',
+    );
+    return '$_temp0';
+  }
 }
