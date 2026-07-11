@@ -205,13 +205,13 @@ class _Header extends StatelessWidget {
                     : match.sportType.l10nLabel(context),
                 style: hasTitle
                     ? theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.onSurface
-                            .withValues(alpha: 0.45),
+                        fontWeight: FontWeight.w700,
+                        color: match.sportType.color,
                         letterSpacing: 0.5,
                       )
                     : theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w800,
+                        color: match.sportType.color,
                       ),
               ),
               if (hasTitle)
@@ -521,9 +521,14 @@ class _SpotsIndicator extends StatelessWidget {
       );
     }
 
-    final taken = match.spotsTaken;
+    // Prefer the real participant count when loaded — self-heals any
+    // players_needed drift in the matches row.
     final total = match.totalSpots!;
-    final remaining = (total - taken).clamp(0, total);
+    final taken = (participants.isNotEmpty
+            ? participants.length
+            : match.spotsTaken)
+        .clamp(0, total);
+    final remaining = total - taken;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
