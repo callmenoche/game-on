@@ -4,13 +4,10 @@
 <dict>
 	<key>get-task-allow</key>
 	<true/>
-	<!-- Universal Links — REPLACE_WITH_YOUR_DOMAIN once a real domain is
-	     bought & hosting /.well-known/apple-app-site-association.
-	     See docs/universal-links-setup.md. Harmless as a placeholder:
-	     Apple simply can't verify a domain that doesn't serve the file. -->
-	<key>com.apple.developer.associated-domains</key>
-	<array>
-		<string>applinks:REPLACE_WITH_YOUR_DOMAIN</string>
-	</array>
+	<!-- Associated Domains (Universal Links) removed for now: Apple's free
+	     "Personal Team" signing does not support this capability at all —
+	     even as an inert placeholder, it blocks local device builds. Re-add
+	     it once enrolled in the paid Apple Developer Program (needed for
+	     App Store distribution anyway). See docs/universal-links-setup.md. -->
 </dict>
 </plist>

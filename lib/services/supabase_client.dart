@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Central access point for the Supabase client.
@@ -41,10 +42,14 @@ class SupabaseService {
 
   // ── Auth helpers ──────────────────────────────────────────────────────────
 
-  // Same custom scheme as guest-claim deep links (see main.dart). The SDK's
-  // PKCE flow auto-detects any incoming URI with a `code` param as an auth
-  // callback and exchanges it for a session — no extra deep-link code needed.
-  static const String _emailRedirectTo = 'io.supabase.gameon://login-callback';
+  // Mobile: same custom scheme as guest-claim deep links (see main.dart) —
+  // the SDK's PKCE flow auto-detects any incoming URI with a `code` param as
+  // an auth callback and exchanges it for a session, no extra code needed.
+  // Web: a custom scheme can't be opened by a browser, so redirect back to
+  // the page the app is served from instead — the same PKCE auto-detection
+  // runs against the browser's URL bar.
+  static String get _emailRedirectTo =>
+      kIsWeb ? Uri.base.origin : 'io.supabase.gameon://login-callback';
 
   static Future<AuthResponse> signUpWithEmail({
     required String email,

@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'supabase_client.dart';
@@ -23,7 +24,9 @@ class BugReportService {
       'category': category,
       'description': description,
       'app_version': '${info.version}+${info.buildNumber}',
-      'platform': '${Platform.operatingSystem} ${Platform.operatingSystemVersion}',
+      'platform': kIsWeb
+          ? 'web'
+          : '${Platform.operatingSystem} ${Platform.operatingSystemVersion}',
     });
   }
 }
