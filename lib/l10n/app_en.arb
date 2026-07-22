@@ -382,10 +382,11 @@
   "selectTime": "Select time",
   "confirm": "Confirm",
 
-  "shareInviteText": "🎮 You've been invited to a GameOn match!\n\nHave the app? Open your spot:\n{deepLink}\n\nManual code: {code}",
+  "shareInviteText": "🎮 You've been invited to a GameOn match!\n\nHave the app? Open your spot:\n{deepLink}\n\nNo app yet? Open it in your browser:\n{webLink}\n\nManual code: {code}",
   "@shareInviteText": {
     "placeholders": {
       "deepLink": { "type": "String" },
+      "webLink": { "type": "String" },
       "code": { "type": "String" }
     }
   },

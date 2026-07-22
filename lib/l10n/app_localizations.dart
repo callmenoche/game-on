@@ -1891,8 +1891,8 @@ abstract class AppLocalizations {
   /// No description provided for @shareInviteText.
   ///
   /// In en, this message translates to:
-  /// **'🎮 You\'ve been invited to a GameOn match!\n\nHave the app? Open your spot:\n{deepLink}\n\nManual code: {code}'**
-  String shareInviteText(String deepLink, String code);
+  /// **'🎮 You\'ve been invited to a GameOn match!\n\nHave the app? Open your spot:\n{deepLink}\n\nNo app yet? Open it in your browser:\n{webLink}\n\nManual code: {code}'**
+  String shareInviteText(String deepLink, String webLink, String code);
 
   /// No description provided for @shareInviteSubject.
   ///

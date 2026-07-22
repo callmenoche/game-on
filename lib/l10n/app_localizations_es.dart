@@ -946,8 +946,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get confirm => 'Confirmar';
 
   @override
-  String shareInviteText(String deepLink, String code) {
-    return '🎮 ¡Te han invitado a un partido de GameOn!\n\n¿Tienes la app? Reclama tu plaza:\n$deepLink\n\nCódigo manual: $code';
+  String shareInviteText(String deepLink, String webLink, String code) {
+    return '🎮 ¡Te han invitado a un partido de GameOn!\n\n¿Tienes la app? Reclama tu plaza:\n$deepLink\n\n¿Aún no la tienes? Ábrela en tu navegador:\n$webLink\n\nCódigo manual: $code';
   }
 
   @override

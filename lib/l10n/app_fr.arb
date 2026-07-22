@@ -334,10 +334,11 @@
   "selectTime": "Choisir l'heure",
   "confirm": "Valider",
 
-  "shareInviteText": "🎮 Tu es invité à un match GameOn !\n\nTu as l'app ? Récupère ta place :\n{deepLink}\n\nCode manuel : {code}",
+  "shareInviteText": "🎮 Tu es invité à un match GameOn !\n\nTu as l'app ? Récupère ta place :\n{deepLink}\n\nPas encore l'app ? Ouvre-la dans ton navigateur :\n{webLink}\n\nCode manuel : {code}",
   "@shareInviteText": {
     "placeholders": {
       "deepLink": { "type": "String" },
+      "webLink": { "type": "String" },
       "code": { "type": "String" }
     }
   },

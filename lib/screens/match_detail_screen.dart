@@ -571,9 +571,18 @@ class _ParticipantsListState extends State<_ParticipantsList> {
   Future<void> _showShareSheet(MatchParticipant guest) async {
     final l = AppLocalizations.of(context)!;
     final code = guest.guestClaimToken ?? '';
+    // Named claimCode, not "code" — Supabase's own PKCE auth-callback
+    // detection treats any ?code= query param as an OAuth authorization
+    // code and misfires trying to exchange it for a session (see
+    // main.dart _handleDeepLink).
     final deepLink =
-        'io.supabase.gameon://claim?code=$code&match=${widget.matchId}';
-    final text = l.shareInviteText(deepLink, code);
+        'io.supabase.gameon://claim?claimCode=$code&match=${widget.matchId}';
+    // TODO: swap for a custom domain once one exists (see
+    // docs/universal-links-setup.md) — same placeholder used for the web
+    // build's Open Graph tags.
+    final webLink =
+        'https://gameon-brown.vercel.app/claim?claimCode=$code&match=${widget.matchId}';
+    final text = l.shareInviteText(deepLink, webLink, code);
     try {
       await Share.share(text, subject: l.shareInviteSubject);
     } catch (_) {

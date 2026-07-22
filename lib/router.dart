@@ -71,6 +71,16 @@ GoRouter buildRouter(AuthProvider authProvider, ProfileProvider profileProvider)
         path: '/privacy',
         builder: (_, __) => const LegalScreen(type: LegalPageType.privacy),
       ),
+      // Web-only landing spot for shared https://…/claim?claimCode=&match= links
+      // (mirrors the io.supabase.gameon://claim custom scheme). Registering
+      // it here just stops go_router's own initial-URL matching from
+      // erroring on an unknown path on cold boot — the actual navigation
+      // into the match + claim sheet is handled by the app_links-driven
+      // _handleDeepLink/_pendingMatchId flow in main.dart, same as native.
+      GoRoute(
+        path: '/claim',
+        redirect: (context, state) => '/',
+      ),
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
         routes: [

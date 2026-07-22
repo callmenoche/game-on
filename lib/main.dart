@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -23,6 +24,10 @@ const _sentryDsn = String.fromEnvironment('SENTRY_DSN');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Clean https://.../claim URLs instead of the default #/claim hash routes —
+  // required for shared web links (guest-claim, future match/profile links)
+  // to be resolvable server-side. No-op on non-web platforms.
+  usePathUrlStrategy();
   await SupabaseService.initialize();
 
   final app = MultiProvider(
@@ -145,7 +150,13 @@ class _GameOnAppState extends State<GameOnApp> {
 
   void _handleDeepLink(Uri uri) {
     if (_isClaimLink(uri)) {
-      final code = uri.queryParameters['code'];
+      // Named claimCode, not "code" — Supabase's own PKCE auth-callback
+      // detection treats ANY uri.queryParameters['code'] as an OAuth
+      // authorization code and tries to exchange it for a session
+      // (supabase_flutter's internal SupabaseAuth deep-link listener,
+      // separate from ours). A real invite code there causes it to
+      // misfire on every claim link, custom-scheme or https alike.
+      final code = uri.queryParameters['claimCode'];
       final matchId = uri.queryParameters['match'];
       if (code == null || code.isEmpty || matchId == null || matchId.isEmpty) {
         return;
