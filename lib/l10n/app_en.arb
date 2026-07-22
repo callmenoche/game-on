@@ -391,6 +391,16 @@
     }
   },
   "shareInviteSubject": "Join my GameOn match",
+  "shareMatchCard": "Share match",
+  "joinOnGameOn": "Join on GameOn",
+  "shareMatchCardText": "🎮 Join me for a {sport} match on GameOn!\n{link}",
+  "@shareMatchCardText": {
+    "placeholders": {
+      "sport": { "type": "String" },
+      "link": { "type": "String" }
+    }
+  },
+  "shareMatchCardSubject": "Share this match",
   "inviteCopied": "Invite copied to clipboard",
   "joinBringFriendsInfo": "Bring friends along — we'll generate a code for each guest slot.",
   "addGuestsCount": "{count, plural, =1{Add 1 guest} other{Add {count} guests}}",

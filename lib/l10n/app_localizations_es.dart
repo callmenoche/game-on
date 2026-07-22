@@ -954,6 +954,20 @@ class AppLocalizationsEs extends AppLocalizations {
   String get shareInviteSubject => 'Únete a mi partido de GameOn';
 
   @override
+  String get shareMatchCard => 'Compartir el partido';
+
+  @override
+  String get joinOnGameOn => 'Únete en GameOn';
+
+  @override
+  String shareMatchCardText(String sport, String link) {
+    return '🎮 ¡Únete a mi partido de $sport en GameOn!\n$link';
+  }
+
+  @override
+  String get shareMatchCardSubject => 'Compartir este partido';
+
+  @override
   String get inviteCopied => 'Invitación copiada al portapapeles';
 
   @override

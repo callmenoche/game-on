@@ -1900,6 +1900,30 @@ abstract class AppLocalizations {
   /// **'Join my GameOn match'**
   String get shareInviteSubject;
 
+  /// No description provided for @shareMatchCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Share match'**
+  String get shareMatchCard;
+
+  /// No description provided for @joinOnGameOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Join on GameOn'**
+  String get joinOnGameOn;
+
+  /// No description provided for @shareMatchCardText.
+  ///
+  /// In en, this message translates to:
+  /// **'🎮 Join me for a {sport} match on GameOn!\n{link}'**
+  String shareMatchCardText(String sport, String link);
+
+  /// No description provided for @shareMatchCardSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Share this match'**
+  String get shareMatchCardSubject;
+
   /// No description provided for @inviteCopied.
   ///
   /// In en, this message translates to:

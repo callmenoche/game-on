@@ -14,6 +14,7 @@ import '../services/supabase_client.dart';
 import '../utils/app_snackbar.dart';
 import '../utils/error_helpers.dart';
 import '../widgets/game_on_logo.dart';
+import '../widgets/match_share_card.dart';
 import '../widgets/report_sheet.dart';
 
 class MatchDetailScreen extends StatefulWidget {
@@ -245,6 +246,11 @@ class _MatchDetailScreenState extends State<MatchDetailScreen> {
                   ],
                 ),
                 actions: [
+                  IconButton(
+                    icon: const Icon(Icons.ios_share_rounded, size: 20),
+                    tooltip: l.shareMatchCard,
+                    onPressed: () => shareMatchCard(context, match),
+                  ),
                   if (isCreator && match.status == MatchStatus.open) ...[
                     IconButton(
                       icon: const Icon(Icons.edit_outlined, size: 20),

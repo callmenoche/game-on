@@ -343,6 +343,10 @@
     }
   },
   "shareInviteSubject": "Únete a mi partido de GameOn",
+  "shareMatchCard": "Compartir el partido",
+  "joinOnGameOn": "Únete en GameOn",
+  "shareMatchCardText": "🎮 ¡Únete a mi partido de {sport} en GameOn!\n{link}",
+  "shareMatchCardSubject": "Compartir este partido",
   "inviteCopied": "Invitación copiada al portapapeles",
   "joinBringFriendsInfo": "Trae amigos: se generará un código para cada plaza de invitado.",
   "addGuestsCount": "{count, plural, =1{Añadir 1 invitado} other{Añadir {count} invitados}}",
