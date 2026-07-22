@@ -1,5 +1,4 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'supabase_client.dart';
 
 class PlaceSuggestion {
   final String placeId;
@@ -13,43 +12,53 @@ class PlaceSuggestion {
   });
 }
 
+/// Calls Google's Places/Geocoding APIs through the `places-proxy` Supabase
+/// Edge Function rather than directly.
+///
+/// Google's legacy Places REST API never returns CORS headers, so a direct
+/// browser call (Flutter web) is blocked outright regardless of API key
+/// configuration; it also rejects HTTP-referrer-restricted keys. Proxying
+/// through our own Edge Function sidesteps both — the Google key lives only
+/// as a server-side secret, and the function sets its own CORS headers.
 class PlacesService {
-  static const _key = String.fromEnvironment('GOOGLE_PLACES_KEY');
-  static const _base = 'https://maps.googleapis.com/maps/api';
-
-  static bool get hasKey => _key.isNotEmpty;
+  static Future<Map<String, dynamic>?> _invoke(
+    Map<String, String> queryParameters,
+  ) async {
+    try {
+      final res = await SupabaseService.client.functions.invoke(
+        'places-proxy',
+        queryParameters: queryParameters,
+      );
+      if (res.data == null) return null;
+      return res.data as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
 
   /// Returns autocomplete suggestions for [input].
-  /// Returns empty list if key is missing or request fails.
+  /// Returns empty list if the request fails.
   static Future<List<PlaceSuggestion>> autocomplete(
     String input,
     String sessionToken,
   ) async {
-    if (_key.isEmpty || input.trim().isEmpty) return [];
-    try {
-      final uri = Uri.parse('$_base/place/autocomplete/json').replace(
-        queryParameters: {
-          'input': input,
-          'sessiontoken': sessionToken,
-          'key': _key,
-        },
+    if (input.trim().isEmpty) return [];
+    final body = await _invoke({
+      'action': 'autocomplete',
+      'input': input,
+      'sessiontoken': sessionToken,
+    });
+    if (body == null) return [];
+    final predictions = body['predictions'] as List<dynamic>? ?? [];
+    return predictions.map((p) {
+      final structured =
+          p['structured_formatting'] as Map<String, dynamic>? ?? {};
+      return PlaceSuggestion(
+        placeId: p['place_id'] as String? ?? '',
+        mainText: structured['main_text'] as String? ?? p['description'] as String? ?? '',
+        secondaryText: structured['secondary_text'] as String? ?? '',
       );
-      final res = await http.get(uri).timeout(const Duration(seconds: 5));
-      if (res.statusCode != 200) return [];
-      final body = jsonDecode(res.body) as Map<String, dynamic>;
-      final predictions = body['predictions'] as List<dynamic>? ?? [];
-      return predictions.map((p) {
-        final structured =
-            p['structured_formatting'] as Map<String, dynamic>? ?? {};
-        return PlaceSuggestion(
-          placeId: p['place_id'] as String? ?? '',
-          mainText: structured['main_text'] as String? ?? p['description'] as String? ?? '',
-          secondaryText: structured['secondary_text'] as String? ?? '',
-        );
-      }).where((s) => s.placeId.isNotEmpty).toList();
-    } catch (_) {
-      return [];
-    }
+    }).where((s) => s.placeId.isNotEmpty).toList();
   }
 
   /// Returns place details (name + coordinates) for [placeId].
@@ -58,54 +67,35 @@ class PlacesService {
     String placeId,
     String sessionToken,
   ) async {
-    if (_key.isEmpty) return null;
-    try {
-      final uri = Uri.parse('$_base/place/details/json').replace(
-        queryParameters: {
-          'place_id': placeId,
-          'fields': 'name,geometry',
-          'sessiontoken': sessionToken,
-          'key': _key,
-        },
-      );
-      final res = await http.get(uri).timeout(const Duration(seconds: 5));
-      if (res.statusCode != 200) return null;
-      final body = jsonDecode(res.body) as Map<String, dynamic>;
-      final result = body['result'] as Map<String, dynamic>?;
-      if (result == null) return null;
-      final loc = (result['geometry'] as Map<String, dynamic>?)?['location']
-          as Map<String, dynamic>?;
-      if (loc == null) return null;
-      return (
-        name: result['name'] as String? ?? '',
-        lat: (loc['lat'] as num).toDouble(),
-        lng: (loc['lng'] as num).toDouble(),
-      );
-    } catch (_) {
-      return null;
-    }
+    final body = await _invoke({
+      'action': 'details',
+      'place_id': placeId,
+      'sessiontoken': sessionToken,
+    });
+    if (body == null) return null;
+    final result = body['result'] as Map<String, dynamic>?;
+    if (result == null) return null;
+    final loc = (result['geometry'] as Map<String, dynamic>?)?['location']
+        as Map<String, dynamic>?;
+    if (loc == null) return null;
+    return (
+      name: result['name'] as String? ?? '',
+      lat: (loc['lat'] as num).toDouble(),
+      lng: (loc['lng'] as num).toDouble(),
+    );
   }
 
   /// Reverse geocodes [lat]/[lng] to a human-readable address string.
   /// Returns null on failure.
   static Future<String?> reverseGeocode(double lat, double lng) async {
-    if (_key.isEmpty) return null;
-    try {
-      final uri = Uri.parse('$_base/geocode/json').replace(
-        queryParameters: {
-          'latlng': '$lat,$lng',
-          'key': _key,
-        },
-      );
-      final res = await http.get(uri).timeout(const Duration(seconds: 5));
-      if (res.statusCode != 200) return null;
-      final body = jsonDecode(res.body) as Map<String, dynamic>;
-      final results = body['results'] as List<dynamic>? ?? [];
-      if (results.isEmpty) return null;
-      return (results.first as Map<String, dynamic>)['formatted_address']
-          as String?;
-    } catch (_) {
-      return null;
-    }
+    final body = await _invoke({
+      'action': 'geocode',
+      'latlng': '$lat,$lng',
+    });
+    if (body == null) return null;
+    final results = body['results'] as List<dynamic>? ?? [];
+    if (results.isEmpty) return null;
+    return (results.first as Map<String, dynamic>)['formatted_address']
+        as String?;
   }
 }

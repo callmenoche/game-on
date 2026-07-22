@@ -42,8 +42,7 @@ jobs:
         run: |
           flutter build apk --release \
             --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
-            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
-            --dart-define=GOOGLE_PLACES_KEY=${{ secrets.GOOGLE_PLACES_KEY }}
+            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -71,8 +70,7 @@ jobs:
         run: |
           flutter build web --release \
             --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
-            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
-            --dart-define=GOOGLE_PLACES_KEY=${{ secrets.GOOGLE_PLACES_KEY_WEB }}
+            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
 
       # Deploys build/web as a plain static site (no framework detected) —
       # Vercel's build image has no Flutter SDK, so we build here and ship

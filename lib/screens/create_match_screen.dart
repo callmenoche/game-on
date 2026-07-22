@@ -579,7 +579,6 @@ class _LocationFieldState extends State<_LocationField> {
   }
 
   void _onTextChanged(String value) {
-    if (!PlacesService.hasKey) return;
     _debounce?.cancel();
     if (value.trim().isEmpty) {
       setState(() => _suggestions = []);

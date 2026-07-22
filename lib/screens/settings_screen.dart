@@ -360,7 +360,6 @@ class _DefaultLocationDialogState extends State<_DefaultLocationDialog> {
     _selectedLat = null;
     _selectedLng = null;
 
-    if (!PlacesService.hasKey) return;
     _debounce?.cancel();
     if (value.trim().isEmpty) {
       setState(() => _suggestions = []);
