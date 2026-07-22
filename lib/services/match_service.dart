@@ -235,6 +235,20 @@ class MatchService {
         .toList();
   }
 
+  /// Matches of [groupId], filtered by [upcoming] — soonest-first for
+  /// upcoming matches, most-recent-first for completed ones.
+  Future<List<Match>> fetchGroupMatches(String groupId,
+      {required bool upcoming}) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+    var query = _matches
+        .select('*, profiles!matches_creator_id_fkey(username, avatar_url)')
+        .eq('group_id', groupId);
+    query = upcoming ? query.gte('date_time', now) : query.lt('date_time', now);
+    final data =
+        await query.order('date_time', ascending: upcoming);
+    return (data as List).map((e) => Match.fromJson(e)).toList();
+  }
+
   /// Completed vs upcoming match counts for a group.
   Future<({int completed, int upcoming})> fetchGroupMatchCounts(
       String groupId) async {

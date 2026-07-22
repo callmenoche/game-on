@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/group.dart';
+import '../models/match.dart';
 import '../providers/auth_provider.dart';
 import '../providers/group_provider.dart';
 import '../services/group_service.dart';
@@ -29,6 +32,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
   ({int completed, int upcoming})? _matchCounts;
   bool _loadingMembers = false;
   bool _uploadingImage = false;
+  final _membersSectionKey = GlobalKey();
 
   Group? _findGroup(GroupProvider p) {
     final matches = p.groups.where((g) => g.id == widget.groupId);
@@ -109,6 +113,32 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
   Future<void> _respond(String requestId, bool accept) async {
     await _groupService.respondToRequest(requestId, accept: accept);
     await _loadMembers();
+  }
+
+  void _scrollToMembers() {
+    final ctx = _membersSectionKey.currentContext;
+    if (ctx != null) {
+      Scrollable.ensureVisible(ctx,
+          duration: const Duration(milliseconds: 350), curve: Curves.easeOut);
+    }
+  }
+
+  Future<void> _showMatchListSheet({required bool upcoming}) async {
+    final l = AppLocalizations.of(context)!;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) => _GroupMatchListSheet(
+        groupId: widget.groupId,
+        upcoming: upcoming,
+        title: upcoming ? l.matchesUpcoming : l.matchesPlayed,
+        emptyLabel: upcoming ? l.noUpcomingMatches : l.noMatchesYet,
+      ),
+    );
   }
 
   Future<void> _leave() async {
@@ -238,6 +268,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                     icon: Icons.people_outline_rounded,
                     value: '${group.memberCount}',
                     label: AppLocalizations.of(context)!.members,
+                    onTap: _scrollToMembers,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -246,6 +277,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                     icon: Icons.check_circle_outline_rounded,
                     value: '${_matchCounts?.completed ?? '—'}',
                     label: AppLocalizations.of(context)!.matchesPlayed,
+                    onTap: () => _showMatchListSheet(upcoming: false),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -254,10 +286,13 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                     icon: Icons.event_available_rounded,
                     value: '${_matchCounts?.upcoming ?? '—'}',
                     label: AppLocalizations.of(context)!.matchesUpcoming,
+                    onTap: () => _showMatchListSheet(upcoming: true),
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 14),
+            _MemberAvatarRow(members: _members),
             const SizedBox(height: 20),
 
             // ── Invite code card ───────────────────────────────────────────
@@ -420,6 +455,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
             // ── Members ────────────────────────────────────────────────────
             const SizedBox(height: 24),
             Row(
+              key: _membersSectionKey,
               children: [
                 Text(AppLocalizations.of(context)!.members,
                     style: const TextStyle(
@@ -516,33 +552,281 @@ class _StatTile extends StatelessWidget {
   final IconData icon;
   final String value;
   final String label;
-  const _StatTile({required this.icon, required this.value, required this.label});
+  final VoidCallback? onTap;
+  const _StatTile(
+      {required this.icon,
+      required this.value,
+      required this.label,
+      this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: theme.cardTheme.color,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          child: Column(
+            children: [
+              Icon(icon, size: 18, color: GameOnBrand.saffron),
+              const SizedBox(height: 6),
+              Text(value,
+                  style:
+                      const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Member avatar row (mirrors match_card.dart's participant dots) ───────
+
+class _MemberAvatarRow extends StatelessWidget {
+  final Map<String, dynamic> members;
+  static const _maxAvatars = 5;
+
+  const _MemberAvatarRow({required this.members});
+
+  @override
+  Widget build(BuildContext context) {
+    if (members.isEmpty) return const SizedBox.shrink();
+    final entries = members.entries.toList();
+    final shown = entries.take(_maxAvatars);
+    final overflow = entries.length - _maxAvatars;
+
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        for (final entry in shown)
+          _MemberDot(
+            username: (entry.value as Map<String, dynamic>)['username'] as String,
+            avatarUrl:
+                (entry.value as Map<String, dynamic>)['avatarUrl'] as String?,
+          ),
+        if (overflow > 0) _MemberOverflowDot(count: overflow),
+      ],
+    );
+  }
+}
+
+class _MemberDot extends StatelessWidget {
+  final String username;
+  final String? avatarUrl;
+  const _MemberDot({required this.username, required this.avatarUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: GameOnBrand.saffron, width: 1.5),
+        color: GameOnBrand.saffron.withValues(alpha: 0.18),
+        image: avatarUrl != null
+            ? DecorationImage(
+                image: CachedNetworkImageProvider(avatarUrl!),
+                fit: BoxFit.cover,
+              )
+            : null,
+      ),
+      child: avatarUrl == null
+          ? Center(
+              child: Text(
+                username.isNotEmpty ? username[0].toUpperCase() : '?',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: GameOnBrand.saffron,
+                ),
+              ),
+            )
+          : null,
+    );
+  }
+}
+
+class _MemberOverflowDot extends StatelessWidget {
+  final int count;
+  const _MemberOverflowDot({required this.count});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      height: 32,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: theme.cardTheme.color,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
       ),
-      child: Column(
-        children: [
-          Icon(icon, size: 18, color: GameOnBrand.saffron),
-          const SizedBox(height: 6),
-          Text(value,
-              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+      child: Text(
+        '+$count',
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Group match list bottom sheet (Played / Upcoming stat tiles) ─────────
+
+class _GroupMatchListSheet extends StatefulWidget {
+  final String groupId;
+  final bool upcoming;
+  final String title;
+  final String emptyLabel;
+  const _GroupMatchListSheet({
+    required this.groupId,
+    required this.upcoming,
+    required this.title,
+    required this.emptyLabel,
+  });
+
+  @override
+  State<_GroupMatchListSheet> createState() => _GroupMatchListSheetState();
+}
+
+class _GroupMatchListSheetState extends State<_GroupMatchListSheet> {
+  final _matchService = MatchService();
+  List<Match>? _matches;
+
+  @override
+  void initState() {
+    super.initState();
+    _matchService
+        .fetchGroupMatches(widget.groupId, upcoming: widget.upcoming)
+        .then((matches) {
+      if (mounted) setState(() => _matches = matches);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final matches = _matches;
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(widget.title,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w800, fontSize: 17)),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+            if (matches == null)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 40),
+                child: Center(
+                    child:
+                        CircularProgressIndicator(color: GameOnBrand.saffron)),
+              )
+            else if (matches.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Text(
+                  widget.emptyLabel,
+                  style: TextStyle(
+                    fontStyle: FontStyle.italic,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                  ),
+                ),
+              )
+            else
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: matches.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemBuilder: (_, i) => _GroupMatchRow(match: matches[i]),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GroupMatchRow extends StatelessWidget {
+  final Match match;
+  const _GroupMatchRow({required this.match});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = match.sportType.color;
+    final locale = Localizations.localeOf(context).languageCode;
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: () {
+        Navigator.pop(context);
+        context.push('/match/${match.id}');
+      },
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: theme.cardTheme.color,
+          borderRadius: BorderRadius.circular(14),
+          border: Border(left: BorderSide(color: color, width: 3)),
+        ),
+        child: Row(
+          children: [
+            PhosphorIcon(match.sportType.icon, size: 22, color: color),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(match.locationName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 14)),
+                  Text(
+                    '${DateFormat('d MMM', locale).format(match.dateTime)} · ${DateFormat('HH:mm').format(match.dateTime)}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+          ],
+        ),
       ),
     );
   }

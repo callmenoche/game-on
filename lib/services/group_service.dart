@@ -189,7 +189,8 @@ class GroupService {
     await _members.delete().eq('group_id', groupId).eq('user_id', userId);
   }
 
-  /// Returns {userId → {username, role}} for all members of [groupId].
+  /// Returns {userId → {username, role, avatarUrl}} for all members of
+  /// [groupId].
   Future<Map<String, dynamic>> fetchMembersWithRoles(String groupId) async {
     final membersData = await _members
         .select('user_id, role')
@@ -200,18 +201,22 @@ class GroupService {
     if (userIds.isEmpty) return {};
 
     final profilesData = await SupabaseService.table('profiles')
-        .select('id, username')
+        .select('id, username, avatar_url')
         .inFilter('id', userIds);
 
-    final usernameMap = {
+    final profileMap = {
       for (final r in profilesData as List)
-        r['id'] as String: r['username'] as String? ?? 'Player'
+        r['id'] as String: (
+          username: r['username'] as String? ?? 'Player',
+          avatarUrl: r['avatar_url'] as String?,
+        )
     };
 
     return {
       for (final r in membersData)
         r['user_id'] as String: {
-          'username': usernameMap[r['user_id']] ?? 'Player',
+          'username': profileMap[r['user_id']]?.username ?? 'Player',
+          'avatarUrl': profileMap[r['user_id']]?.avatarUrl,
           'role': r['role'] as String,
         }
     };
