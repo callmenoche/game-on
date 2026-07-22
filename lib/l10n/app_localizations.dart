@@ -2128,6 +2128,42 @@ abstract class AppLocalizations {
   /// **'Letters, numbers, and _ only'**
   String get usernameCharset;
 
+  /// No description provided for @noActivityYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity yet'**
+  String get noActivityYet;
+
+  /// No description provided for @noGroupsToShow.
+  ///
+  /// In en, this message translates to:
+  /// **'No groups to show'**
+  String get noGroupsToShow;
+
+  /// No description provided for @noCoPlayersYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No teammates yet'**
+  String get noCoPlayersYet;
+
+  /// No description provided for @nMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 member} other{{count} members}}'**
+  String nMembers(int count);
+
+  /// No description provided for @topSports.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Sports'**
+  String get topSports;
+
+  /// No description provided for @frequentTeammates.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequent Teammates'**
+  String get frequentTeammates;
+
   /// No description provided for @guestsCount.
   ///
   /// In en, this message translates to:

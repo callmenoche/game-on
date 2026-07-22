@@ -23,6 +23,22 @@ class GroupService {
     return (data as List).map((e) => Group.fromJson(e)).toList();
   }
 
+  /// Groups [userId] belongs to that are visible to the current viewer:
+  /// groups shared with the viewer, plus any public group (RLS-enforced —
+  /// see migration 028). Private/invite_only groups the viewer isn't in
+  /// stay hidden.
+  Future<List<Group>> fetchGroupsForUser(String userId) async {
+    final memberRows = await _members.select('group_id').eq('user_id', userId);
+    final ids =
+        (memberRows as List).map((r) => r['group_id'] as String).toList();
+    if (ids.isEmpty) return [];
+    final data = await _groups
+        .select()
+        .inFilter('id', ids)
+        .order('member_count', ascending: false);
+    return (data as List).map((e) => Group.fromJson(e)).toList();
+  }
+
   /// Up to 20 searchable groups (public + invite_only, per RLS) matching
   /// [query] by name.
   Future<List<Group>> searchGroups(String query) async {

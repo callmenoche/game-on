@@ -1079,6 +1079,32 @@ class AppLocalizationsEs extends AppLocalizations {
   String get usernameCharset => 'Solo letras, números y _';
 
   @override
+  String get noActivityYet => 'Aún no hay actividad';
+
+  @override
+  String get noGroupsToShow => 'No hay grupos que mostrar';
+
+  @override
+  String get noCoPlayersYet => 'Aún no hay compañeros';
+
+  @override
+  String nMembers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count miembros',
+      one: '1 miembro',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get topSports => 'Deportes destacados';
+
+  @override
+  String get frequentTeammates => 'Compañeros frecuentes';
+
+  @override
   String guestsCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

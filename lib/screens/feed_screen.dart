@@ -381,6 +381,12 @@ class _FilterSheet extends StatelessWidget {
                 ),
                 _sheetChip(
                   context,
+                  label: l.next30Days,
+                  selected: provider.dateFilter == DateFilter.next30,
+                  onTap: () => provider.setDateFilter(DateFilter.next30),
+                ),
+                _sheetChip(
+                  context,
                   label: _customRangeLabel(context, provider),
                   selected: provider.dateFilter == DateFilter.custom,
                   icon: Icons.date_range_rounded,

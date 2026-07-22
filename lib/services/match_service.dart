@@ -172,6 +172,43 @@ class MatchService {
     return (data as List).map((e) => Match.fromJson(e)).toList();
   }
 
+  /// Players [userId] has shared the most matches with, most-frequent first.
+  Future<List<({String userId, String username, String? avatarUrl, int count})>>
+      fetchTopCoPlayers(String userId, {int limit = 8}) async {
+    final myRows = await _participants.select('match_id').eq('user_id', userId);
+    final matchIds = (myRows as List).map((r) => r['match_id'] as String).toList();
+    if (matchIds.isEmpty) return [];
+
+    // NULL user_id (unclaimed guest spots) never match .neq(), so they're
+    // excluded automatically — no extra filter needed.
+    final rows = await _participants
+        .select('user_id')
+        .inFilter('match_id', matchIds)
+        .neq('user_id', userId);
+
+    final counts = <String, int>{};
+    for (final r in rows as List) {
+      final uid = r['user_id'] as String?;
+      if (uid == null) continue;
+      counts[uid] = (counts[uid] ?? 0) + 1;
+    }
+    if (counts.isEmpty) return [];
+
+    final topIds = (counts.keys.toList()
+          ..sort((a, b) => counts[b]!.compareTo(counts[a]!)))
+        .take(limit)
+        .toList();
+    final profiles = await fetchProfiles(topIds);
+    return topIds
+        .map((id) => (
+              userId: id,
+              username: profiles[id]?.username ?? 'Player',
+              avatarUrl: profiles[id]?.avatarUrl,
+              count: counts[id]!,
+            ))
+        .toList();
+  }
+
   Future<Map<String, ({String username, String? avatarUrl})>> fetchProfiles(List<String> userIds) async {
     if (userIds.isEmpty) return {};
     final data = await SupabaseService.table('profiles')

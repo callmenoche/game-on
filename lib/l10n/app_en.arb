@@ -433,6 +433,15 @@
   "usernameTooShort": "At least 3 characters",
   "usernameTooLong": "Max 20 characters",
   "usernameCharset": "Letters, numbers, and _ only",
+  "noActivityYet": "No activity yet",
+  "noGroupsToShow": "No groups to show",
+  "noCoPlayersYet": "No teammates yet",
+  "nMembers": "{count, plural, =1{1 member} other{{count} members}}",
+  "@nMembers": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "topSports": "Top Sports",
+  "frequentTeammates": "Frequent Teammates",
   "guestsCount": "{count, plural, =1{1 guest} other{{count} guests}}",
   "@guestsCount": {
     "placeholders": { "count": { "type": "int" } }

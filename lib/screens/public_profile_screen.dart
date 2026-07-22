@@ -1,18 +1,20 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
+import '../models/group.dart';
 import '../models/match.dart';
 import '../models/profile.dart';
+import '../providers/group_provider.dart';
 import '../providers/moderation_provider.dart';
+import '../services/group_service.dart';
 import '../services/match_service.dart';
 import '../services/profile_service.dart';
 import '../utils/app_snackbar.dart';
 import '../widgets/game_on_logo.dart';
-import '../widgets/profile_stats.dart';
+import '../widgets/profile_highlights.dart';
 import '../widgets/report_sheet.dart';
 
 class PublicProfileScreen extends StatefulWidget {
@@ -26,10 +28,13 @@ class PublicProfileScreen extends StatefulWidget {
 class _PublicProfileScreenState extends State<PublicProfileScreen> {
   final _profileService = ProfileService();
   final _matchService   = MatchService();
+  final _groupService   = GroupService();
 
   Profile? _profile;
   List<Match> _history = [];
   List<Match> _upcoming = [];
+  List<Group> _groups = [];
+  List<CoPlayer> _coPlayers = [];
   bool _loading = true;
   String? _error;
 
@@ -45,12 +50,16 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
         _profileService.fetchProfile(widget.userId),
         _matchService.fetchUserMatchHistory(widget.userId),
         _matchService.fetchUserUpcomingMatches(widget.userId),
+        _matchService.fetchTopCoPlayers(widget.userId),
+        _groupService.fetchGroupsForUser(widget.userId),
       ]);
       setState(() {
-        _profile  = results[0] as Profile;
-        _history  = results[1] as List<Match>;
-        _upcoming = results[2] as List<Match>;
-        _loading  = false;
+        _profile    = results[0] as Profile;
+        _history    = results[1] as List<Match>;
+        _upcoming   = results[2] as List<Match>;
+        _coPlayers  = results[3] as List<CoPlayer>;
+        _groups     = results[4] as List<Group>;
+        _loading    = false;
       });
     } catch (_) {
       setState(() {
@@ -84,7 +93,13 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
                   child: Text(_error!,
                       style: TextStyle(
                           color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5))))
-              : _ProfileBody(profile: _profile!, history: _history, upcoming: _upcoming),
+              : _ProfileBody(
+                  profile: _profile!,
+                  history: _history,
+                  upcoming: _upcoming,
+                  groups: _groups,
+                  coPlayers: _coPlayers,
+                ),
     );
   }
 }
@@ -178,8 +193,16 @@ class _ProfileBody extends StatelessWidget {
   final Profile profile;
   final List<Match> history;
   final List<Match> upcoming;
+  final List<Group> groups;
+  final List<CoPlayer> coPlayers;
 
-  const _ProfileBody({required this.profile, required this.history, required this.upcoming});
+  const _ProfileBody({
+    required this.profile,
+    required this.history,
+    required this.upcoming,
+    required this.groups,
+    required this.coPlayers,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -188,11 +211,6 @@ class _ProfileBody extends StatelessWidget {
     for (final m in history) {
       sportCounts[m.sportType] = (sportCounts[m.sportType] ?? 0) + 1;
     }
-    final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
-    final lastWeek =
-        history.where((m) => m.dateTime.isAfter(sevenDaysAgo)).toList();
-    final lastWeekMins = lastWeek.fold(0, (s, m) => s + m.durationMinutes);
-    final topSports = computeTopSports(history);
 
     final initial = profile.username.isNotEmpty
         ? profile.username[0].toUpperCase()
@@ -268,36 +286,43 @@ class _ProfileBody extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // ── Stats strip ────────────────────────────────────────────────────
-          StatsStrip(
-            lastWeekCount: lastWeek.length,
-            lastWeekMins: lastWeekMins,
-            topSports: topSports,
+          // ── Recent activities ────────────────────────────────────────────────
+          ProfileSectionLabel(AppLocalizations.of(context)!.recentMatches),
+          const SizedBox(height: 12),
+          ActivityStrip(
+            matches: history.take(3).toList(),
+            emptyLabel: AppLocalizations.of(context)!.noActivityYet,
           ),
+          const SizedBox(height: 24),
 
-          // ── Activity breakdown (donut) ─────────────────────────────────────
-          if (sportCounts.isNotEmpty) ...[
-            const SizedBox(height: 28),
-            _SectionLabel(AppLocalizations.of(context)!.activityBreakdown),
-            const SizedBox(height: 14),
-            SportDonutChart(counts: sportCounts),
-          ],
+          // ── Upcoming activities ───────────────────────────────────────────────
+          ProfileSectionLabel(AppLocalizations.of(context)!.upcomingMatches),
+          const SizedBox(height: 12),
+          ActivityStrip(
+            matches: upcoming.take(3).toList(),
+            emptyLabel: AppLocalizations.of(context)!.noActivityYet,
+          ),
+          const SizedBox(height: 24),
 
-          // ── Upcoming matches ───────────────────────────────────────────────
-          if (upcoming.isNotEmpty) ...[
-            const SizedBox(height: 28),
-            _SectionLabel(AppLocalizations.of(context)!.upcomingMatches),
-            const SizedBox(height: 12),
-            ...upcoming.take(5).map((m) => _HistoryRow(match: m)),
-          ],
+          // ── Top sports ─────────────────────────────────────────────────────
+          ProfileSectionLabel(AppLocalizations.of(context)!.topSports),
+          const SizedBox(height: 12),
+          TopSportsBars(counts: sportCounts),
+          const SizedBox(height: 24),
 
-          // ── Recent matches ─────────────────────────────────────────────────
-          if (history.isNotEmpty) ...[
-            const SizedBox(height: 28),
-            _SectionLabel(AppLocalizations.of(context)!.recentMatches),
-            const SizedBox(height: 12),
-            ...history.take(5).map((m) => _HistoryRow(match: m)),
-          ],
+          // ── Groups ─────────────────────────────────────────────────────────
+          ProfileSectionLabel(AppLocalizations.of(context)!.groupsTitle),
+          const SizedBox(height: 12),
+          ProfileGroupsStrip(
+            groups: groups,
+            isMember: context.watch<GroupProvider>().isMember,
+          ),
+          const SizedBox(height: 24),
+
+          // ── Frequent teammates ─────────────────────────────────────────────
+          ProfileSectionLabel(AppLocalizations.of(context)!.frequentTeammates),
+          const SizedBox(height: 12),
+          TopCoPlayersStrip(players: coPlayers),
         ],
       ),
     );
@@ -334,71 +359,6 @@ class _InitialsAvatar extends StatelessWidget {
   }
 }
 
-// ─── History row ──────────────────────────────────────────────────────────────
-
-class _HistoryRow extends StatelessWidget {
-  final Match match;
-  const _HistoryRow({required this.match});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.push('/match/${match.id}'),
-      child: Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
-        borderRadius: BorderRadius.circular(12),
-        border: Border(
-            left: BorderSide(color: match.sportType.color, width: 3)),
-      ),
-      child: Row(
-        children: [
-          PhosphorIcon(match.sportType.icon, size: 22,
-              color: match.sportType.color),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(match.sportType.l10nLabel(context),
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700, fontSize: 13)),
-                Text(
-                  match.locationName,
-                  style: TextStyle(
-                      fontSize: 11,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                DateFormat('d MMM', Localizations.localeOf(context).languageCode).format(match.dateTime),
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w700),
-              ),
-              Text(
-                DateFormat('HH:mm').format(match.dateTime),
-                style: TextStyle(
-                    fontSize: 11,
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45)),
-              ),
-            ],
-          ),
-        ],
-      ),
-    ),
-    );
-  }
-}
-
 // ─── Age / gender display line ────────────────────────────────────────────────
 
 class _AgeGenderLine extends StatelessWidget {
@@ -424,23 +384,3 @@ class _AgeGenderLine extends StatelessWidget {
   }
 }
 
-// ─── Section label ────────────────────────────────────────────────────────────
-
-class _SectionLabel extends StatelessWidget {
-  final String text;
-  const _SectionLabel(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text.toUpperCase(),
-      style: TextStyle(
-        fontSize: 11,
-        fontWeight: FontWeight.w800,
-        letterSpacing: 1.2,
-        color:
-            Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45),
-      ),
-    );
-  }
-}

@@ -1,23 +1,24 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
+import '../models/group.dart';
 import '../models/match.dart';
 import '../models/profile.dart';
 import '../providers/auth_provider.dart';
+import '../providers/group_provider.dart';
 import '../providers/profile_provider.dart';
+import '../services/group_service.dart';
 import '../services/match_service.dart';
 import '../services/supabase_client.dart';
 import '../widgets/availability_grid.dart';
 import '../utils/error_helpers.dart';
 import '../widgets/game_on_logo.dart';
 import '../widgets/profile_form_fields.dart';
-import '../widgets/profile_stats.dart';
+import '../widgets/profile_highlights.dart';
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -32,9 +33,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _editing = false;
   bool _saving = false;
   final _bioCtrl = TextEditingController();
+  final _groupService = GroupService();
   List<String> _favoriteSports = [];
   List<Match> _history = [];
   List<Match> _upcoming = [];
+  List<Group> _groups = [];
+  List<CoPlayer> _coPlayers = [];
   bool _dataLoaded = false;
 
   // Edit-mode state for new fields
@@ -60,11 +64,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final results = await Future.wait([
         svc.fetchUserMatchHistory(userId),
         svc.fetchUserUpcomingMatches(userId),
+        svc.fetchTopCoPlayers(userId),
+        _groupService.fetchGroupsForUser(userId),
       ]);
       if (mounted) {
         setState(() {
-          _history = results[0];
-          _upcoming = results[1];
+          _history = results[0] as List<Match>;
+          _upcoming = results[1] as List<Match>;
+          _coPlayers = results[2] as List<CoPlayer>;
+          _groups = results[3] as List<Group>;
           _dataLoaded = true;
         });
       }
@@ -223,11 +231,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     for (final m in _history) {
       sportCounts[m.sportType] = (sportCounts[m.sportType] ?? 0) + 1;
     }
-    final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
-    final lastWeek =
-        _history.where((m) => m.dateTime.isAfter(sevenDaysAgo)).toList();
-    final lastWeekMins = lastWeek.fold(0, (s, m) => s + m.durationMinutes);
-    final topSports = computeTopSports(_history);
 
     return Scaffold(
       appBar: AppBar(
@@ -305,7 +308,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                       // ── Birthdate + gender (edit mode) ───────────────────
                       if (_editing) ...[
-                        _SectionLabel(l.dateOfBirth),
+                        ProfileSectionLabel(l.dateOfBirth),
                         const SizedBox(height: 8),
                         DateField(
                           value: _editBirthDate,
@@ -321,7 +324,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ],
                         const SizedBox(height: 20),
-                        _SectionLabel(l.gender),
+                        ProfileSectionLabel(l.gender),
                         const SizedBox(height: 8),
                         GenderPicker(
                           value: _editGender,
@@ -340,29 +343,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 28),
                       ],
 
-                      // ── Stats strip ──────────────────────────────────────
-                      StatsStrip(
-                        lastWeekCount: lastWeek.length,
-                        lastWeekMins: lastWeekMins,
-                        topSports: topSports,
-                      ),
-
-                      // ── Activity breakdown (donut) ───────────────────────
-                      if (_dataLoaded && sportCounts.isNotEmpty) ...[
-                        const SizedBox(height: 28),
-                        _SectionLabel(l.activityBreakdown),
-                        const SizedBox(height: 14),
-                        SportDonutChart(counts: sportCounts),
-                      ],
-
-                      // ── Upcoming matches ─────────────────────────────────
-                      if (_upcoming.isNotEmpty) ...[
-                        const SizedBox(height: 28),
-                        _SectionLabel(l.upcomingMatches),
+                      // ── Recent activities ────────────────────────────────
+                      if (_dataLoaded) ...[
+                        ProfileSectionLabel(l.recentMatches),
                         const SizedBox(height: 12),
-                        ..._upcoming
-                            .take(5)
-                            .map((m) => _MatchRow(match: m)),
+                        ActivityStrip(
+                          matches: _history.take(3).toList(),
+                          emptyLabel: l.noActivityYet,
+                        ),
+                        const SizedBox(height: 24),
+
+                        // ── Upcoming activities ─────────────────────────────
+                        ProfileSectionLabel(l.upcomingMatches),
+                        const SizedBox(height: 12),
+                        ActivityStrip(
+                          matches: _upcoming.take(3).toList(),
+                          emptyLabel: l.noActivityYet,
+                        ),
+                        const SizedBox(height: 24),
+
+                        // ── Top sports ───────────────────────────────────────
+                        ProfileSectionLabel(l.topSports),
+                        const SizedBox(height: 12),
+                        TopSportsBars(counts: sportCounts),
+                        const SizedBox(height: 24),
+
+                        // ── Groups ───────────────────────────────────────────
+                        ProfileSectionLabel(l.groupsTitle),
+                        const SizedBox(height: 12),
+                        ProfileGroupsStrip(
+                          groups: _groups,
+                          isMember: context.watch<GroupProvider>().isMember,
+                        ),
+                        const SizedBox(height: 24),
+
+                        // ── Frequent teammates ───────────────────────────────
+                        ProfileSectionLabel(l.frequentTeammates),
+                        const SizedBox(height: 12),
+                        TopCoPlayersStrip(players: _coPlayers),
                       ],
 
                       // ── Availability grid ────────────────────────────────
@@ -372,7 +390,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       // ── Favourite sports (edit mode only) ───────────────
                       if (_editing) ...[
                         const SizedBox(height: 28),
-                        _SectionLabel(l.favouriteSports),
+                        ProfileSectionLabel(l.favouriteSports),
                         const SizedBox(height: 12),
                         _FavouriteSportsPicker(
                           selected: _favoriteSports,
@@ -579,71 +597,6 @@ class _InitialsAvatar extends StatelessWidget {
   }
 }
 
-// ─── Upcoming match row ───────────────────────────────────────────────────────
-
-class _MatchRow extends StatelessWidget {
-  final Match match;
-  const _MatchRow({required this.match});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.push('/match/${match.id}'),
-      child: Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding:
-          const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
-        borderRadius: BorderRadius.circular(12),
-        border: Border(
-            left: BorderSide(color: match.sportType.color, width: 3)),
-      ),
-      child: Row(
-        children: [
-          PhosphorIcon(match.sportType.icon, size: 22, color: match.sportType.color),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(match.sportType.l10nLabel(context),
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700, fontSize: 13)),
-                Text(
-                  match.locationName,
-                  style: TextStyle(
-                      fontSize: 11,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                DateFormat('d MMM', Localizations.localeOf(context).languageCode).format(match.dateTime),
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w700),
-              ),
-              Text(
-                DateFormat('HH:mm').format(match.dateTime),
-                style: TextStyle(
-                    fontSize: 11,
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45)),
-              ),
-            ],
-          ),
-        ],
-      ),
-    ),
-    );
-  }
-}
-
 // ─── Favourite sports picker ──────────────────────────────────────────────────
 
 class _FavouriteSportsPicker extends StatelessWidget {
@@ -809,25 +762,3 @@ class _AgeGenderLine extends StatelessWidget {
   }
 }
 
-// ─── Section label ────────────────────────────────────────────────────────────
-
-class _SectionLabel extends StatelessWidget {
-  final String text;
-  const _SectionLabel(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text.toUpperCase(),
-      style: TextStyle(
-        fontSize: 11,
-        fontWeight: FontWeight.w800,
-        letterSpacing: 1.2,
-        color: Theme.of(context)
-            .colorScheme
-            .onSurface
-            .withValues(alpha: 0.45),
-      ),
-    );
-  }
-}

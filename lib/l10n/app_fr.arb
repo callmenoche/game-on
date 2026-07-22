@@ -385,6 +385,15 @@
   "usernameTooShort": "3 caractères minimum",
   "usernameTooLong": "20 caractères maximum",
   "usernameCharset": "Lettres, chiffres et _ uniquement",
+  "noActivityYet": "Pas encore d'activité",
+  "noGroupsToShow": "Aucun groupe à afficher",
+  "noCoPlayersYet": "Pas encore de coéquipiers",
+  "nMembers": "{count, plural, =1{1 membre} other{{count} membres}}",
+  "@nMembers": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "topSports": "Sports favoris",
+  "frequentTeammates": "Coéquipiers fréquents",
   "guestsCount": "{count, plural, =1{1 invité} other{{count} invités}}",
   "@guestsCount": {
     "placeholders": { "count": { "type": "int" } }

@@ -172,7 +172,7 @@ class _Step1 extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const GameOnLogo(size: 36),
+          const GameOnLogo(size: 36, color: GameOnBrand.saffron),
           const SizedBox(height: 32),
           Text(
             l.welcomeToGameOn,
