@@ -2200,6 +2200,12 @@ abstract class AppLocalizations {
   /// **'Add a group photo (optional)'**
   String get groupPhotoOptional;
 
+  /// No description provided for @mustAcceptTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Please accept the Terms of Service and Privacy Policy to continue'**
+  String get mustAcceptTerms;
+
   /// No description provided for @guestsCount.
   ///
   /// In en, this message translates to:

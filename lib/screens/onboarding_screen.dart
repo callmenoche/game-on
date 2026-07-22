@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/match.dart';
@@ -63,7 +64,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _finish() async {
-    if (!_formKey.currentState!.validate()) return;
+    // No re-validation of Step 2's form here: reaching this step already
+    // required passing it once (Step 2's own "Next" button gates on
+    // _formKey.currentState!.validate()). Re-checking it from here is not
+    // just redundant — PageView only keeps pages near the viewport mounted,
+    // so by the time we're on Step 3, Step 2's Form can already be disposed
+    // and _formKey.currentState is null, crashing the null-check operator
+    // silently (Flutter's error zone swallows it — this button did
+    // *nothing* from the user's perspective, on every attempt, terms
+    // checkbox or not).
+    if (!_termsAccepted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.mustAcceptTerms)),
+      );
+      return;
+    }
     setState(() => _isSubmitting = true);
 
     await context.read<ProfileProvider>().completeOnboarding(
@@ -194,6 +209,7 @@ class _Step1 extends StatelessWidget {
               runSpacing: 10,
               children: SportType.values.map((sport) {
                 final isSelected = selectedSports.contains(sport.name);
+                final onSurface = Theme.of(context).colorScheme.onSurface;
                 return GestureDetector(
                   onTap: () => onToggle(sport.name),
                   child: AnimatedContainer(
@@ -202,21 +218,24 @@ class _Step1 extends StatelessWidget {
                         horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? GameOnBrand.saffron
+                          ? sport.color.withValues(alpha: 0.18)
                           : Theme.of(context).cardTheme.color,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: isSelected
-                            ? GameOnBrand.saffron
-                            : GameOnBrand.slateLight.withValues(alpha: 0.4),
+                            ? sport.color
+                            : onSurface.withValues(alpha: 0.18),
+                        width: isSelected ? 1.5 : 1,
                       ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          sport.emoji,
-                          style: const TextStyle(fontSize: 20),
+                        PhosphorIcon(
+                          sport.icon,
+                          size: 20,
+                          color:
+                              isSelected ? sport.color : onSurface.withValues(alpha: 0.55),
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -225,8 +244,8 @@ class _Step1 extends StatelessWidget {
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
                             color: isSelected
-                                ? GameOnBrand.slateDark
-                                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.85),
+                                ? sport.color
+                                : onSurface.withValues(alpha: 0.85),
                           ),
                         ),
                       ],
@@ -604,11 +623,13 @@ class _Step3 extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed: isSubmitting || !termsAccepted ? null : onFinish,
+              onPressed: isSubmitting ? null : onFinish,
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(54),
                 backgroundColor: GameOnBrand.saffron,
                 foregroundColor: GameOnBrand.slateDark,
+                disabledBackgroundColor:
+                    GameOnBrand.saffron.withValues(alpha: 0.3),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
               ),

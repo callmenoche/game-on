@@ -449,6 +449,7 @@
   "matchesPlayed": "Played",
   "matchesUpcoming": "Upcoming",
   "groupPhotoOptional": "Add a group photo (optional)",
+  "mustAcceptTerms": "Please accept the Terms of Service and Privacy Policy to continue",
   "guestsCount": "{count, plural, =1{1 guest} other{{count} guests}}",
   "@guestsCount": {
     "placeholders": { "count": { "type": "int" } }

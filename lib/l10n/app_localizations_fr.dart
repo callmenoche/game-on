@@ -1125,6 +1125,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get groupPhotoOptional => 'Ajoute une photo de groupe (optionnel)';
 
   @override
+  String get mustAcceptTerms =>
+      'Accepte les CGU et la politique de confidentialité pour continuer';
+
+  @override
   String guestsCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

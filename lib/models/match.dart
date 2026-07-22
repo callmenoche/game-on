@@ -67,16 +67,6 @@ enum SportType {
         SportType.other      => 'Other',
       };
 
-  String get emoji => switch (this) {
-        SportType.padel      => '🎾',
-        SportType.football   => '⚽',
-        SportType.basketball => '🏀',
-        SportType.tennis     => '🎾',
-        SportType.running    => '🏃',
-        SportType.cycling    => '🚴',
-        SportType.other      => '🏅',
-      };
-
   PhosphorIconData get icon => switch (this) {
         SportType.football   => PhosphorIconsLight.soccerBall,
         SportType.padel      => PhosphorIconsLight.tennisBall,

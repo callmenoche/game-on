@@ -401,6 +401,7 @@
   "matchesPlayed": "Joués",
   "matchesUpcoming": "À venir",
   "groupPhotoOptional": "Ajoute une photo de groupe (optionnel)",
+  "mustAcceptTerms": "Accepte les CGU et la politique de confidentialité pour continuer",
   "guestsCount": "{count, plural, =1{1 invité} other{{count} invités}}",
   "@guestsCount": {
     "placeholders": { "count": { "type": "int" } }
