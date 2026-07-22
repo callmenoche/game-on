@@ -710,10 +710,10 @@ class _EmptyState extends StatelessWidget {
     this.distanceKm = 10.0,
   });
 
-  String _title(AppLocalizations l) {
+  String _title(BuildContext context, AppLocalizations l) {
     if (hasSearch) return l.noMatchesFound;
     if (hasDistanceFilter) return l.noMatchesWithinKm(distanceKm.round());
-    final sportLabel = sport?.label ?? '';
+    final sportLabel = sport?.l10nLabel(context) ?? '';
     final dateLabel = switch (dateFilter) {
       DateFilter.upcoming => l.dateUpcoming,
       DateFilter.today    => l.dateToday,
@@ -746,7 +746,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              _title(l),
+              _title(context, l),
               style: theme.textTheme.titleLarge
                   ?.copyWith(fontWeight: FontWeight.w700),
               textAlign: TextAlign.center,
