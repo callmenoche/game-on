@@ -98,8 +98,15 @@ GitHub Actions runs on every push/PR to `main`:
 
 1. **analyze-and-test** — `flutter analyze` + `flutter test`
 2. **build-apk** — builds a release APK (artifact uploaded)
+3. **deploy-web** — builds the web app and deploys it to Vercel (push to
+   `main` only, never on pull requests)
 
-Required GitHub secrets: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `GOOGLE_PLACES_KEY`.
+Required GitHub secrets: `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
+`GOOGLE_PLACES_KEY` (Android/iOS — restricted to those apps in Google Cloud
+Console), `GOOGLE_PLACES_KEY_WEB` (separate key, HTTP-referrer restricted to
+the Vercel domain — Google's key restrictions are per-platform, so mobile
+and web can't safely share one key), `VERCEL_TOKEN`, `VERCEL_ORG_ID`,
+`VERCEL_PROJECT_ID`.
 
 ## Project structure
 

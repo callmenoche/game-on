@@ -50,3 +50,36 @@ jobs:
         with:
           name: release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+
+  deploy-web:
+    runs-on: ubuntu-latest
+    needs: analyze-and-test
+    # Only deploy on actual pushes to main — never from a pull_request event,
+    # which would ship unmerged/untrusted code straight to production.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: beta
+          flutter-version: 3.43.0-0.2.pre
+
+      - run: flutter pub get
+
+      - name: Build web release
+        run: |
+          flutter build web --release \
+            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
+            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
+            --dart-define=GOOGLE_PLACES_KEY=${{ secrets.GOOGLE_PLACES_KEY_WEB }}
+
+      # Deploys build/web as a plain static site (no framework detected) —
+      # Vercel's build image has no Flutter SDK, so we build here and ship
+      # the compiled output rather than asking Vercel to build it.
+      - name: Deploy to Vercel
+        working-directory: build/web
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: npx --yes vercel@latest deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
