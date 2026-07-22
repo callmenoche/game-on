@@ -4,6 +4,8 @@ import '../models/match.dart';
 import '../models/match_participant.dart';
 import 'supabase_client.dart';
 
+typedef CoPlayer = ({String userId, String username, String? avatarUrl, int count});
+
 class MatchService {
   static final _matches = SupabaseService.table('matches');
   static final _participants = SupabaseService.table('match_participants');
@@ -172,9 +174,33 @@ class MatchService {
     return (data as List).map((e) => Match.fromJson(e)).toList();
   }
 
+  /// Suggested players for [userId]: direct teammates first, and if that
+  /// isn't enough to reach [limit], backfilled with teammates-of-teammates
+  /// (walked in ranked order, skipping anyone already in the list).
+  Future<List<CoPlayer>> fetchSuggestedPlayers(String userId,
+      {int limit = 5}) async {
+    final direct = await fetchTopCoPlayers(userId, limit: limit);
+    if (direct.length >= limit) return direct;
+
+    final seen = {userId, ...direct.map((p) => p.userId)};
+    final suggestions = [...direct];
+
+    for (final teammate in direct) {
+      if (suggestions.length >= limit) break;
+      final secondDegree =
+          await fetchTopCoPlayers(teammate.userId, limit: limit);
+      for (final candidate in secondDegree) {
+        if (suggestions.length >= limit) break;
+        if (!seen.add(candidate.userId)) continue;
+        suggestions.add(candidate);
+      }
+    }
+    return suggestions;
+  }
+
   /// Players [userId] has shared the most matches with, most-frequent first.
-  Future<List<({String userId, String username, String? avatarUrl, int count})>>
-      fetchTopCoPlayers(String userId, {int limit = 8}) async {
+  Future<List<CoPlayer>> fetchTopCoPlayers(String userId,
+      {int limit = 8}) async {
     final myRows = await _participants.select('match_id').eq('user_id', userId);
     final matchIds = (myRows as List).map((r) => r['match_id'] as String).toList();
     if (matchIds.isEmpty) return [];
@@ -207,6 +233,23 @@ class MatchService {
               count: counts[id]!,
             ))
         .toList();
+  }
+
+  /// Completed vs upcoming match counts for a group.
+  Future<({int completed, int upcoming})> fetchGroupMatchCounts(
+      String groupId) async {
+    final rows = await _matches.select('date_time').eq('group_id', groupId);
+    final now = DateTime.now();
+    var completed = 0, upcoming = 0;
+    for (final r in rows as List) {
+      final dateTime = DateTime.parse(r['date_time'] as String);
+      if (dateTime.isBefore(now)) {
+        completed++;
+      } else {
+        upcoming++;
+      }
+    }
+    return (completed: completed, upcoming: upcoming);
   }
 
   Future<Map<String, ({String username, String? avatarUrl})>> fetchProfiles(List<String> userIds) async {

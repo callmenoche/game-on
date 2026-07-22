@@ -1,12 +1,15 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/group.dart';
 import '../providers/auth_provider.dart';
 import '../providers/group_provider.dart';
 import '../services/group_service.dart';
+import '../services/match_service.dart';
 import '../services/supabase_client.dart';
 import '../widgets/game_on_logo.dart';
 
@@ -20,9 +23,12 @@ class GroupDetailScreen extends StatefulWidget {
 
 class _GroupDetailScreenState extends State<GroupDetailScreen> {
   final _groupService = GroupService();
+  final _matchService = MatchService();
   Map<String, dynamic> _members = {};
   List<Map<String, String>> _pendingRequests = [];
+  ({int completed, int upcoming})? _matchCounts;
   bool _loadingMembers = false;
+  bool _uploadingImage = false;
 
   Group? _findGroup(GroupProvider p) {
     final matches = p.groups.where((g) => g.id == widget.groupId);
@@ -33,6 +39,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
   void initState() {
     super.initState();
     _loadMembers();
+    _loadMatchCounts();
   }
 
   bool get _amIAdmin {
@@ -50,6 +57,41 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
       await _loadPendingRequests();
     } finally {
       if (mounted) setState(() => _loadingMembers = false);
+    }
+  }
+
+  Future<void> _loadMatchCounts() async {
+    try {
+      final counts = await _matchService.fetchGroupMatchCounts(widget.groupId);
+      if (mounted) setState(() => _matchCounts = counts);
+    } catch (_) {
+      // Non-fatal — the stats row just won't show.
+    }
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    final xfile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+      maxWidth: 1024,
+      maxHeight: 1024,
+    );
+    if (xfile == null || !mounted) return;
+    final Uint8List bytes = await xfile.readAsBytes();
+    final ext = xfile.path.split('.').last.toLowerCase();
+    setState(() => _uploadingImage = true);
+    try {
+      await _groupService.uploadGroupImage(widget.groupId, bytes, ext);
+      if (mounted) await context.read<GroupProvider>().fetchGroups();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context)!.errorGeneric),
+          backgroundColor: Colors.redAccent,
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _uploadingImage = false);
     }
   }
 
@@ -127,11 +169,97 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: _loadMembers,
+        onRefresh: () => Future.wait([_loadMembers(), _loadMatchCounts()]),
         color: GameOnBrand.saffron,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
           children: [
+            // ── Cover image ─────────────────────────────────────────────────
+            GestureDetector(
+              onTap: _amIAdmin ? _pickAndUploadImage : null,
+              child: Container(
+                height: 140,
+                width: double.infinity,
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  color: GameOnBrand.saffron.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (group.imageUrl != null)
+                      CachedNetworkImage(
+                        imageUrl: group.imageUrl!,
+                        fit: BoxFit.cover,
+                        errorWidget: (_, __, ___) => const Icon(
+                            Icons.group_rounded,
+                            color: GameOnBrand.saffron,
+                            size: 48),
+                      )
+                    else
+                      const Center(
+                        child: Icon(Icons.group_rounded,
+                            color: GameOnBrand.saffron, size: 48),
+                      ),
+                    if (_uploadingImage)
+                      Container(
+                        color: Colors.black.withValues(alpha: 0.4),
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                              color: GameOnBrand.saffron),
+                        ),
+                      )
+                    else if (_amIAdmin)
+                      Positioned(
+                        right: 8,
+                        bottom: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: const BoxDecoration(
+                            color: GameOnBrand.saffron,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.camera_alt_rounded,
+                              size: 16, color: GameOnBrand.slateDark),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // ── Stats row: members + matches played/upcoming ────────────────
+            Row(
+              children: [
+                Expanded(
+                  child: _StatTile(
+                    icon: Icons.people_outline_rounded,
+                    value: '${group.memberCount}',
+                    label: AppLocalizations.of(context)!.members,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _StatTile(
+                    icon: Icons.check_circle_outline_rounded,
+                    value: '${_matchCounts?.completed ?? '—'}',
+                    label: AppLocalizations.of(context)!.matchesPlayed,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _StatTile(
+                    icon: Icons.event_available_rounded,
+                    value: '${_matchCounts?.upcoming ?? '—'}',
+                    label: AppLocalizations.of(context)!.matchesUpcoming,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
             // ── Invite code card ───────────────────────────────────────────
             Container(
               padding: const EdgeInsets.all(20),
@@ -377,6 +505,44 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
               }),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ─── Stat tile ─────────────────────────────────────────────────────────────
+
+class _StatTile extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+  const _StatTile({required this.icon, required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      decoration: BoxDecoration(
+        color: theme.cardTheme.color,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 18, color: GameOnBrand.saffron),
+          const SizedBox(height: 6),
+          Text(value,
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }

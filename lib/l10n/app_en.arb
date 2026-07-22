@@ -443,6 +443,12 @@
   },
   "topSports": "Top Sports",
   "frequentTeammates": "Frequent Teammates",
+  "recentGroups": "Recent Groups",
+  "suggestedPlayers": "Suggested Players",
+  "suggestedPlayer": "Suggested for you",
+  "matchesPlayed": "Played",
+  "matchesUpcoming": "Upcoming",
+  "groupPhotoOptional": "Add a group photo (optional)",
   "guestsCount": "{count, plural, =1{1 guest} other{{count} guests}}",
   "@guestsCount": {
     "placeholders": { "count": { "type": "int" } }

@@ -2164,6 +2164,42 @@ abstract class AppLocalizations {
   /// **'Frequent Teammates'**
   String get frequentTeammates;
 
+  /// No description provided for @recentGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Groups'**
+  String get recentGroups;
+
+  /// No description provided for @suggestedPlayers.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested Players'**
+  String get suggestedPlayers;
+
+  /// No description provided for @suggestedPlayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested for you'**
+  String get suggestedPlayer;
+
+  /// No description provided for @matchesPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Played'**
+  String get matchesPlayed;
+
+  /// No description provided for @matchesUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get matchesUpcoming;
+
+  /// No description provided for @groupPhotoOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a group photo (optional)'**
+  String get groupPhotoOptional;
+
   /// No description provided for @guestsCount.
   ///
   /// In en, this message translates to:

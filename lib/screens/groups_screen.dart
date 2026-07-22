@@ -10,7 +10,9 @@ import '../models/group.dart';
 import '../models/profile.dart';
 import '../providers/group_provider.dart';
 import '../services/group_service.dart';
+import '../services/match_service.dart' show CoPlayer, MatchService;
 import '../services/profile_service.dart';
+import '../services/supabase_client.dart';
 import '../utils/app_snackbar.dart';
 import '../widgets/game_on_logo.dart';
 
@@ -26,6 +28,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
   final _searchCtrl = TextEditingController();
   final _profileService = ProfileService();
   final _groupService = GroupService();
+  final _matchService = MatchService();
   Timer? _debounce;
 
   String _query = '';
@@ -33,12 +36,37 @@ class _GroupsScreenState extends State<GroupsScreen> {
   List<Profile> _playerResults = [];
   List<Group> _groupResults = [];
 
+  List<Group> _recentGroups = [];
+  List<CoPlayer> _suggestedPlayers = [];
+  bool _loadingDiscovery = true;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<GroupProvider>().fetchGroups();
     });
+    _loadDiscovery();
+  }
+
+  Future<void> _loadDiscovery() async {
+    final userId = SupabaseService.currentUser?.id;
+    if (userId == null) return;
+    try {
+      final results = await Future.wait([
+        _groupService.fetchRecentGroups(),
+        _matchService.fetchSuggestedPlayers(userId),
+      ]);
+      if (mounted) {
+        setState(() {
+          _recentGroups = results[0] as List<Group>;
+          _suggestedPlayers = results[1] as List<CoPlayer>;
+          _loadingDiscovery = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingDiscovery = false);
+    }
   }
 
   @override
@@ -183,20 +211,47 @@ class _GroupsScreenState extends State<GroupsScreen> {
       return const Center(
           child: CircularProgressIndicator(color: GameOnBrand.saffron));
     }
-    if (provider.groups.isEmpty) {
+
+    // Discovery groups already shown under "My groups" would be redundant.
+    final myGroupIds = provider.groups.map((g) => g.id).toSet();
+    final discoveryGroups =
+        _recentGroups.where((g) => !myGroupIds.contains(g.id)).toList();
+
+    if (provider.groups.isEmpty &&
+        discoveryGroups.isEmpty &&
+        _suggestedPlayers.isEmpty &&
+        !_loadingDiscovery) {
       return _EmptyState(onJoin: () => _showJoinDialog(context));
     }
+
     return RefreshIndicator(
-      onRefresh: provider.fetchGroups,
+      onRefresh: () =>
+          Future.wait([provider.fetchGroups(), _loadDiscovery()]),
       color: GameOnBrand.saffron,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
         children: [
-          _SectionHeader(l.myGroups),
-          ...provider.groups.map((g) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _GroupCard(group: g),
-              )),
+          if (provider.groups.isNotEmpty) ...[
+            _SectionHeader(l.myGroups),
+            ...provider.groups.map((g) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _GroupCard(group: g),
+                )),
+            const SizedBox(height: 8),
+          ],
+          if (discoveryGroups.isNotEmpty) ...[
+            _SectionHeader(l.recentGroups),
+            ...discoveryGroups.map((g) => Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _GroupSearchCard(group: g),
+                )),
+            const SizedBox(height: 8),
+          ],
+          if (_suggestedPlayers.isNotEmpty) ...[
+            _SectionHeader(l.suggestedPlayers),
+            const SizedBox(height: 4),
+            ..._suggestedPlayers.map((p) => _SuggestedPlayerTile(player: p)),
+          ],
         ],
       ),
     );
@@ -322,6 +377,73 @@ class _PlayerTile extends StatelessWidget {
   }
 }
 
+// ─── Suggested player tile ────────────────────────────────────────────────
+
+class _SuggestedPlayerTile extends StatelessWidget {
+  final CoPlayer player;
+  const _SuggestedPlayerTile({required this.player});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final initial =
+        player.username.isNotEmpty ? player.username[0].toUpperCase() : '?';
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: CircleAvatar(
+        radius: 22,
+        backgroundColor: GameOnBrand.saffron.withValues(alpha: 0.15),
+        backgroundImage: player.avatarUrl != null
+            ? CachedNetworkImageProvider(player.avatarUrl!)
+            : null,
+        child: player.avatarUrl == null
+            ? Text(initial,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w800, color: GameOnBrand.saffron))
+            : null,
+      ),
+      title: Text(player.username,
+          style: const TextStyle(fontWeight: FontWeight.w700)),
+      subtitle: Text(
+        l.suggestedPlayer,
+        style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
+      ),
+      onTap: () => context.push('/player/${player.userId}'),
+    );
+  }
+}
+
+// ─── Group thumbnail (image if set, generic icon otherwise) ──────────────
+
+class _GroupThumbnail extends StatelessWidget {
+  final String? imageUrl;
+  final double size;
+  const _GroupThumbnail({required this.imageUrl, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: GameOnBrand.saffron.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(size * 0.27),
+      ),
+      child: imageUrl != null
+          ? CachedNetworkImage(
+              imageUrl: imageUrl!,
+              fit: BoxFit.cover,
+              errorWidget: (_, __, ___) => Icon(Icons.group_rounded,
+                  color: GameOnBrand.saffron, size: size * 0.5),
+            )
+          : Icon(Icons.group_rounded,
+              color: GameOnBrand.saffron, size: size * 0.5),
+    );
+  }
+}
+
 // ─── Group visibility badge ──────────────────────────────────────────────
 
 class _VisibilityBadge extends StatelessWidget {
@@ -375,16 +497,7 @@ class _GroupSearchCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: GameOnBrand.saffron.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.group_rounded,
-                  color: GameOnBrand.saffron, size: 22),
-            ),
+            _GroupThumbnail(imageUrl: group.imageUrl, size: 44),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -517,16 +630,7 @@ class _GroupCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: GameOnBrand.saffron.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.group_rounded,
-                  color: GameOnBrand.saffron, size: 24),
-            ),
+            _GroupThumbnail(imageUrl: group.imageUrl, size: 48),
             const SizedBox(width: 14),
             Expanded(
               child: Column(

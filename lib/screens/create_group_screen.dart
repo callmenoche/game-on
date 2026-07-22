@@ -1,9 +1,13 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/group.dart';
 import '../providers/group_provider.dart';
+import '../services/group_service.dart';
 import '../widgets/game_on_logo.dart';
 
 class CreateGroupScreen extends StatefulWidget {
@@ -18,6 +22,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   final _nameCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   GroupVisibility _visibility = GroupVisibility.private;
+  Uint8List? _imageBytes;
+  String? _imageExt;
   bool _isSubmitting = false;
 
   @override
@@ -25,6 +31,21 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     _nameCtrl.dispose();
     _descCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final xfile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+      maxWidth: 1024,
+      maxHeight: 1024,
+    );
+    if (xfile == null || !mounted) return;
+    final bytes = await xfile.readAsBytes();
+    setState(() {
+      _imageBytes = bytes;
+      _imageExt = xfile.path.split('.').last.toLowerCase();
+    });
   }
 
   Future<void> _submit() async {
@@ -37,6 +58,16 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
           desc.isEmpty ? null : desc,
           visibility: _visibility,
         );
+
+    if (group != null && _imageBytes != null && _imageExt != null) {
+      // Best-effort: the group itself is already created, don't block on this.
+      try {
+        await GroupService()
+            .uploadGroupImage(group.id, _imageBytes!, _imageExt!);
+      } catch (_) {
+        // Ignored — the admin can add a photo later from the group screen.
+      }
+    }
 
     if (!mounted) return;
     setState(() => _isSubmitting = false);
@@ -105,6 +136,37 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
               ),
             ),
             const SizedBox(height: 28),
+            Center(
+              child: GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  width: 96,
+                  height: 96,
+                  decoration: BoxDecoration(
+                    color: GameOnBrand.saffron.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(20),
+                    image: _imageBytes != null
+                        ? DecorationImage(
+                            image: MemoryImage(_imageBytes!),
+                            fit: BoxFit.cover)
+                        : null,
+                  ),
+                  child: _imageBytes == null
+                      ? const Icon(Icons.add_a_photo_rounded,
+                          color: GameOnBrand.saffron, size: 28)
+                      : null,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Center(
+              child: Text(l.groupPhotoOptional,
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: theme.colorScheme.onSurface
+                          .withValues(alpha: 0.45))),
+            ),
+            const SizedBox(height: 24),
             _label(l.groupName),
             const SizedBox(height: 10),
             TextFormField(

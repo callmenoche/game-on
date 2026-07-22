@@ -82,11 +82,6 @@ class _FeedScreenState extends State<FeedScreen> {
                 _searchOpen ? Icons.close_rounded : Icons.search_rounded),
             onPressed: _toggleSearch,
           ),
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: AppLocalizations.of(context)!.settings,
-            onPressed: () => context.push('/settings'),
-          ),
         ],
       ),
       floatingActionButton: context.watch<MatchProvider>().matches.isNotEmpty

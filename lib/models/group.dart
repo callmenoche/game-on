@@ -14,6 +14,7 @@ class Group {
   final String id;
   final String name;
   final String? description;
+  final String? imageUrl;
   final String inviteCode;
   final String creatorId;
   final DateTime createdAt;
@@ -24,6 +25,7 @@ class Group {
     required this.id,
     required this.name,
     this.description,
+    this.imageUrl,
     required this.inviteCode,
     required this.creatorId,
     required this.createdAt,
@@ -45,6 +47,7 @@ class Group {
       id: json['id'] as String,
       name: json['name'] as String,
       description: json['description'] as String?,
+      imageUrl: json['image_url'] as String?,
       inviteCode: json['invite_code'] as String,
       creatorId: json['creator_id'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),

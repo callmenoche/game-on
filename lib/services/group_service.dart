@@ -1,3 +1,7 @@
+import 'dart:typed_data';
+
+import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
+
 import '../models/group.dart';
 import 'supabase_client.dart';
 
@@ -36,6 +40,16 @@ class GroupService {
         .select()
         .inFilter('id', ids)
         .order('member_count', ascending: false);
+    return (data as List).map((e) => Group.fromJson(e)).toList();
+  }
+
+  /// Most recently created searchable groups (public + invite_only, per
+  /// RLS) — a discovery feed, regardless of the viewer's membership.
+  Future<List<Group>> fetchRecentGroups({int limit = 5}) async {
+    final data = await _groups
+        .select()
+        .order('created_at', ascending: false)
+        .limit(limit);
     return (data as List).map((e) => Group.fromJson(e)).toList();
   }
 
@@ -149,6 +163,25 @@ class GroupService {
     await _requests
         .update({'status': accept ? 'accepted' : 'declined'})
         .eq('id', requestId);
+  }
+
+  /// Uploads [bytes] as the group's cover image and persists the URL.
+  /// Admin-only, enforced by storage RLS (migration 029).
+  Future<String> uploadGroupImage(
+      String groupId, Uint8List bytes, String ext) async {
+    final path = '$groupId/image.$ext';
+    await SupabaseService.client.storage.from('group-images').uploadBinary(
+          path,
+          bytes,
+          fileOptions: const FileOptions(upsert: true),
+        );
+    final url =
+        SupabaseService.client.storage.from('group-images').getPublicUrl(path);
+    // Stable path across uploads → cache-bust so the new image shows
+    // immediately (same trick as ProfileService.uploadAvatar).
+    final versioned = '$url?v=${DateTime.now().millisecondsSinceEpoch}';
+    await _groups.update({'image_url': versioned}).eq('id', groupId);
+    return versioned;
   }
 
   Future<void> leaveGroup(String groupId) async {

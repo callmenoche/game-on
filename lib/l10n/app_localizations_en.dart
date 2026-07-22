@@ -1099,6 +1099,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get frequentTeammates => 'Frequent Teammates';
 
   @override
+  String get recentGroups => 'Recent Groups';
+
+  @override
+  String get suggestedPlayers => 'Suggested Players';
+
+  @override
+  String get suggestedPlayer => 'Suggested for you';
+
+  @override
+  String get matchesPlayed => 'Played';
+
+  @override
+  String get matchesUpcoming => 'Upcoming';
+
+  @override
+  String get groupPhotoOptional => 'Add a group photo (optional)';
+
+  @override
   String guestsCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

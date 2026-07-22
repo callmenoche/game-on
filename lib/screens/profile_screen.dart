@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
@@ -14,7 +15,6 @@ import '../providers/profile_provider.dart';
 import '../services/group_service.dart';
 import '../services/match_service.dart';
 import '../services/supabase_client.dart';
-import '../widgets/availability_grid.dart';
 import '../utils/error_helpers.dart';
 import '../widgets/game_on_logo.dart';
 import '../widgets/profile_form_fields.dart';
@@ -237,6 +237,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: Text(l.profile,
             style: const TextStyle(fontWeight: FontWeight.w800)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: l.settings,
+            onPressed: () => context.push('/settings'),
+          ),
           if (profileProvider.isLoading && profile == null)
             const Padding(
               padding: EdgeInsets.all(12),
@@ -382,10 +387,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 12),
                         TopCoPlayersStrip(players: _coPlayers),
                       ],
-
-                      // ── Availability grid ────────────────────────────────
-                      const SizedBox(height: 28),
-                      const AvailabilityGrid(),
 
                       // ── Favourite sports (edit mode only) ───────────────
                       if (_editing) ...[

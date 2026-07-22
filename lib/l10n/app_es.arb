@@ -395,6 +395,12 @@
   },
   "topSports": "Deportes destacados",
   "frequentTeammates": "Compañeros frecuentes",
+  "recentGroups": "Grupos recientes",
+  "suggestedPlayers": "Jugadores sugeridos",
+  "suggestedPlayer": "Sugerido para ti",
+  "matchesPlayed": "Jugados",
+  "matchesUpcoming": "Próximos",
+  "groupPhotoOptional": "Añade una foto de grupo (opcional)",
   "guestsCount": "{count, plural, =1{1 invitado} other{{count} invitados}}",
   "@guestsCount": {
     "placeholders": { "count": { "type": "int" } }

@@ -7,6 +7,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../l10n/app_localizations.dart';
 import '../models/group.dart';
 import '../models/match.dart';
+import '../services/match_service.dart' show CoPlayer;
 import 'game_on_logo.dart';
 
 /// Shared "very visual" profile sections — used by both the own-profile
@@ -311,8 +312,6 @@ class ProfileGroupsStrip extends StatelessWidget {
 }
 
 // ─── Top co-players strip ─────────────────────────────────────────────────
-
-typedef CoPlayer = ({String userId, String username, String? avatarUrl, int count});
 
 class TopCoPlayersStrip extends StatelessWidget {
   final List<CoPlayer> players;
