@@ -32,6 +32,19 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="io.supabase.gameon" android:host="claim" />
             </intent-filter>
+            <!-- App Links (https) — REPLACE_WITH_YOUR_DOMAIN once a real
+                 domain is bought & hosting /.well-known/assetlinks.json.
+                 autoVerify safely no-ops until Android can verify the
+                 domain; see docs/universal-links-setup.md. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="REPLACE_WITH_YOUR_DOMAIN"
+                    android:pathPrefix="/claim" />
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

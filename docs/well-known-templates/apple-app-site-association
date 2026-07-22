@@ -1,0 +1,12 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["FH82LCB79J.com.callmenoche.gameon"],
+        "components": [
+          { "/": "/claim", "comment": "Guest-spot claim links" }
+        ]
+      }
+    ]
+  }
+}

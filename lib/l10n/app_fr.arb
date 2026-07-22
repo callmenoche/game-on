@@ -410,5 +410,14 @@
   "spotsRemaining": "{count, plural, =0{Complet} =1{1 place restante} other{{count} places restantes}}",
   "@spotsRemaining": {
     "placeholders": { "count": { "type": "int" } }
-  }
+  },
+
+  "checkYourEmail": "Vérifie ta boîte mail",
+  "checkYourEmailBody": "On a envoyé un lien de confirmation à {email}. Clique dessus pour activer ton compte, puis reviens ici.",
+  "@checkYourEmailBody": {
+    "placeholders": { "email": { "type": "String" } }
+  },
+  "resendEmail": "Renvoyer l'e-mail",
+  "confirmationEmailResent": "E-mail de confirmation renvoyé",
+  "backToSignIn": "Retour à la connexion"
 }

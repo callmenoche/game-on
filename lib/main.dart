@@ -135,8 +135,16 @@ class _GameOnAppState extends State<GameOnApp> {
       r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
       caseSensitive: false);
 
+  /// Matches both the custom-scheme claim link (`io.supabase.gameon://claim`)
+  /// and the future Universal/App Link (`https://<domain>/claim`) — no Dart
+  /// change needed once a real domain is wired (see
+  /// docs/universal-links-setup.md).
+  bool _isClaimLink(Uri uri) =>
+      (uri.scheme == 'io.supabase.gameon' && uri.host == 'claim') ||
+      (uri.scheme == 'https' && uri.path == '/claim');
+
   void _handleDeepLink(Uri uri) {
-    if (uri.scheme == 'io.supabase.gameon' && uri.host == 'claim') {
+    if (_isClaimLink(uri)) {
       final code = uri.queryParameters['code'];
       final matchId = uri.queryParameters['match'];
       if (code == null || code.isEmpty || matchId == null || matchId.isEmpty) {

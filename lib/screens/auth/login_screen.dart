@@ -50,60 +50,65 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final pendingEmail =
+        context.watch<AuthProvider>().pendingConfirmationEmail;
 
     return Scaffold(
       backgroundColor: GameOnBrand.slateDark,
       resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: Column(
-          children: [
-            // ── Scrollable content ─────────────────────────────
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 48),
-                    _buildHeader(theme),
-                    const SizedBox(height: 36),
-                    _buildTabBar(theme),
-                    const SizedBox(height: 24),
-                    AnimatedBuilder(
-                      animation: _tabController,
-                      builder: (_, __) => _tabController.index == 0
-                          ? _SignInForm(
-                              formKey: _signInFormKey,
-                              emailController: _emailController,
-                              passwordController: _passwordController,
-                              obscurePassword: _obscurePassword,
-                              onToggleObscure: () => setState(
-                                  () => _obscurePassword = !_obscurePassword),
-                            )
-                          : _SignUpForm(
-                              formKey: _signUpFormKey,
-                              emailController: _signUpEmailController,
-                              passwordController: _signUpPasswordController,
-                              obscurePassword: _obscureSignUpPassword,
-                              onToggleObscure: () => setState(() =>
-                                  _obscureSignUpPassword =
-                                      !_obscureSignUpPassword),
-                            ),
+        child: pendingEmail != null
+            ? _CheckEmailView(email: pendingEmail)
+            : Column(
+                children: [
+                  // ── Scrollable content ─────────────────────────────
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SizedBox(height: 48),
+                          _buildHeader(theme),
+                          const SizedBox(height: 36),
+                          _buildTabBar(theme),
+                          const SizedBox(height: 24),
+                          AnimatedBuilder(
+                            animation: _tabController,
+                            builder: (_, __) => _tabController.index == 0
+                                ? _SignInForm(
+                                    formKey: _signInFormKey,
+                                    emailController: _emailController,
+                                    passwordController: _passwordController,
+                                    obscurePassword: _obscurePassword,
+                                    onToggleObscure: () => setState(() =>
+                                        _obscurePassword = !_obscurePassword),
+                                  )
+                                : _SignUpForm(
+                                    formKey: _signUpFormKey,
+                                    emailController: _signUpEmailController,
+                                    passwordController:
+                                        _signUpPasswordController,
+                                    obscurePassword: _obscureSignUpPassword,
+                                    onToggleObscure: () => setState(() =>
+                                        _obscureSignUpPassword =
+                                            !_obscureSignUpPassword),
+                                  ),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildErrorBanner(),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                    _buildErrorBanner(),
-                  ],
-                ),
-              ),
-            ),
+                  ),
 
-            // ── Pinned submit button ────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
-              child: _buildSubmitButton(),
-            ),
-          ],
-        ),
+                  // ── Pinned submit button ────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+                    child: _buildSubmitButton(),
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -234,6 +239,108 @@ class _LoginScreenState extends State<LoginScreen>
         password: _signUpPasswordController.text,
       );
     }
+  }
+}
+
+// ─── Check-your-email view ──────────────────────────────────────────────────
+
+class _CheckEmailView extends StatefulWidget {
+  final String email;
+  const _CheckEmailView({required this.email});
+
+  @override
+  State<_CheckEmailView> createState() => _CheckEmailViewState();
+}
+
+class _CheckEmailViewState extends State<_CheckEmailView> {
+  bool _isResending = false;
+
+  Future<void> _resend() async {
+    setState(() => _isResending = true);
+    final ok = await context.read<AuthProvider>().resendConfirmationEmail();
+    if (!mounted) return;
+    setState(() => _isResending = false);
+    final l = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(ok ? l.confirmationEmailResent : l.errorGeneric),
+        backgroundColor: ok ? GameOnBrand.saffron : Colors.redAccent,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 88,
+            height: 88,
+            decoration: BoxDecoration(
+              color: GameOnBrand.saffron.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.mark_email_unread_rounded,
+                size: 40, color: GameOnBrand.saffron),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            l.checkYourEmail,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            l.checkYourEmailBody(widget.email),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 14,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 32),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: _isResending ? null : _resend,
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(50),
+                backgroundColor: GameOnBrand.saffron,
+                foregroundColor: GameOnBrand.slateDark,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+              ),
+              child: _isResending
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2.5, color: GameOnBrand.slateDark),
+                    )
+                  : Text(l.resendEmail,
+                      style: const TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w800)),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () =>
+                context.read<AuthProvider>().cancelPendingConfirmation(),
+            child: Text(l.backToSignIn,
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
+          ),
+        ],
+      ),
+    );
   }
 }
 

@@ -4,5 +4,13 @@
 <dict>
 	<key>get-task-allow</key>
 	<true/>
+	<!-- Universal Links — REPLACE_WITH_YOUR_DOMAIN once a real domain is
+	     bought & hosting /.well-known/apple-app-site-association.
+	     See docs/universal-links-setup.md. Harmless as a placeholder:
+	     Apple simply can't verify a domain that doesn't serve the file. -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:REPLACE_WITH_YOUR_DOMAIN</string>
+	</array>
 </dict>
 </plist>

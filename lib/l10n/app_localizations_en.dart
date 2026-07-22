@@ -1146,4 +1146,21 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get checkYourEmail => 'Check your email';
+
+  @override
+  String checkYourEmailBody(String email) {
+    return 'We sent a confirmation link to $email. Tap it to activate your account, then come back here.';
+  }
+
+  @override
+  String get resendEmail => 'Resend email';
+
+  @override
+  String get confirmationEmailResent => 'Confirmation email sent again';
+
+  @override
+  String get backToSignIn => 'Back to sign in';
 }

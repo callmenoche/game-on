@@ -458,5 +458,14 @@
   "spotsRemaining": "{count, plural, =0{Full} =1{1 spot left} other{{count} spots left}}",
   "@spotsRemaining": {
     "placeholders": { "count": { "type": "int" } }
-  }
+  },
+
+  "checkYourEmail": "Check your email",
+  "checkYourEmailBody": "We sent a confirmation link to {email}. Tap it to activate your account, then come back here.",
+  "@checkYourEmailBody": {
+    "placeholders": { "email": { "type": "String" } }
+  },
+  "resendEmail": "Resend email",
+  "confirmationEmailResent": "Confirmation email sent again",
+  "backToSignIn": "Back to sign in"
 }

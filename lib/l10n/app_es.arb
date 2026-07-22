@@ -410,5 +410,14 @@
   "spotsRemaining": "{count, plural, =0{Completo} =1{1 plaza libre} other{{count} plazas libres}}",
   "@spotsRemaining": {
     "placeholders": { "count": { "type": "int" } }
-  }
+  },
+
+  "checkYourEmail": "Revisa tu correo",
+  "checkYourEmailBody": "Enviamos un enlace de confirmación a {email}. Tócalo para activar tu cuenta y vuelve aquí.",
+  "@checkYourEmailBody": {
+    "placeholders": { "email": { "type": "String" } }
+  },
+  "resendEmail": "Reenviar correo",
+  "confirmationEmailResent": "Correo de confirmación reenviado",
+  "backToSignIn": "Volver al inicio de sesión"
 }

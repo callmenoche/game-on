@@ -8,12 +8,16 @@ class AuthProvider extends ChangeNotifier {
   User? _user;
   bool _isLoading = false;
   String? _error;
+  String? _pendingConfirmationEmail;
   StreamSubscription? _authSub;
 
   User? get user => _user;
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isAuthenticated => _user != null;
+  /// Set right after sign-up when Supabase requires email confirmation
+  /// before a session is issued (dashboard "Confirm email" setting).
+  String? get pendingConfirmationEmail => _pendingConfirmationEmail;
 
   AuthProvider() {
     // Seed with current session (app cold-start)
@@ -22,6 +26,7 @@ class AuthProvider extends ChangeNotifier {
     // React to sign-in / sign-out events
     _authSub = SupabaseService.authStateChanges.listen((data) {
       _user = data.session?.user;
+      if (_user != null) _pendingConfirmationEmail = null;
       notifyListeners();
     });
   }
@@ -46,8 +51,11 @@ class AuthProvider extends ChangeNotifier {
   }) async {
     _setLoading(true);
     try {
-      await SupabaseService.signUpWithEmail(email: email, password: password);
+      final res = await SupabaseService.signUpWithEmail(
+          email: email, password: password);
       _error = null;
+      // No session yet → dashboard requires email confirmation first.
+      if (res.session == null) _pendingConfirmationEmail = email;
     } on AuthException catch (e) {
       _error = _classifyAuthError(e);
     } catch (_) {
@@ -55,6 +63,22 @@ class AuthProvider extends ChangeNotifier {
     } finally {
       _setLoading(false);
     }
+  }
+
+  Future<bool> resendConfirmationEmail() async {
+    final email = _pendingConfirmationEmail;
+    if (email == null) return false;
+    try {
+      await SupabaseService.resendConfirmationEmail(email);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  void cancelPendingConfirmation() {
+    _pendingConfirmationEmail = null;
+    notifyListeners();
   }
 
   Future<void> signOut() async {

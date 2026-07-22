@@ -2241,6 +2241,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =0{Full} =1{1 spot left} other{{count} spots left}}'**
   String spotsRemaining(int count);
+
+  /// No description provided for @checkYourEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your email'**
+  String get checkYourEmail;
+
+  /// No description provided for @checkYourEmailBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a confirmation link to {email}. Tap it to activate your account, then come back here.'**
+  String checkYourEmailBody(String email);
+
+  /// No description provided for @resendEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend email'**
+  String get resendEmail;
+
+  /// No description provided for @confirmationEmailResent.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmation email sent again'**
+  String get confirmationEmailResent;
+
+  /// No description provided for @backToSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to sign in'**
+  String get backToSignIn;
 }
 
 class _AppLocalizationsDelegate

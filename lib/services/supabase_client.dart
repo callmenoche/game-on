@@ -41,11 +41,26 @@ class SupabaseService {
 
   // ── Auth helpers ──────────────────────────────────────────────────────────
 
+  // Same custom scheme as guest-claim deep links (see main.dart). The SDK's
+  // PKCE flow auto-detects any incoming URI with a `code` param as an auth
+  // callback and exchanges it for a session — no extra deep-link code needed.
+  static const String _emailRedirectTo = 'io.supabase.gameon://login-callback';
+
   static Future<AuthResponse> signUpWithEmail({
     required String email,
     required String password,
   }) =>
-      client.auth.signUp(email: email, password: password);
+      client.auth.signUp(
+        email: email,
+        password: password,
+        emailRedirectTo: _emailRedirectTo,
+      );
+
+  static Future<void> resendConfirmationEmail(String email) => client.auth.resend(
+        type: OtpType.signup,
+        email: email,
+        emailRedirectTo: _emailRedirectTo,
+      );
 
   static Future<AuthResponse> signInWithEmail({
     required String email,
